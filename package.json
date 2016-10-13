@@ -1,0 +1,30 @@
+{
+  "name": "tedicross",
+  "version": "0.1.0",
+  "description": "Better DiteCross",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trgwii/TediCross.git"
+  },
+  "keywords": [
+    "telegram",
+    "discord",
+    "cross"
+  ],
+  "author": "Thomas Rory Gummerson <trgwii@hotmail.com> (http://trgwii.no)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/trgwii/TediCross/issues"
+  },
+  "homepage": "https://github.com/trgwii/TediCross#readme",
+  "dependencies": {
+    "discord.io": "^2.2.3"
+  },
+  "devDependencies": {
+    "why-is-node-running": "^1.2.2"
+  }
+}
