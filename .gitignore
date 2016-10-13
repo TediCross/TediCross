@@ -38,3 +38,6 @@ jspm_packages
 
 # Vim swap files
 *.swp
+
+# Project settings
+settings.json
