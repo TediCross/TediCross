@@ -2,6 +2,10 @@
 	"telegram": {
 		"auth": {
 			"token": "<BOT TOKEN HERE>"
-		}
+		},
+		"timeout": 5
+	},
+	"debug": {
+		"port": 6666
 	}
 }
