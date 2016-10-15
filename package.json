@@ -4,7 +4,9 @@
   "description": "Better DiteCross",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "check": "./node_modules/.bin/happiness",
+    "generate-example-settings": "node taskrunner.js & sleep 1 & touch settings.json"
   },
   "repository": {
     "type": "git",
@@ -26,6 +28,7 @@
     "teleapiwrapper": "^2.1.1"
   },
   "devDependencies": {
+    "happiness": "^7.1.2",
     "why-is-node-running": "^1.2.2"
   }
 }

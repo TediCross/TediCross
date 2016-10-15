@@ -3,9 +3,16 @@
 		"auth": {
 			"token": "<BOT TOKEN HERE>"
 		},
-		"timeout": 5
+		"timeout": 5,
+		"chat_id": "<TELEGRAM CHAT ID HERE>"
 	},
-	"debug": {
-		"port": 6666
-	}
+	"discord": {
+		"auth": {
+			"token": "<BOT TOKEN HERE>"
+		},
+		"channelID": "<DISCORD CHANNEL ID HERE>",
+		"botID": "<BOT ID HERE>",
+		"usersfile": "discord_users.json"
+	},
+	"debug": true
 }
