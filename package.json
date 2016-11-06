@@ -25,6 +25,7 @@
   "homepage": "https://github.com/trgwii/TediCross#readme",
   "dependencies": {
     "discord.io": "^2.2.3",
+    "lodash": "^4.16.6",
     "teleapiwrapper": "^2.1.1"
   },
   "devDependencies": {
