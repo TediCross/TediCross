@@ -1,72 +1,102 @@
-'use strict';
+"use strict";
 
-const stream = require('stream');
-const fs = require('fs');
-const http = require('http');
-const https = require('https');
+/**************************
+ * Import important stuff *
+ **************************/
 
-const { BotAPI, InputFile } = require('teleapiwrapper');
-const Discord = require('discord.io');
-const updateGetter = require('./updategetter.js');
+const stream = require("stream");
+const fs = require("fs");
+const http = require("http");
+const https = require("https");
 
-const settings = JSON.parse(fs.readFileSync('settings.json'));
+const { BotAPI, InputFile } = require("teleapiwrapper");
+const Discord = require("discord.io");
+const updateGetter = require("./updategetter.js");
 
+/**************************
+ * Read the settings file *
+ **************************/
+
+const settings = JSON.parse(fs.readFileSync("settings.json"));
+
+/*************************************
+ * Get and set up the debug function *
+ *************************************/
+
+const debug = require("./debugFunc");
+debug.doDebug = settings.debug;
+
+/*************
+ * TediCross *
+ *************/
+
+// Create a Telegram bot
 const tgBot = new BotAPI(settings.telegram.auth.token);
+updateGetter(tgBot, settings.telegram.timeout);
+
+// Create a Discord bot
 const dcBot = new Discord.Client({
 	token: settings.discord.auth.token,
 	autorun: true
 });
 
-updateGetter(tgBot, settings.telegram.timeout);
 
-// Log inits
-dcBot.on('ready', () => console.log(`Discord: ${dcBot.username} (${dcBot.id})`));
+// Log data when the bots are ready
+dcBot.on("ready", () => console.log(`Discord: ${dcBot.username} (${dcBot.id})`));
 tgBot.getMe().then(bot => console.log(`Telegram: ${bot.username} (${bot.id})`));
 
-const dcUsers = JSON.parse(fs.readFileSync(settings.discord.usersfile, 'utf8'));
-setInterval(() => fs.writeFile(settings.discord.usersfile, JSON.stringify(dcUsers, undefined, '\t')), 30000);
+// Read the UserID/Username map for Discord
+const dcUsers = JSON.parse(fs.readFileSync(settings.discord.usersfile, "utf8"));
 
-const logStream = fs.createWriteStream('debug_log.txt', { flags: 'a' });
-dcBot.on('any', e => {
-	if (e.t === 'GUILD_CREATE') {
+// Update the UserID/Username map every 30 seconds
+setInterval(() => fs.writeFile(settings.discord.usersfile, JSON.stringify(dcUsers, undefined, "\t")), 30000);
+
+/****************
+ * From Discord *
+ ****************/
+
+dcBot.on("any", e => {
+	if (e.t === "GUILD_CREATE") {
 		e.d.members.forEach(member => {
 			dcUsers[member.user.id] = member.user.username;
 		});
-	}
-	else if (e.t === 'MESSAGE_CREATE') {
+	} else if (e.t === "MESSAGE_CREATE") {
 		if(e.d.attachments) {
 			e.d.attachments.forEach(attachment => {
-				const req = attachment.url[4] === 's' ? https.get(attachment.url) : http.get(attachment.url);
-				req.on('response', res => {
+				const req = attachment.url[4] === "s" ? https.get(attachment.url) : http.get(attachment.url);
+				req.on("response", res => {
 					const s = new stream.PassThrough();
 					tgBot.sendPhoto({
 						chat_id: settings.telegram.chat_id,
-						photo: new InputFile(s, attachment.url.split('/').pop())
+						photo: new InputFile(s, attachment.url.split("/").pop())
 					});
 					res.pipe(s);
 				});
 			});
 		}
 	}
-	logStream.write(JSON.stringify(e, undefined, '\t') + '\n\n\n');
 });
-dcBot.on('presence', (user, userID) => { dcUsers[userID] = user; });
-dcBot.on('message', (user, userID, channelID, message, event) => {
+dcBot.on("presence", (user, userID) => { dcUsers[userID] = user; });
+
+// Listen for Discord messages
+dcBot.on("message", (user, userID, channelID, message, event) => {
+	// Store the UserID/Username mapping
 	dcUsers[userID] = user;
+
 	// Ignore own messages
 	if (userID !== settings.discord.botID) {
-		if (settings.debug) {
-			console.log(`Got message: \`${message}\` from Discord-user: ${user} (${userID})`);
-		}
+		debug(`Got message: \`${message}\` from Discord-user: ${user} (${userID})`);
+
+		// Pass the message on to Telegram
 		tgBot.sendMessage({
 			chat_id: settings.telegram.chat_id,
 			text: `<b>${user}</b>: ${message
-				.replace(/</g, '&lt;')
-				.replace(/>/g, '&gt;')
-				.replace(/&/g, '&amp;')
-				.replace(/\*\*([^*]+)\*\*/g, (m, b) => '<b>' + b + '</b>')
-				.replace(/\*([^*]+)\*/g, (m, b) => '<i>' + b + '</i>')
-				.replace(/_([^*]+)_/g, (m, b) => '<i>' + b + '</i>')
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/&/g, "&amp;")
+				.replace(/\*\*([^*]+)\*\*/g, (m, b) => "<b>" + b + "</b>")
+				.replace(/\*([^*]+)\*/g, (m, b) => "<i>" + b + "</i>")
+				.replace(/_([^*]+)_/g, (m, b) => "<i>" + b + "</i>")
 				.replace(/<@!(\d+)>/g, (m, id) => {
 					if (dcUsers[id]) {
 						return `@${dcUsers[id]}`;
@@ -74,40 +104,22 @@ dcBot.on('message', (user, userID, channelID, message, event) => {
 						return m;
 					}
 				})}`,
-			parse_mode: 'HTML'
+			parse_mode: "HTML"
 		});
 	}
 });
 
-tgBot.on('text', message => {
-	if (settings.debug) {
-		console.log(`Got message: \`${message.text}\` from Telegram-user: ${message.from.username || message.from.first_name} (${message.from.id})`);
-	}
+/*****************
+ * From Telegram *
+ *****************/
+
+// Set up event listener for text messages from Telegram
+tgBot.on("text", message => {
+	debug(`Got message: \`${message.text}\` from Telegram-user: ${message.from.username || message.from.first_name} (${message.from.id})`);
+
+	// Pass it on to Discord
 	dcBot.sendMessage({
 		to: settings.discord.channelID,
-		message: `${message.from.username || message.from.first_name}: ${message.text}`
+		message: `**${message.from.username || message.from.first_name}:** ${message.text}`
 	});
 });
-
-if (settings.debug) {
-	process.stdin.setEncoding('utf8');
-	process.stdin.on('data', data => {
-		data = data.trim();
-		switch (data) {
-			case 'exit':
-				process.stdin.pause();
-				console.log('Exiting...');
-				break;
-			case 'help':
-				console.log(
-`Available commands:
-	help - this
-	exit - exit application`
-				);
-				break;
-			default:
-				break;
-		}
-	});
-}
-

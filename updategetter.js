@@ -49,12 +49,10 @@ function updateGetter(bot, timeout = 60) {
 						emitter.emit("text", update.message);
 					}
 				}
-
-				// Get more updates!
-				process.nextTick(fetchUpdates);
 			});
 		  })
-		  .catch(err => console.error(`${err.name}: ${err.message}`));
+		  .catch(err => console.error(`${err.name}: ${err.message}`))
+		  .then(() => process.nextTick(fetchUpdates));	// Get more updates regardless of what happens
 	}
 
 	// Start the fetching
@@ -62,9 +60,8 @@ function updateGetter(bot, timeout = 60) {
 
 	// Mix the emitter into the bot
 	for (let k in emitter) {
-		bot[k] = typeof emitter[k] === "function" ? emitter[k].bind(emitter) : emitter[k];
+		bot[k] = emitter[k] instanceof Function ? emitter[k].bind(emitter) : emitter[k];
 	}
-
 }
 
 /***********************
