@@ -42,6 +42,8 @@ const dcBot = new Discord.Client({
 	autorun: true
 });
 
+// Mapping between usernames and IDs
+const dcUsers = new DiscordUserMap(settings.discord.usersfile);
 
 // Log data when the bots are ready
 dcBot.on("ready", () => console.log(`Discord: ${dcBot.username} (${dcBot.id})`));
@@ -50,9 +52,6 @@ tgBot.getMe().then(bot => console.log(`Telegram: ${bot.username} (${bot.id})`));
 /***************************
  * Set up the Discord part *
  ***************************/
-
-// Mapping between usernames and IDs
-const dcUsers = new DiscordUserMap(settings.discord.usersfile);
 
 dcBot.on("any", e => {
 	if (e.t === "GUILD_CREATE") {
@@ -123,6 +122,15 @@ dcBot.on("message", (user, userID, channelID, message, event) => {
 // Set up event listener for text messages from Telegram
 tgBot.on("text", message => {
 	debug(`Got message: \`${message.text}\` from Telegram-user: ${message.from.username || message.from.first_name} (${message.from.id})`);
+
+	// Translate any usernames to discord IDs
+	message.text = message.text.replace(/@(\S+)/, (m, username) => {
+		if (dcUsers.lookupUsername(username)) {
+			return `<@${dcUsers.lookupUsername(username)}>`;
+		} else {
+			return m;
+		}
+	});
 
 	// Pass it on to Discord
 	dcBot.sendMessage({
