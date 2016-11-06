@@ -91,23 +91,26 @@ dcBot.on("message", (user, userID, channelID, message, event) => {
 	if (userID !== settings.discord.botID) {
 		debug(`Got message: \`${message}\` from Discord-user: ${user} (${userID})`);
 
+		// Modify the message to fit Telegram
+		message = message
+		  .replace(/<@!?(\d+)>/g, (m, id) => {	// @ID to @Username
+			if (dcUsers.lookupID(id)) {
+				return `@${dcUsers.lookupID(id)}`;
+			} else {
+				return m;
+			}
+		  })
+		  .replace(/</g, "&lt;")	// < to &lt;
+		  .replace(/>/g, "&gt;")	// > to &gt;
+		  .replace(/&/g, "&amp;")	// & to &amp;
+		  .replace(/\*\*([^*]+)\*\*/g, (m, b) => "<b>" + b + "</b>")	// **text** to <b>text</b>
+		  .replace(/\*([^*]+)\*/g, (m, b) => "<i>" + b + "</i>")	// *text* to <i>text</i>
+		  .replace(/_([^*]+)_/g, (m, b) => "<i>" + b + "</i>")	// _text_ to <i>text</i>
+
 		// Pass the message on to Telegram
 		tgBot.sendMessage({
 			chat_id: settings.telegram.chat_id,
-			text: `<b>${user}</b>: ${message
-				.replace(/</g, "&lt;")	// < to &lt;
-				.replace(/>/g, "&gt;")	// > to &gt;
-				.replace(/&/g, "&amp;")	// & to &amp;
-				.replace(/\*\*([^*]+)\*\*/g, (m, b) => "<b>" + b + "</b>")	// **text** to <b>text</b>
-				.replace(/\*([^*]+)\*/g, (m, b) => "<i>" + b + "</i>")	// *text* to <i>text</i>
-				.replace(/_([^*]+)_/g, (m, b) => "<i>" + b + "</i>")	// _text_ to <i>text</i>
-				.replace(/<@!(\d+)>/g, (m, id) => {	// @ID to @Username
-					if (dcUsers.lookupID(id)) {
-						return `@${dcUsers.lookupID(id)}`;
-					} else {
-						return m;
-					}
-				})}`,
+			text: `<b>${user}</b>: ${message}`,
 			parse_mode: "HTML"
 		});
 	}
