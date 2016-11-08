@@ -41,3 +41,6 @@ jspm_packages
 
 # Project settings
 settings.json
+
+# User map
+discord_users.json

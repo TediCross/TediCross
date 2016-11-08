@@ -56,7 +56,7 @@ class DiscordUserMap {
 		 */
 		this._nameToId = {};
 		for (let id in data) {
-			this._nameToId[data[id]] = id;
+			this._nameToId[data[id].toLowerCase()] = id;
 		}
 
 		/**
@@ -106,7 +106,7 @@ class DiscordUserMap {
 				// Check if the mapping exists
 				if (this._nameToId[username] !== id) {
 					// Nope. Create or update it
-					this._nameToId[username] = id;
+					this._nameToId[username.toLowerCase()] = id;
 					this._idToName[id] = username;
 
 					// Save it
@@ -129,7 +129,7 @@ class DiscordUserMap {
 				// Check if the mapping exists
 				if (this._idToName[id] !== username) {
 					// Nope. Create or update it
-					this._nameToId[username] = id;
+					this._nameToId[username.toLowerCase()] = id;
 					this._idToName[id] = username;
 
 					// Save it
@@ -157,8 +157,8 @@ class DiscordUserMap {
 	 *
 	 * @return {String}	The ID this username belongs to
 	 */
-	lookupUsername(id) {
-		return this._nameToId[id];
+	lookupUsername(username) {
+		return this._nameToId[username.toLowerCase()];
 	}
 
 	/**
