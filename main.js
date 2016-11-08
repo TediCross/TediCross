@@ -128,6 +128,8 @@ tgBot.on("text", message => {
 
 		// Iterate over the entities backwards, to not fuck up the offset
 		for (let i = message.entities.length-1; i >= 0; i--) {
+
+			// Select the entity object
 			let e = message.entities[i];
 
 			// Extract the entity part
@@ -139,10 +141,26 @@ tgBot.on("text", message => {
 			// Do something based on entity type
 			switch(e.type) {
 				case "mention":
+				case "text_mention":
 					// A mention. Substitute the Discord user ID if one exists
 					let username = part.substring(1);
 					substitute = dcUsers.lookupUsername(username) ? `<@${dcUsers.lookupUsername(username)}>` : part;
 					break;
+				case "code":
+					// Inline code. Add backticks
+					substitute = "`" + part + "`";
+					break;
+				case "pre":
+					// Code block. Add triple backticks
+					substitute = "```\n" + part + "\n```";
+					break;
+				case "hashtag":
+				case "url":
+				case "bot_command":
+				case "email":
+				case "bold":
+				case "italic":
+				case "text_link":
 				default:
 					// Just leave it as it is
 					break;
