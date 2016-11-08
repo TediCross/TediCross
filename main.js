@@ -59,7 +59,7 @@ dcBot.on("any", e => {
 			dcUsers.mapID(member.user.id).toUsername(member.user.username);
 		});
 	} else if (e.t === "MESSAGE_CREATE") {
-		if(e.d.attachments) {
+		if (e.d.attachments) {
 			e.d.attachments.forEach(attachment => {
 				const req = attachment.url[4] === "s" ? https.get(attachment.url) : http.get(attachment.url);
 				req.on("response", res => {
@@ -119,61 +119,76 @@ dcBot.on("message", (user, userID, channelID, message, event) => {
  * Set up Telegram part *
  ************************/
 
+/**
+ * Converts entities (usernames, code, ...) in Telegram messages to Discord format
+ *
+ * @param {String} text	The text to handle
+ * @param {MessageEntity[]} entities	Array of entities for the text
+ *
+ * ®return {String} The fully converted string
+ */
+function handleTelegramEntities(text, entities = []) {
+	// Don't mess up the original
+	let substitutedText = text;
+
+	// Iterate over the entities backwards, to not fuck up the offset
+	for (let i = entities.length-1; i >= 0; i--) {
+
+		// Select the entity object
+		let e = entities[i];
+
+		// Extract the entity part
+		let part = substitutedText.substring(e.offset, e.offset+e.length);
+
+		// The string to substitute
+		let substitute = part;
+
+		// Do something based on entity type
+		switch(e.type) {
+			case "mention":
+			case "text_mention":
+				// A mention. Substitute the Discord user ID if one exists
+				let username = part.substring(1);
+				substitute = dcUsers.lookupUsername(username) ? `<@${dcUsers.lookupUsername(username)}>` : part;
+				break;
+			case "code":
+				// Inline code. Add backticks
+				substitute = "`" + part + "`";
+				break;
+			case "pre":
+				// Code block. Add triple backticks
+				substitute = "```\n" + part + "\n```";
+				break;
+			case "hashtag":
+			case "url":
+			case "bot_command":
+			case "email":
+			case "bold":
+			case "italic":
+			case "text_link":
+			default:
+				// Just leave it as it is
+				break;
+		}
+
+		// Do the substitution if there is a change
+		if (substitute !== part) {
+			substitutedText = substitutedText.split("");
+			substitutedText.splice(e.offset, e.length, substitute);
+			substitutedText = substitutedText.join("");
+		}
+	}
+
+	// Return the converted string
+	return substitutedText;
+}
+
 // Set up event listener for text messages from Telegram
 tgBot.on("text", message => {
 	debug(`Got message: \`${message.text}\` from Telegram-user: ${message.from.username || message.from.first_name} (${message.from.id})`);
 
-	// Translate any message entities
-	if (message.entities !== undefined) {
-
-		// Iterate over the entities backwards, to not fuck up the offset
-		for (let i = message.entities.length-1; i >= 0; i--) {
-
-			// Select the entity object
-			let e = message.entities[i];
-
-			// Extract the entity part
-			let part = message.text.substring(e.offset, e.offset+e.length);
-
-			// The string to substitute
-			let substitute = part;
-
-			// Do something based on entity type
-			switch(e.type) {
-				case "mention":
-				case "text_mention":
-					// A mention. Substitute the Discord user ID if one exists
-					let username = part.substring(1);
-					substitute = dcUsers.lookupUsername(username) ? `<@${dcUsers.lookupUsername(username)}>` : part;
-					break;
-				case "code":
-					// Inline code. Add backticks
-					substitute = "`" + part + "`";
-					break;
-				case "pre":
-					// Code block. Add triple backticks
-					substitute = "```\n" + part + "\n```";
-					break;
-				case "hashtag":
-				case "url":
-				case "bot_command":
-				case "email":
-				case "bold":
-				case "italic":
-				case "text_link":
-				default:
-					// Just leave it as it is
-					break;
-			}
-
-			// Do the substitution if there is a change
-			if (substitute !== part) {
-				message.text = message.text.split("");
-				message.text.splice(e.offset, e.length, substitute);
-				message.text = message.text.join("");
-			}
-		}
-	}
+	// Convert the text to Discord format
+	message.text = handleTelegramEntities(message.text, message.entities);
 
 	// Pass it on to Discord
 	dcBot.sendMessage({
