@@ -123,14 +123,39 @@ dcBot.on("message", (user, userID, channelID, message, event) => {
 tgBot.on("text", message => {
 	debug(`Got message: \`${message.text}\` from Telegram-user: ${message.from.username || message.from.first_name} (${message.from.id})`);
 
-	// Translate any usernames to discord IDs
-	message.text = message.text.replace(/@(\S+)/, (m, username) => {
-		if (dcUsers.lookupUsername(username)) {
-			return `<@${dcUsers.lookupUsername(username)}>`;
-		} else {
-			return m;
+	// Translate any message entities
+	if (message.entities !== undefined) {
+
+		// Iterate over the entities backwards, to not fuck up the offset
+		for (let i = message.entities.length-1; i >= 0; i--) {
+			let e = message.entities[i];
+
+			// Extract the entity part
+			let part = message.text.substring(e.offset, e.offset+e.length);
+
+			// The string to substitute
+			let substitute = part;
+
+			// Do something based on entity type
+			switch(e.type) {
+				case "mention":
+					// A mention. Substitute the Discord user ID if one exists
+					let username = part.substring(1);
+					substitute = dcUsers.lookupUsername(username) ? `<@${dcUsers.lookupUsername(username)}>` : part;
+					break;
+				default:
+					// Just leave it as it is
+					break;
+			}
+
+			// Do the substitution if there is a change
+			if (substitute !== part) {
+				message.text = message.text.split("");
+				message.text.splice(e.offset, e.length, substitute);
+				message.text = message.text.join("");
+			}
 		}
-	});
+	}
 
 	// Pass it on to Discord
 	dcBot.sendMessage({
