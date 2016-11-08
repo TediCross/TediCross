@@ -40,7 +40,13 @@ class DiscordUserMap {
 		let data = fs.readFileSync(this.filename);
 
 		// Parse it as JSON
-		data = JSON.parse(data);
+		try {
+			data = JSON.parse(data);
+		} catch(e) {
+			// Invalid JSON. Log it, and start with an empty object
+			console.log(`Invalid JSON in ${this.filename}:\n\n${data}\n\nStarting with empty usermap`);
+			data = {};
+		}
 
 		/**
 		 * The mapping between IDs and names
