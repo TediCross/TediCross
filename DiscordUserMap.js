@@ -44,7 +44,7 @@ class DiscordUserMap {
 			data = JSON.parse(data);
 		} catch(e) {
 			// Invalid JSON. Log it, and start with an empty object
-			console.log(`Invalid JSON in ${this.filename}:\n\n${data}\n\nStarting with empty usermap`);
+			console.warn(`Invalid JSON in ${this.filename}:\n\n${data}\n\nStarting with empty usermap`);
 			data = {};
 		}
 
