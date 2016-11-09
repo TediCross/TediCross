@@ -96,7 +96,7 @@ class DiscordUserMap {
 		});
 
 		// Log an error if the write failed
-		p.catch(err => console.error("Writing discord user map failed!", err));
+		p = p.catch(err => console.error("Writing discord user map failed!", err));
 		
 		// Set the new "finishedWriting" promise
 		this._finishedWriting = p;
