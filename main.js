@@ -90,28 +90,37 @@ dcBot.on("message", (user, userID, channelID, message, event) => {
 	if (userID !== settings.discord.botID) {
 		debug(`Got message: \`${message}\` from Discord-user: ${user} (${userID})`);
 
-		// Modify the message to fit Telegram
-		message = message
-		  .replace(/<@!?(\d+)>/g, (m, id) => {	// @ID to @Username
-			if (dcUsers.lookupID(id)) {
-				return `@${dcUsers.lookupID(id)}`;
-			} else {
-				return m;
-			}
-		  })
-		  .replace(/</g, "&lt;")	// < to &lt;
-		  .replace(/>/g, "&gt;")	// > to &gt;
-		  .replace(/&/g, "&amp;")	// & to &amp;
-		  .replace(/\*\*([^*]+)\*\*/g, (m, b) => "<b>" + b + "</b>")	// **text** to <b>text</b>
-		  .replace(/\*([^*]+)\*/g, (m, b) => "<i>" + b + "</i>")	// *text* to <i>text</i>
-		  .replace(/_([^*]+)_/g, (m, b) => "<i>" + b + "</i>")	// _text_ to <i>text</i>
+		// Check if the message came from the correct chat
+		if (channelID == settings.discord.channelID) {
+		// Yup. Modify the message to fit Telegram
+			message = message
+			  .replace(/<@!?(\d+)>/g, (m, id) => {	// @ID to @Username
+				if (dcUsers.lookupID(id)) {
+					return `@${dcUsers.lookupID(id)}`;
+				} else {
+					return m;
+				}
+			  })
+			  .replace(/</g, "&lt;")	// < to &lt;
+			  .replace(/>/g, "&gt;")	// > to &gt;
+			  .replace(/&/g, "&amp;")	// & to &amp;
+			  .replace(/\*\*([^*]+)\*\*/g, (m, b) => "<b>" + b + "</b>")	// **text** to <b>text</b>
+			  .replace(/\*([^*]+)\*/g, (m, b) => "<i>" + b + "</i>")	// *text* to <i>text</i>
+			  .replace(/_([^*]+)_/g, (m, b) => "<i>" + b + "</i>")	// _text_ to <i>text</i>
 
-		// Pass the message on to Telegram
-		tgBot.sendMessage({
-			chat_id: settings.telegram.chat_id,
-			text: `<b>${user}</b>: ${message}`,
-			parse_mode: "HTML"
-		});
+			// Pass the message on to Telegram
+			tgBot.sendMessage({
+				chat_id: settings.telegram.chat_id,
+				text: `<b>${user}</b>: ${message}`,
+				parse_mode: "HTML"
+			});
+		} else {
+			// Tell the sender that this is a private bot
+			dcBot.sendMessage({
+				to: channelID,
+				text: "This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. If you wish to use TediCross yourself, please download and create an in instance. You may ask <@$83182919866122240> for help"
+			});
+		}
 	}
 });
 
@@ -129,7 +138,7 @@ dcBot.on("message", (user, userID, channelID, message, event) => {
  */
 function handleTelegramEntities(text, entities = []) {
 	// Don't mess up the original
-	let substitutedText = text;
+	let substitutedText = text.split("");
 
 	// Iterate over the entities backwards, to not fuck up the offset
 	for (let i = entities.length-1; i >= 0; i--) {
@@ -138,7 +147,7 @@ function handleTelegramEntities(text, entities = []) {
 		let e = entities[i];
 
 		// Extract the entity part
-		let part = substitutedText.substring(e.offset, e.offset+e.length);
+		let part = text.substring(e.offset, e.offset+e.length);
 
 		// The string to substitute
 		let substitute = part;
@@ -173,26 +182,33 @@ function handleTelegramEntities(text, entities = []) {
 
 		// Do the substitution if there is a change
 		if (substitute !== part) {
-			substitutedText = substitutedText.split("");
 			substitutedText.splice(e.offset, e.length, substitute);
-			substitutedText = substitutedText.join("");
 		}
 	}
 
 	// Return the converted string
-	return substitutedText;
+	return substitutedText.join("");
 }
 
 // Set up event listener for text messages from Telegram
 tgBot.on("text", message => {
 	debug(`Got message: \`${message.text}\` from Telegram-user: ${message.from.username || message.from.first_name} (${message.from.id})`);
 
-	// Convert the text to Discord format
-	message.text = handleTelegramEntities(message.text, message.entities);
+	// Check if the message came from the correct group
+	if (message.chat.id == settings.telegram.chat_id) {
+		// Yup. Convert the text to Discord format
+		message.text = handleTelegramEntities(message.text, message.entities);
 
-	// Pass it on to Discord
-	dcBot.sendMessage({
-		to: settings.discord.channelID,
-		message: `**${message.from.username || message.from.first_name}:** ${message.text}`
-	});
+		// Pass it on to Discord
+		dcBot.sendMessage({
+			to: settings.discord.channelID,
+			message: `**${message.from.username || message.from.first_name}:** ${message.text}`
+		});
+	} else {
+		// Tell the sender that this is a private bot
+		tgBot.sendMessage({
+			chat_id: message.chat.id,
+			text: "This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. If you wish to use TediCross yourself, please download and create an in instance. You may ask @Suppen for help"
+		});
+	}
 });
