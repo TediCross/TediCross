@@ -4,15 +4,17 @@
  * Import important stuff *
  **************************/
 
+// General stuff
 const stream = require("stream");
 const fs = require("fs");
-const http = require("http");
-const https = require("https");
+const request = require("request");
 
+// Telegram stuff
 const { BotAPI, InputFile } = require("teleapiwrapper");
-const Discord = require("discord.io");
 const updateGetter = require("./updategetter.js");
 
+// Discord stuff
+const Discord = require("discord.js");
 const DiscordUserMap = require("./DiscordUserMap");
 
 /**************************
@@ -37,63 +39,59 @@ const tgBot = new BotAPI(settings.telegram.auth.token);
 updateGetter(tgBot, settings.telegram.timeout);
 
 // Create a Discord bot
-const dcBot = new Discord.Client({
-	token: settings.discord.auth.token,
-	autorun: true
-});
+const dcBot = new Discord.Client();
+// The bot is started at the bottom (dcBot.login())
 
 // Mapping between usernames and IDs
 const dcUsers = new DiscordUserMap(settings.discord.usersfile);
 
 // Log data when the bots are ready
-dcBot.on("ready", () => console.log(`Discord: ${dcBot.username} (${dcBot.id})`));
+dcBot.on("ready", () => console.log(`Discord: ${dcBot.user.username} (${dcBot.user.id})`));
 tgBot.getMe().then(bot => console.log(`Telegram: ${bot.username} (${bot.id})`));
 
 /***************************
  * Set up the Discord part *
  ***************************/
 
-dcBot.on("any", e => {
-	if (e.t === "GUILD_CREATE") {
-		e.d.members.forEach(member => {
-			dcUsers.mapID(member.user.id).toUsername(member.user.username);
-		});
-	} else if (e.t === "MESSAGE_CREATE") {
-		if (e.d.attachments) {
-			e.d.attachments.forEach(attachment => {
-				const req = attachment.url[4] === "s" ? https.get(attachment.url) : http.get(attachment.url);
-				req.on("response", res => {
-					const s = new stream.PassThrough();
-					tgBot.sendPhoto({
-						chat_id: settings.telegram.chat_id,
-						photo: new InputFile(s, attachment.url.split("/").pop())
-					});
-					res.pipe(s);
-				});
-			});
+// Save the bot's known users when the bot is ready
+dcBot.on("ready", () => {
+	// Save the bot's usermap
+	for (let [userId, {username}] of dcBot.users) {
+
+		// Store the UserID/Username mapping
+		if (username && userId) {
+			dcUsers.mapID(userId).toUsername(username);
 		}
 	}
 });
 
-// Listen for presence
-dcBot.on("presence", (user, userID) => {
+// Listen for presence to get name/ID mapping
+dcBot.on("presenceUpdate", (oldMember, newMember) => {
+	// Get info about the user
+	let userName = newMember.user.username;
+	let userId = newMember.user.id;
+
 	// Store the UserID/Username mapping
-	dcUsers.mapID(userID).toUsername(user);
+	dcUsers.mapID(userId).toUsername(userName);
 });
 
 // Listen for Discord messages
-dcBot.on("message", (user, userID, channelID, message, event) => {
+dcBot.on("message", message => {
+	// Get info about the sender
+	let senderName = message.author.username;
+	let senderId = message.author.id;
+
 	// Store the UserID/Username mapping
-	dcUsers.mapID(userID).toUsername(user);
+	dcUsers.mapID(senderId).toUsername(senderName);
 
-	// Ignore own messages
-	if (userID !== settings.discord.botID) {
-		debug(`Got message: \`${message}\` from Discord-user: ${user} (${userID})`);
+	// Don't do anything with the bot's own messages
+	if (senderId !== settings.discord.botID) {
 
-		// Check if the message came from the correct chat
-		if (channelID == settings.discord.channelID) {
-		// Yup. Modify the message to fit Telegram
-			message = message
+		// Check if the message is from the correct chat
+		if (message.channel.id === settings.discord.channelID) {
+
+			// Modify the message to fit Telegram
+			let processedMessage = message.cleanContent
 			  .replace(/<@!?(\d+)>/g, (m, id) => {	// @ID to @Username
 				if (dcUsers.lookupID(id)) {
 					return `@${dcUsers.lookupID(id)}`;
@@ -101,28 +99,22 @@ dcBot.on("message", (user, userID, channelID, message, event) => {
 					return m;
 				}
 			  })
-			  .replace(/</g, "&lt;")	// < to &lt;
-			  .replace(/>/g, "&gt;")	// > to &gt;
-			  .replace(/&/g, "&amp;")	// & to &amp;
-			  .replace(/\*\*([^*]+)\*\*/g, (m, b) => "<b>" + b + "</b>")	// **text** to <b>text</b>
-			  .replace(/\*([^*]+)\*/g, (m, b) => "<i>" + b + "</i>")	// *text* to <i>text</i>
-			  .replace(/_([^*]+)_/g, (m, b) => "<i>" + b + "</i>")	// _text_ to <i>text</i>
 
-			// Pass the message on to Telegram
+			// Pass it on to Telegram
 			tgBot.sendMessage({
 				chat_id: settings.telegram.chat_id,
-				text: `<b>${user}</b>: ${message}`,
-				parse_mode: "HTML"
+				text: `**${senderName}:** ${processedMessage}`,
+				parse_mode: "Markdown"
 			});
 		} else {
-			// Tell the sender that this is a private bot
-			dcBot.sendMessage({
-				to: channelID,
-				text: "This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. If you wish to use TediCross yourself, please download and create an in instance. You may ask <@$83182919866122240> for help"
-			});
+			// Not from the correct chat. Inform the sender that this is a private bot
+			message.reply("This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. If you wish to use TediCross yourself, please download and create an in instance. You may ask <@$83182919866122240> for help");
 		}
 	}
 });
+
+// Start the Discord bot
+dcBot.login(settings.discord.auth.token);
 
 /************************
  * Set up Telegram part *
@@ -199,11 +191,11 @@ tgBot.on("text", message => {
 		// Yup. Convert the text to Discord format
 		message.text = handleTelegramEntities(message.text, message.entities);
 
+		// Find out who the message is from
+		let fromName = message.from.username || message.from.first_name;
+
 		// Pass it on to Discord
-		dcBot.sendMessage({
-			to: settings.discord.channelID,
-			message: `**${message.from.username || message.from.first_name}:** ${message.text}`
-		});
+		dcBot.channels.find("id", settings.discord.channelID).sendMessage(`**${fromName}:** ${message.text}`);
 	} else {
 		// Tell the sender that this is a private bot
 		tgBot.sendMessage({

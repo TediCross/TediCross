@@ -71,6 +71,9 @@ class DiscordUserMap {
 		 * @private
 		 */
 		this._finishedWriting = Promise.resolve();
+
+		// Make the _saveMap method debounced, to not save every damn change
+		this._saveMap = _.debounce(this._saveMap, 500);
 	}
 
 	/**
