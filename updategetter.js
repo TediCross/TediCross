@@ -44,9 +44,11 @@ function updateGetter(bot, timeout = 60) {
 					// This is a new message
 					emitter.emit("message", update.message);
 
-					// Is it a text message?
-					if (update.message.text !== undefined) {
+					// Determine type
+					if (update.message.text !== undefined) {	// Text message
 						emitter.emit("text", update.message);
+					} else if (update.message.photo) {	// Photo
+						emitter.emit("photo", update.message);
 					}
 				}
 			});

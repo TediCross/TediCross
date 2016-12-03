@@ -204,3 +204,46 @@ tgBot.on("text", message => {
 		});
 	}
 });
+
+// Set up event listener for photo messages from Telegram
+tgBot.on("photo", message => {
+	debug(`Got photo from Telegram-user: ${message.from.username || message.from.first_name} (${message.from.id})`);
+
+	// Check if the message came from the correct group
+	if (message.chat.id == settings.telegram.chat_id) {
+		// Yup. Convert the caption to Discord format
+		message.caption = handleTelegramEntities(message.caption, message.entities);
+
+		// Find out who the message is from
+		let fromName = message.from.username || message.from.first_name;
+
+		// Download the photo
+		tgBot.getFile({file_id: message.photo[message.photo.length-1].file_id})
+		  .then(file => tgBot.helperGetFileStream(file))
+		  .then(fileStream => {
+			// Create an array of buffers to store the file in
+			let buffers = [];
+
+			// Fetch the file
+			fileStream.on("data", chunk => {
+				buffers.push(chunk);
+			});
+
+			// Send the file when it is fetched
+			fileStream.on("end", () => {
+				dcBot.channels.find("id", settings.discord.channelID).sendFile(
+					Buffer.concat(buffers),
+					"photo.jpg",	// Telegram will convert it to jpg no matter what filetype is actually sent
+					message.caption
+				);
+			});
+		  })
+		  .catch(err => console.log(err));
+	} else {
+		// Tell the sender that this is a private bot
+		tgBot.sendMessage({
+			chat_id: message.chat.id,
+			text: "This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. If you wish to use TediCross yourself, please download and create an in instance. You may ask @Suppen for help"
+		});
+	}
+});
