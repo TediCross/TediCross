@@ -77,6 +77,7 @@ dcBot.on("presenceUpdate", (oldMember, newMember) => {
 
 // Listen for Discord messages
 dcBot.on("message", message => {
+console.log(message);
 	// Get info about the sender
 	let senderName = message.author.username;
 	let senderId = message.author.id;
@@ -106,9 +107,9 @@ dcBot.on("message", message => {
 				text: `**${senderName}:** ${processedMessage}`,
 				parse_mode: "Markdown"
 			});
-		} else {
-			// Not from the correct chat. Inform the sender that this is a private bot
-			message.reply("This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. If you wish to use TediCross yourself, please download and create an instance. You may ask <@$83182919866122240> for help");
+		} else if (message.channel.guild.id !== settings.discord.serverID) {	// Check if it is the correct server
+			// Inform the sender that this is a private bot
+			message.reply("This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. If you wish to use TediCross yourself, please download and create an instance. You may ask @Suppen for help");
 		}
 	}
 });

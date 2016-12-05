@@ -12,6 +12,7 @@
 		},
 		"channelID": "<DISCORD CHANNEL ID HERE>",
 		"botID": "<BOT ID HERE>",
+		"serverID": "<SERVER (GUILD) ID HERE>",
 		"usersfile": "discord_users.json"
 	},
 	"debug": true
