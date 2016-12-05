@@ -77,7 +77,6 @@ dcBot.on("presenceUpdate", (oldMember, newMember) => {
 
 // Listen for Discord messages
 dcBot.on("message", message => {
-console.log(message);
 	// Get info about the sender
 	let senderName = message.author.username;
 	let senderId = message.author.id;
