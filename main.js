@@ -23,13 +23,6 @@ const DiscordUserMap = require("./DiscordUserMap");
 
 const settings = JSON.parse(fs.readFileSync("settings.json"));
 
-/*************************************
- * Get and set up the debug function *
- *************************************/
-
-const debug = require("./debugFunc");
-debug.doDebug = settings.debug;
-
 /*************
  * TediCross *
  *************/
@@ -47,7 +40,12 @@ const dcUsers = new DiscordUserMap(settings.discord.usersfile);
 
 // Log data when the bots are ready
 dcBot.on("ready", () => console.log(`Discord: ${dcBot.user.username} (${dcBot.user.id})`));
-tgBot.getMe().then(bot => console.log(`Telegram: ${bot.username} (${bot.id})`));
+tgBot.getMe().then(bot => {
+	console.log(`Telegram: ${bot.username} (${bot.id})`)
+
+	// Put the data on the bot
+	tgBot.me = bot;
+});
 
 /***************************
  * Set up the Discord part *
@@ -77,6 +75,18 @@ dcBot.on("presenceUpdate", (oldMember, newMember) => {
 
 // Listen for Discord messages
 dcBot.on("message", message => {
+
+	// Check if this is a request for server info
+	if (message.cleanContent.toLowerCase() === `@${dcBot.user.username} channelinfo`.toLowerCase()) {
+		// It is. Give it
+		message.reply(
+			"channelID: " + message.channel.id + "\n" +
+			"serverID: " + message.guild.id + "\n" +
+			"botID: " + dcBot.user.id
+		);
+		return;
+	}
+
 	// Get info about the sender
 	let senderName = message.author.username;
 	let senderId = message.author.id;
@@ -102,7 +112,7 @@ dcBot.on("message", message => {
 
 			// Pass it on to Telegram
 			tgBot.sendMessage({
-				chat_id: settings.telegram.chat_id,
+				chat_id: settings.telegram.chatID,
 				text: `**${senderName}:** ${processedMessage}`,
 				parse_mode: "Markdown"
 			});
@@ -189,23 +199,31 @@ function handleTelegramEntities(text, entities = []) {
  */
 function telegramWrapFunction(func) {
 	return function(message) {
-		// Check if the message came from the correct group
-		if (message.chat.id == settings.telegram.chat_id) {
-			// Yup. Do the thing
-			func(message);
-		} else {
-			// Tell the sender that this is a private bot
+		// Check if this is a request for chat info
+		if (message.text !== undefined && tgBot.me !== undefined && message.text.toLowerCase() === `@${tgBot.me.username} chatinfo`.toLowerCase()) {
+			// It is. Give it
 			tgBot.sendMessage({
 				chat_id: message.chat.id,
-				text: "This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. If you wish to use TediCross yourself, please download and create an instance. You may ask @Suppen for help"
+				text: "chatID: " + message.chat.id
 			});
+		} else {
+			// Check if the message came from the correct group
+			if (message.chat.id == settings.telegram.chatID) {
+				// Yup. Do the thing
+				func(message);
+			} else {
+				// Tell the sender that this is a private bot
+				tgBot.sendMessage({
+					chat_id: message.chat.id,
+					text: "This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. If you wish to use TediCross yourself, please download and create an instance. You may ask @Suppen for help"
+				});
+			}
 		}
 	}
 }
 
 // Set up event listener for text messages from Telegram
 tgBot.on("text", telegramWrapFunction(message => {
-	debug(`Got message: \`${message.text}\` from Telegram-user: ${message.from.username || message.from.first_name} (${message.from.id})`);
 
 	// Convert the text to Discord format
 	message.text = handleTelegramEntities(message.text, message.entities);
@@ -219,7 +237,6 @@ tgBot.on("text", telegramWrapFunction(message => {
 
 // Set up event listener for photo messages from Telegram
 tgBot.on("photo", telegramWrapFunction(message => {
-	debug(`Got photo from Telegram-user: ${message.from.username || message.from.first_name} (${message.from.id})`);
 
 	// Convert the caption to Discord format
 	message.caption = handleTelegramEntities(message.caption, message.entities);
