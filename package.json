@@ -29,6 +29,6 @@
     "discord.js": "^10.0.1",
     "lodash": "^4.17.2",
     "request": "^2.79.0",
-    "teleapiwrapper": "^2.1.1"
+    "teleapiwrapper": "^2.3.0"
   }
 }
