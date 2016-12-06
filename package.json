@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "check": "./node_modules/.bin/happiness",
-    "generate-example-settings": "node taskrunner.js & sleep 1 & touch settings.json"
+    "generate-example-settings": "node taskrunner.js & sleep 1 & touch settings.json",
+    "start": "node main.js"
   },
   "repository": {
     "type": "git",
@@ -15,7 +16,8 @@
   "keywords": [
     "telegram",
     "discord",
-    "cross"
+    "cross",
+    "bridge"
   ],
   "author": "Thomas Rory Gummerson <trgwii@hotmail.com> (http://trgwii.no)",
   "license": "MIT",
@@ -28,9 +30,5 @@
     "lodash": "^4.17.2",
     "request": "^2.79.0",
     "teleapiwrapper": "^2.1.1"
-  },
-  "devDependencies": {
-    "happiness": "^7.1.2",
-    "why-is-node-running": "^1.2.2"
   }
 }
