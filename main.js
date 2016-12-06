@@ -77,7 +77,7 @@ dcBot.on("presenceUpdate", (oldMember, newMember) => {
 dcBot.on("message", message => {
 
 	// Check if this is a request for server info
-	if (message.cleanContent.toLowerCase() === `@${dcBot.user.username} channelinfo`.toLowerCase()) {
+	if (message.cleanContent.toLowerCase() === `@${dcBot.user.username} chatinfo`.toLowerCase()) {
 		// It is. Give it
 		message.reply(
 			"channelID: " + message.channel.id + "\n" +
