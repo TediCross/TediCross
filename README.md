@@ -5,7 +5,17 @@ TediCross is a bot which bridges a chat in [Telegram](https://telegram.org) with
 There is no public TediCross bot. You need to host it yourself. One bot per bridge. To host a bot, you need [nodejs](https://nodejs.org). Version 7 has been tested, but it probably works for v4 and up.
 
 
-Step by step:
+Features & known bugs
+---------------------
+
+Currently, the bot is able to relay ordinary text messages from Telegram to Discord and vice versa. Formatting of the messages, like @-mentions, inline- and block-style code, URLs etc. work.
+
+Sending images works from Telegram to Discord, but not the other way. It will eventually work both ways
+
+For a list of known bugs, or to submit a bug or feature request, see this repo's "Issues" tab
+
+
+Step by step installation:
 -------------
  1. Install nodejs
  2. Clone this git repo
@@ -24,5 +34,4 @@ Done! You now have a nice bridge between a Telegram chat and a Discord channel
 
 
 ### Questions?
-If you need any help, ask @Suppen on Telegram. If you have feature requests or bug reports, file an issue in this repo.
-
+If you need any help, ask @Suppen on Telegram
