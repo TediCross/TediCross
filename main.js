@@ -115,7 +115,11 @@ dcBot.on("message", message => {
 				chat_id: settings.telegram.chatID,
 				text: `**${senderName}:** ${processedMessage}`,
 				parse_mode: "Markdown"
-			});
+			  })
+			  .catch(err => {
+				// Hmm... Could not send the message for some reason TODO Do something about this
+				console.err("Could not relay message to Telegram");
+			  });
 		} else if (message.channel.guild.id !== settings.discord.serverID) {	// Check if it is the correct server
 			// Inform the sender that this is a private bot
 			message.reply("This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. If you wish to use TediCross yourself, please download and create an instance. You may ask @Suppen for help");
@@ -140,7 +144,7 @@ dcBot.login(settings.discord.auth.token);
  */
 function handleTelegramEntities(text, entities = []) {
 	// Don't mess up the original
-	let substitutedText = text.split("");
+	let substitutedText = text !== undefined ? text.split("") : [""];
 
 	// Iterate over the entities backwards, to not fuck up the offset
 	for (let i = entities.length-1; i >= 0; i--) {
@@ -216,7 +220,11 @@ function telegramWrapFunction(func) {
 				tgBot.sendMessage({
 					chat_id: message.chat.id,
 					text: "This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. If you wish to use TediCross yourself, please download and create an instance. You may ask @Suppen for help"
-				});
+				  })
+				  .catch(err => {
+					// Hmm... Could not send the message for some reason TODO Do something about this
+					console.err("Could not relay message to Telegram");
+				  });
 			}
 		}
 	}
@@ -261,7 +269,7 @@ tgBot.on("photo", telegramWrapFunction(message => {
 			dcBot.channels.find("id", settings.discord.channelID).sendFile(
 				Buffer.concat(buffers),
 				"photo.jpg",	// Telegram will convert it to jpg no matter what filetype is actually sent
-				message.caption
+				`**${fromName}:** ${message.caption}`
 			);
 		});
 	  })
