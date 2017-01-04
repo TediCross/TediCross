@@ -108,7 +108,8 @@ dcBot.on("message", message => {
 				} else {
 					return m;
 				}
-			  })
+			  });
+
 
 			// Pass it on to Telegram
 			tgBot.sendMessage({
@@ -118,7 +119,7 @@ dcBot.on("message", message => {
 			  })
 			  .catch(err => {
 				// Hmm... Could not send the message for some reason TODO Do something about this
-				console.err("Could not relay message to Telegram");
+				console.error("Could not relay message to Telegram:", err);
 			  });
 		} else if (message.channel.guild.id !== settings.discord.serverID) {	// Check if it is the correct server
 			// Inform the sender that this is a private bot
@@ -223,7 +224,7 @@ function telegramWrapFunction(func) {
 				  })
 				  .catch(err => {
 					// Hmm... Could not send the message for some reason TODO Do something about this
-					console.err("Could not relay message to Telegram");
+					console.error("Could not provide chatinfo:", err, message);
 				  });
 			}
 		}
@@ -273,5 +274,7 @@ tgBot.on("photo", telegramWrapFunction(message => {
 			);
 		});
 	  })
-	  .catch(err => console.log(err));
+	  .catch(err => {
+		console.log("Something went wrong when relaying a photo from Telegram to Discord:", err);
+	  });
 }));
