@@ -38,5 +38,5 @@ Done! You now have a nice bridge between a Telegram chat and a Discord channel
 Questions?
 ----------
 
-If you need any help, ask [@Suppen](https://telegram.me/Suppen) on Telegram
+If you need any help, ask [@Suppen](https://t.me/Suppen) on Telegram
 
