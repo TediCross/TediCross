@@ -17,7 +17,7 @@ For a list of known bugs, or to submit a bug or feature request, see this repo's
 
 Step by step installation:
 -------------
- 1. Install nodejs
+ 1. Install [nodejs](https://nodejs.org)
  2. Clone this git repo
  3. Enter the repo
  4. `npm install`
