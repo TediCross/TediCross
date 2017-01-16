@@ -114,7 +114,7 @@ dcBot.on("message", message => {
 			// Pass it on to Telegram
 			tgBot.sendMessage({
 				chat_id: settings.telegram.chatID,
-				text: `**${senderName}:** ${processedMessage}`,
+				text: `*${senderName}*: ${processedMessage}`,
 				parse_mode: "Markdown"
 			  })
 			  .catch(err => {
@@ -241,7 +241,7 @@ tgBot.on("text", telegramWrapFunction(message => {
 	let fromName = message.from.username || message.from.first_name;
 
 	// Pass it on to Discord
-	dcBot.channels.find("id", settings.discord.channelID).sendMessage(`**${fromName}:** ${message.text}`);
+	dcBot.channels.find("id", settings.discord.channelID).sendMessage(`**${fromName}**: ${message.text}`);
 }));
 
 // Set up event listener for photo messages from Telegram
@@ -270,7 +270,7 @@ tgBot.on("photo", telegramWrapFunction(message => {
 			dcBot.channels.find("id", settings.discord.channelID).sendFile(
 				Buffer.concat(buffers),
 				"photo.jpg",	// Telegram will convert it to jpg no matter what filetype is actually sent
-				`**${fromName}:** ${message.caption}`
+				`**${fromName}**: ${message.caption}`
 			);
 		});
 	  })
