@@ -81,8 +81,7 @@ dcBot.on("message", message => {
 		// It is. Give it
 		message.reply(
 			"channelID: " + message.channel.id + "\n" +
-			"serverID: " + message.guild.id + "\n" +
-			"botID: " + dcBot.user.id
+			"serverID: " + message.guild.id + "\n"
 		);
 		return;
 	}
@@ -95,7 +94,7 @@ dcBot.on("message", message => {
 	dcUsers.mapID(senderId).toUsername(senderName);
 
 	// Don't do anything with the bot's own messages
-	if (senderId !== settings.discord.botID) {
+	if (senderId !== dcBot.user.id) {
 
 		// Check if the message is from the correct chat
 		if (message.channel.id === settings.discord.channelID) {
