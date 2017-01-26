@@ -107,13 +107,25 @@ dcBot.on("message", message => {
 				} else {
 					return m;
 				}
-			  });
-
+			  })
+			  .replace(/&/g, "&amp;")	// This and the two next makes HTML the user inputs harmless
+			  .replace(/</g, "&lt;")
+			  .replace(/>/g, "&gt;")
+			  .replace(/```\S+\n/g, "```")	// Ignore the language of code blocks. Telegram can't really do anything with that info
+			  .replace(/```((.|\s)+?)```/g, (match, code) => {
+				return `<pre>${code}</pre>`;	// FIXME Doesn't work
+			  })
+			  .replace(/`([^`]+)`/g, (match, code) => `<code>${code}</code>`)
+			  .replace(/__(.*?)__/g, (match, text) => `<b>${text}</b>`)	// Telegram doesn't support '<u>', so make it bold instead
+			  .replace(/\*\*(.*?)\*\*/g, (match, text) => `<b>${text}</b>`)
+			  .replace(/(\*|_)(.*?)\1/g, (match, char, text) => `<i>${text}</i>`)
+			  .trim();
 
 			// Pass it on to Telegram
 			tgBot.sendMessage({
 				chat_id: settings.telegram.chatID,
-				text: `${senderName}: ${processedMessage}`
+				text: `<b>${senderName}:</b>\n${processedMessage}`,
+				parse_mode: "HTML"
 			  })
 			  .catch(err => {
 				// Hmm... Could not send the message for some reason TODO Do something about this
