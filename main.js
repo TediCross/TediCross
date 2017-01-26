@@ -113,8 +113,7 @@ dcBot.on("message", message => {
 			// Pass it on to Telegram
 			tgBot.sendMessage({
 				chat_id: settings.telegram.chatID,
-				text: `*${senderName}*: ${processedMessage}`,
-				parse_mode: "Markdown"
+				text: `${senderName}: ${processedMessage}`
 			  })
 			  .catch(err => {
 				// Hmm... Could not send the message for some reason TODO Do something about this
