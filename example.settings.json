@@ -1,17 +1,17 @@
 {
 	"telegram": {
 		"auth": {
-			"token": "<BOT TOKEN HERE>"
+			"token": "BOT TOKEN HERE"
 		},
 		"timeout": 5,
-		"chatID": "<TELEGRAM CHAT ID HERE>"
+		"chatID": "TELEGRAM CHAT ID HERE"
 	},
 	"discord": {
 		"auth": {
-			"token": "<BOT TOKEN HERE>"
+			"token": "BOT TOKEN HERE"
 		},
-		"channelID": "<DISCORD CHANNEL ID HERE>",
-		"serverID": "<SERVER (GUILD) ID HERE>",
+		"channelID": "DISCORD CHANNEL ID HERE",
+		"serverID": "SERVER (GUILD) ID HERE",
 		"usersfile": "discord_users.json"
 	}
 }
