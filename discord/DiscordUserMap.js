@@ -7,6 +7,23 @@
 const fs = require("fs");
 const _ = require("lodash");
 
+/** Map containing instances of DiscordUserMap objects */
+const instanceMap = new Proxy({}, {
+	get(target, name) {
+		// Check if the instance exists
+		if (!(name in target)) {
+			// Nope. Create a dummy entry to tell the constructor everything is OK
+			target[name] = "Kake";
+
+			// Create the instance
+			target[name] = new DiscordUserMap(name);
+		}
+
+		// Return the instance
+		return target[name];
+	}
+});
+
 /****************************
  * The DiscordUserMap class *
  ****************************/
@@ -19,8 +36,16 @@ class DiscordUserMap {
 	 * Creates a new mapping betweein user IDs and usernames
 	 *
 	 * @param {String} filename	Name of the file read the map from and store it to
+	 *
+	 * @private
 	 */
 	constructor(filename) {
+		// Check if this instance is allowed to be created
+		if (instanceMap[filename] !== "Kake") {
+			// Nope. Complain
+			throw new Error("Not authorized to create an instance. Please go through the 'getInstance' function of the class");
+		}
+
 		/**
 		 * The filename this map is associated with
 		 *
@@ -192,6 +217,13 @@ class DiscordUserMap {
 	 */
 	get idToNameMap() {
 		return _.clone(this._idToName);
+	}
+
+	/**
+	 * Tries to get an existing instance of a DiscordUserMap. It there is none, it will create one
+	 */
+	static getInstance(filename) {
+		return instanceMap[filename];
 	}
 }
 
