@@ -19,6 +19,8 @@ For a list of known bugs, or to submit a bug or feature request, see this repo's
 
 Step by step installation:
 -------------
+Setting up the bot requires basic knowledge of the command line, which is bash or similar on Linux/Mac, and cmd.exe in Windows
+
  1. Install [nodejs](https://nodejs.org)
  2. Clone this git repo, or download it as a zip or whatever
  3. Enter the repo
@@ -41,20 +43,20 @@ FAQ
 
 Thanks to Etheral for helping make this
 
-Q: I'm new to this! How do I enter the repo and start issuing commands?
-A: Open up your Windows command prompt - cmd.exe - and navigate to the directory in which you extracted TediCross. You can use the `cd [directory]` command to navigate there one step at a time, ex. `cd downloads`. 
-
-Q: When I enter "npm start", my cmd window starts producing endless errors!
-A: That might mean you're missing the bot token for Telegram or Discord - both of those should be inserted into their places in the settings.json file.
-
-Q: The bot responds with a generic help message when I ask it for info!
-A: The command to write is "@botname chatinfo", not "@botname /chatinfo"
-
-Q: My bot is responding to messages sent in one of the chats, but it's responding with a generic help message!
-A: Doublecheck the Telegram and Discord chat IDs you put into settings.json. Group chats in Telegram always have a negative ID, so they start with a "-"
-
-Q: I see in the Git repo there's an update to the bot. How do I update it?
-A: If you cloned the repo, it's as simple as using the command `git pull`. If you downloaded it as a zip, or somehow else, download it again and copy your settings file
+> Q: I'm new to this! How do I enter the repo and start issuing commands?
+> A: Open up your command prompt - bash or similar in Linux/Mac or cmd.exe in Windows - and navigate to the directory in which you extracted TediCross. You can use the `cd [directory]` command to navigate there one step at a time, ex. `cd Downloads`. 
+> 
+> Q: When I enter "npm start", my cmd window starts producing endless errors!
+> A: That might mean you're missing the bot token for Telegram or Discord - both of those should be inserted into their places in the settings.json file.
+> 
+> Q: The bot responds with a generic help message when I ask it for info!
+> A: The command to write is "@botname chatinfo", not "@botname /chatinfo"
+> 
+> Q: My bot is responding to messages sent in one of the chats, but it's responding with a generic help message!
+> A: Doublecheck the Telegram and Discord chat IDs you put into settings.json. Group chats in Telegram always have a negative ID, so they start with a "-"
+> 
+> Q: I see in the Git repo there's an update to the bot. How do I update it?
+> A: If you cloned the repo, it's as simple as using the command `git pull`. If you downloaded it as a zip, or somehow else, download it again and copy your settings file. It may or may not be necessary to run `npm install` again
 
 
 Questions?
