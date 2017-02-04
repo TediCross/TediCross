@@ -10,8 +10,6 @@ Features & known bugs
 
 Currently, the bot is able to relay ordinary text messages from Telegram to Discord and vice versa. Formatting of the messages, like @-mentions, inline- and block-style code, URLs etc. work.
 
-Sending images works from Telegram to Discord, but not the other way. It will eventually work both ways
-
 The bot sometimes crashes for reasons unknown. Just restart the bot, and it works again.
 
 For a list of known bugs, or to submit a bug or feature request, see this repo's "Issues" tab

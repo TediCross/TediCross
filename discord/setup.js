@@ -6,6 +6,7 @@
 
 const settings = require("../settings");
 const DiscordUserMap = require("./DiscordUserMap");
+const md2html = require("./md2html");
 
 /**********************
  * The setup function *
@@ -69,36 +70,34 @@ function setup(dcBot, tgBot) {
 			// Check if the message is from the correct chat
 			if (message.channel.id === settings.discord.channelID) {
 
+				// Keep track of the promises made when sending
+				let promises = [];
+
 				// Modify the message to fit Telegram
-				let processedMessage = message.cleanContent
-				  .replace(/<@!?(\d+)>/g, (m, id) => {	// @ID to @Username
-					if (dcUsers.lookupID(id)) {
-						return `@${dcUsers.lookupID(id)}`;
-					} else {
-						return m;
-					}
-				  })
-				  .replace(/&/g, "&amp;")	// This and the two next makes HTML the user inputs harmless
-				  .replace(/</g, "&lt;")
-				  .replace(/>/g, "&gt;")
-				  .replace(/```\S+\n/g, "```")	// Ignore the language of code blocks. Telegram can't really do anything with that info
-				  .replace(/```((.|\s)+?)```/g, (match, code) => `<pre>${code}</pre>`)
-				  .replace(/`([^`]+)`/g, (match, code) => `<code>${code}</code>`)
-				  .replace(/__(.*?)__/g, (match, text) => `<b>${text}</b>`)	// Telegram doesn't support '<u>', so make it bold instead
-				  .replace(/\*\*(.*?)\*\*/g, (match, text) => `<b>${text}</b>`)
-				  .replace(/(\*|_)(.*?)\1/g, (match, char, text) => `<i>${text}</i>`)
-				  .trim();
+				let processedMessage = md2html(message.cleanContent);
+
+				// Check for attachments and pass them on
+				promises = promises.concat(
+					message.attachments.map(({url}) => tgBot.sendMessage({
+						chat_id: settings.telegram.chatID,
+						text: url
+					}))
+				);
 
 				// Pass it on to Telegram
-				tgBot.sendMessage({
-					chat_id: settings.telegram.chatID,
-					text: `<b>${senderName}:</b>\n${processedMessage}`,
-					parse_mode: "HTML"
-				  })
-				  .catch(err => {
+				promises.push(
+					tgBot.sendMessage({
+						chat_id: settings.telegram.chatID,
+						text: `<b>${senderName}:</b>\n${processedMessage}`,
+						parse_mode: "HTML"
+					})
+				);
+
+				// Check for errors
+				Promise.all(promises).catch(err => {
 					// Hmm... Could not send the message for some reason TODO Do something about this
 					console.error("Could not relay message to Telegram:", err);
-				  });
+				});
 			} else if (message.channel.guild.id !== settings.discord.serverID) {	// Check if it is the correct server
 				// Inform the sender that this is a private bot
 				message.reply("This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. If you wish to use TediCross yourself, please download and create an instance. You may ask @Suppen for help");
