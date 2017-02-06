@@ -88,7 +88,7 @@ function setup(dcBot, tgBot) {
 				promises.push(
 					tgBot.sendMessage({
 						chat_id: settings.telegram.chatID,
-						text: `<b>${senderName}:</b>\n${processedMessage}`,
+						text: `<b>${senderName}</b>\n${processedMessage}`,
 						parse_mode: "HTML"
 					})
 				);

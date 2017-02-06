@@ -52,7 +52,7 @@ function setup(tgBot, dcBot) {
 		}
 
 		// Pass it on to Discord
-		dcBot.channels.find("id", settings.discord.channelID).sendMessage(`**${fromName}**: ${message.text}`);
+		dcBot.channels.get(settings.discord.channelID).sendMessage(`**${fromName}**\n${message.text}`);
 	}, tgBot));
 
 	// Set up event listener for photo messages from Telegram
@@ -78,10 +78,10 @@ function setup(tgBot, dcBot) {
 
 			// Send the file when it is fetched
 			fileStream.on("end", () => {
-				dcBot.channels.find("id", settings.discord.channelID).sendFile(
+				dcBot.channels.get(settings.discord.channelID).sendFile(
 					Buffer.concat(buffers),
 					"photo.jpg",	// Telegram will convert it to jpg no matter what filetype is actually sent
-					`**${fromName}**: ${message.caption}`
+					`**${fromName}**:\n${message.caption}`
 				);
 			});
 		  })
