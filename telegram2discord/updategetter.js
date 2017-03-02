@@ -47,16 +47,15 @@ function updateGetter(bot, timeout = 60) {
 					emitter.emit("message", message);
 
 					// Determine type
-					let file = message.audio || message.document || message.photo || message.sticker || message.video || message.voice || null;
 					if (update.message.text !== undefined) {	// Text message
 						emitter.emit("text", message);
-					} else if (file !== null) {	// Some kind of file
-						if (message.photo) {
-							emitter.emit("photo", message);	// Photo
-						} else if (message.document) {
-							emitter.emit("document", message);	// Document
-						}
-					} 
+					} else if (message.photo) {
+						emitter.emit("photo", message);	// Photo
+					} else if (message.document) {
+						emitter.emit("document", message);	// Document
+					} else if (message.audio) {
+						emitter.emit("audio", message);	// Audio
+					}
 				}
 			});
 		  })

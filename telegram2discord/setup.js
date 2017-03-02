@@ -4,6 +4,8 @@
  * Import important stuff *
  **************************/
 
+const fs = require("fs");
+
 const updateGetter = require("./updategetter");
 const settings = require("../settings");
 const handleEntities = require("./handleEntities");
@@ -97,7 +99,7 @@ function setup(tgBot, dcBot) {
 		// Find out who the message is from
 		let fromName = getDisplayName(message.from);
 
-		// Download the photo
+		// Download the document
 		tgBot.getFile({file_id: message.document.file_id})
 		  .then(file => tgBot.helperGetFileStream(file))
 		  .then(fileStream => {
@@ -114,6 +116,46 @@ function setup(tgBot, dcBot) {
 				dcBot.channels.get(settings.discord.channelID).sendFile(
 					Buffer.concat(buffers),
 					message.document.file_name,
+					`**${fromName}**`
+				);
+			});
+		  })
+		  .catch(err => {
+			console.log("Something went wrong when relaying a document from Telegram to Discord:", err);
+		  });
+	});
+
+	// Generic file not emitted in other events
+	tgBot.on("audio", (message) => {
+		// XXX Wet code. Mostly copied from the photo handler
+
+		// Find out who the message is from
+		let fromName = getDisplayName(message.from);
+
+		// Extension of the file
+		let extension = "";
+
+		// Download the audio
+		tgBot.getFile({file_id: message.audio.file_id})
+		  .then(file => {
+			// Extract the extension from the file path. The file name is generic 'music/file_<number>.<ext>'
+			extension = "." + file.file_path.split(".").reverse()[0];
+			return tgBot.helperGetFileStream(file);
+		  })
+		  .then(fileStream => {
+			// Create an array of buffers to store the file in
+			let buffers = [];
+
+			// Fetch the file
+			fileStream.on("data", chunk => {
+				buffers.push(chunk);
+			});
+
+			// Send the file when it is fetched
+			fileStream.on("end", () => {
+				dcBot.channels.get(settings.discord.channelID).sendFile(
+					Buffer.concat(buffers),
+					message.audio.title + extension,
 					`**${fromName}**`
 				);
 			});
