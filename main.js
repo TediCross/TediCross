@@ -9,11 +9,11 @@ const settings = require("./settings");
 
 // Telegram stuff
 const { BotAPI, InputFile } = require("teleapiwrapper");
-const telegramSetup = require("./telegram/setup");
+const telegramSetup = require("./telegram2discord/setup");
 
 // Discord stuff
 const Discord = require("discord.js");
-const discordSetup = require("./discord/setup");
+const discordSetup = require("./discord2telegram/setup");
 
 /*************
  * TediCross *

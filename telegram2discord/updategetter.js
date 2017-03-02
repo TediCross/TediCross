@@ -40,16 +40,23 @@ function updateGetter(bot, timeout = 60) {
 
 				// Check what type of update this is
 				if (update.message !== undefined) {
+					// Extract the message
+					let message = update.message;
 
 					// This is a new message
-					emitter.emit("message", update.message);
+					emitter.emit("message", message);
 
 					// Determine type
+					let file = message.audio || message.document || message.photo || message.sticker || message.video || message.voice || null;
 					if (update.message.text !== undefined) {	// Text message
-						emitter.emit("text", update.message);
-					} else if (update.message.photo) {	// Photo
-						emitter.emit("photo", update.message);
-					}
+						emitter.emit("text", message);
+					} else if (file !== null) {	// Some kind of file
+						if (message.photo) {
+							emitter.emit("photo", message);	// Photo
+						} else if (message.document) {
+							emitter.emit("document", message);	// Document
+						}
+					} 
 				}
 			});
 		  })

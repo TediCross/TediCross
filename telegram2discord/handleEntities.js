@@ -5,7 +5,7 @@
  **************************/
 
 const settings = require("../settings");
-const DiscordUserMap = require("../discord/DiscordUserMap");
+const DiscordUserMap = require("../discord2telegram/DiscordUserMap");
 
 // Get the instance of the DiscordUserMap
 const dcUsers = DiscordUserMap.getInstance(settings.discord.usersfile);

@@ -52,7 +52,7 @@ function setup(tgBot, dcBot) {
 		}
 
 		// Pass it on to Discord
-		dcBot.channels.get(settings.discord.channelID).sendMessage(`**${fromName}**\n${message.text}`);
+		dcBot.channels.get(settings.discord.channelID).sendMessage(`**${fromName}**: ${message.text}`);
 	}, tgBot));
 
 	// Set up event listener for photo messages from Telegram
@@ -89,6 +89,39 @@ function setup(tgBot, dcBot) {
 			console.log("Something went wrong when relaying a photo from Telegram to Discord:", err);
 		  });
 	}, tgBot));
+
+	// Generic file not emitted in other events
+	tgBot.on("document", (message) => {
+		// XXX Wet code. Mostly copied from the photo handler
+
+		// Find out who the message is from
+		let fromName = getDisplayName(message.from);
+
+		// Download the photo
+		tgBot.getFile({file_id: message.document.file_id})
+		  .then(file => tgBot.helperGetFileStream(file))
+		  .then(fileStream => {
+			// Create an array of buffers to store the file in
+			let buffers = [];
+
+			// Fetch the file
+			fileStream.on("data", chunk => {
+				buffers.push(chunk);
+			});
+
+			// Send the file when it is fetched
+			fileStream.on("end", () => {
+				dcBot.channels.get(settings.discord.channelID).sendFile(
+					Buffer.concat(buffers),
+					message.document.file_name,
+					`**${fromName}**`
+				);
+			});
+		  })
+		  .catch(err => {
+			console.log("Something went wrong when relaying a document from Telegram to Discord:", err);
+		  });
+	});
 }
 
 /*****************************
