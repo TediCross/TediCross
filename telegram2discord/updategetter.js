@@ -55,6 +55,8 @@ function updateGetter(bot, timeout = 60) {
 						emitter.emit("document", message);	// Document
 					} else if (message.audio) {
 						emitter.emit("audio", message);	// Audio
+					} else if (message.video) {
+						emitter.emit("video", message);
 					}
 				}
 			});

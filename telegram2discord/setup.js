@@ -125,7 +125,7 @@ function setup(tgBot, dcBot) {
 		  });
 	});
 
-	// Generic file not emitted in other events
+	// Set up event listener for audio messages
 	tgBot.on("audio", (message) => {
 		// XXX Wet code. Mostly copied from the photo handler
 
@@ -161,7 +161,47 @@ function setup(tgBot, dcBot) {
 			});
 		  })
 		  .catch(err => {
-			console.log("Something went wrong when relaying a document from Telegram to Discord:", err);
+			console.log("Something went wrong when relaying an audio file from Telegram to Discord:", err);
+		  });
+	});
+
+	// Set up event listener for audio messages
+	tgBot.on("video", (message) => {
+		// XXX Wet code. Mostly copied from the video handler
+
+		// Find out who the message is from
+		let fromName = getDisplayName(message.from);
+
+		// Extension of the file
+		let extension = "";
+
+		// Download the video
+		tgBot.getFile({file_id: message.video.file_id})
+		  .then(file => {
+			// Extract the extension from the file path. The file name is generic 'video/file_<number>.<ext>'
+			extension = "." + file.file_path.split(".").reverse()[0];
+			return tgBot.helperGetFileStream(file);
+		  })
+		  .then(fileStream => {
+			// Create an array of buffers to store the file in
+			let buffers = [];
+
+			// Fetch the file
+			fileStream.on("data", chunk => {
+				buffers.push(chunk);
+			});
+
+			// Send the file when it is fetched
+			fileStream.on("end", () => {
+				dcBot.channels.get(settings.discord.channelID).sendFile(
+					Buffer.concat(buffers),
+					"video" + extension,
+					`**${fromName}**`
+				);
+			});
+		  })
+		  .catch(err => {
+			console.log("Something went wrong when relaying a video from Telegram to Discord:", err);
 		  });
 	});
 }
