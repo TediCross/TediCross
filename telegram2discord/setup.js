@@ -204,6 +204,45 @@ function setup(tgBot, dcBot) {
 			console.log("Something went wrong when relaying a video from Telegram to Discord:", err);
 		  });
 	});
+
+	// Set up event listener for sticker messages from Telegram
+	tgBot.on("sticker", wrapFunction(message => {
+		// XXX Very WET code. Mostly copied from the photo handler
+
+		// Find out who the message is from
+		let fromName = getDisplayName(message.from);
+
+		// Extension of the file
+		let extension = "";
+
+		// Download the photo
+		tgBot.getFile({file_id: message.sticker.thumb.file_id})
+		  .then(file => {
+			extension = "." + file.file_path.split(".").reverse()[0];
+			return tgBot.helperGetFileStream(file)
+		  })
+		  .then(fileStream => {
+			// Create an array of buffers to store the file in
+			let buffers = [];
+
+			// Fetch the file
+			fileStream.on("data", chunk => {
+				buffers.push(chunk);
+			});
+
+			// Send the file when it is fetched
+			fileStream.on("end", () => {
+				dcBot.channels.get(settings.discord.channelID).sendFile(
+					Buffer.concat(buffers),
+					"sticker.png",
+					`**${fromName}**:\n${message.sticker.emoji}`
+				);
+			});
+		  })
+		  .catch(err => {
+			console.log("Something went wrong when relaying a photo from Telegram to Discord:", err);
+		  });
+	}, tgBot));
 }
 
 /*****************************

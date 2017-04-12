@@ -47,16 +47,18 @@ function updateGetter(bot, timeout = 60) {
 					emitter.emit("message", message);
 
 					// Determine type
-					if (update.message.text !== undefined) {	// Text message
+					if (update.message.text !== undefined) {
 						emitter.emit("text", message);
-					} else if (message.photo) {
-						emitter.emit("photo", message);	// Photo
-					} else if (message.document) {
-						emitter.emit("document", message);	// Document
-					} else if (message.audio) {
-						emitter.emit("audio", message);	// Audio
-					} else if (message.video) {
+					} else if (message.photo !== undefined) {
+						emitter.emit("photo", message);
+					} else if (message.document !== undefined) {
+						emitter.emit("document", message);
+					} else if (message.audion !== undefined) {
+						emitter.emit("audio", message);
+					} else if (message.video !== undefined) {
 						emitter.emit("video", message);
+					} else if (message.sticker !== undefined) {
+						emitter.emit("sticker", message);
 					}
 				}
 			});
