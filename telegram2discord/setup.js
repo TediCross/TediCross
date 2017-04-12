@@ -54,7 +54,8 @@ function setup(tgBot, dcBot) {
 		}
 
 		// Pass it on to Discord
-		dcBot.channels.get(settings.discord.channelID).sendMessage(`**${fromName}**: ${message.text}`);
+		dcBot.channels.get(settings.discord.channelID).sendMessage(`**${fromName}**: ${message.text}`)
+		.catch(err => console.error("Discord did not accept a text message:", err));
 	}, tgBot));
 
 	// Set up event listener for photo messages from Telegram
@@ -84,7 +85,8 @@ function setup(tgBot, dcBot) {
 					Buffer.concat(buffers),
 					"photo.jpg",	// Telegram will convert it to jpg no matter what filetype is actually sent
 					`**${fromName}**:\n${message.caption}`
-				);
+				)
+				.catch(err => console.error("Discord did not accept a photo:", err))
 			});
 		  })
 		  .catch(err => {
@@ -117,7 +119,8 @@ function setup(tgBot, dcBot) {
 					Buffer.concat(buffers),
 					message.document.file_name,
 					`**${fromName}**`
-				);
+				)
+				.catch(err => console.error("Discord did not accept a document:", err));
 			});
 		  })
 		  .catch(err => {
@@ -157,7 +160,8 @@ function setup(tgBot, dcBot) {
 					Buffer.concat(buffers),
 					message.audio.title + extension,
 					`**${fromName}**`
-				);
+				)
+				.catch(err => console.error("Discord did not accept an audio file:", err));
 			});
 		  })
 		  .catch(err => {
@@ -197,7 +201,8 @@ function setup(tgBot, dcBot) {
 					Buffer.concat(buffers),
 					"video" + extension,
 					`**${fromName}**`
-				);
+				)
+				.catch(err => console.error("Discord did not accept a video:", err))
 			});
 		  })
 		  .catch(err => {
@@ -236,11 +241,12 @@ function setup(tgBot, dcBot) {
 					Buffer.concat(buffers),
 					"sticker.png",
 					`**${fromName}**:\n${message.sticker.emoji}`
-				);
+				)
+				.catch(err => console.error("Discord did not accept a sticker:", err))
 			});
 		  })
 		  .catch(err => {
-			console.log("Something went wrong when relaying a photo from Telegram to Discord:", err);
+			console.log("Something went wrong when relaying a sticker from Telegram to Discord:", err);
 		  });
 	}, tgBot));
 }

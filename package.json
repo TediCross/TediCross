@@ -26,9 +26,8 @@
   },
   "homepage": "https://github.com/trgwii/TediCross#readme",
   "dependencies": {
-    "discord.js": "^10.0.1",
+    "discord.js": "^11.0.0",
     "lodash": "^4.17.4",
-    "request": "^2.79.0",
     "teleapiwrapper": "^2.3.0"
   }
 }

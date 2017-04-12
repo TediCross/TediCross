@@ -63,8 +63,8 @@ function updateGetter(bot, timeout = 60) {
 				}
 			});
 		  })
-		  .catch(err => console.error(`${err.name}: ${err.message}`))
-		  .then(() => process.nextTick(fetchUpdates));	// Get more updates regardless of what happens
+		  .catch(err => console.error("Couldn't fetch Telegram messages. Reason:", `${err.name}: ${err.message}`))
+		  .then(fetchUpdates);	// Get more updates regardless of what happens
 	}
 
 	// Start the fetching

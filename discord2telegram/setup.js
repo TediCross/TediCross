@@ -70,34 +70,25 @@ function setup(dcBot, tgBot) {
 			// Check if the message is from the correct chat
 			if (message.channel.id === settings.discord.channelID) {
 
-				// Keep track of the promises made when sending
-				let promises = [];
-
 				// Modify the message to fit Telegram
 				let processedMessage = md2html(message.cleanContent);
 
 				// Check for attachments and pass them on
-				promises = promises.concat(
-					message.attachments.map(({url}) => tgBot.sendMessage({
-						chat_id: settings.telegram.chatID,
-						text: url
-					}))
-				);
-
-				// Pass it on to Telegram
-				promises.push(
+				message.attachments.forEach(({url}) => {
 					tgBot.sendMessage({
 						chat_id: settings.telegram.chatID,
-						text: `<b>${senderName}</b>\n${processedMessage}`,
-						parse_mode: "HTML"
+						text: url
 					})
-				);
-
-				// Check for errors
-				Promise.all(promises).catch(err => {
-					// Hmm... Could not send the message for some reason TODO Do something about this
-					console.error("Could not relay message to Telegram:", err);
+					.catch(err => console.error("Telegram did not accept an attachment:", err));
 				});
+
+				// Pass the message on to Telegram
+				tgBot.sendMessage({
+					chat_id: settings.telegram.chatID,
+					text: `<b>${senderName}</b>\n${processedMessage}`,
+					parse_mode: "HTML"
+				})
+				.catch(err => console.error("Telegram did not accept a message:", err));
 			} else if (message.channel.guild.id !== settings.discord.serverID) {	// Check if it is the correct server
 				// Inform the sender that this is a private bot
 				message.reply("This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. If you wish to use TediCross yourself, please download and create an instance. You may ask @Suppen for help");
@@ -106,7 +97,7 @@ function setup(dcBot, tgBot) {
 	});
 
 	// Start the Discord bot
-	dcBot.login(settings.discord.auth.token);
+	dcBot.login(settings.discord.auth.token).catch(err => console.error("Could not authenticate the Discord bot:", err));
 }
 
 /*****************************

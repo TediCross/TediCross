@@ -32,7 +32,7 @@ tgBot.getMe().then(bot => {
 
 	// Put the data on the bot
 	tgBot.me = bot;
-});
+}).catch(err => console.error("Failed at getting the Telegram bot's me-object:", err));
 
 /*********************
  * Set up the bridge *
