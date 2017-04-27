@@ -25,7 +25,7 @@ Setting up the bot requires basic knowledge of the command line, which is bash o
  4. `npm install`
  5. Copy the file `example.settings.json` to `settings.json`
  6. Aquire a bot token for Telegram ([How to create a Telegram bot](https://core.telegram.org/bots#3-how-do-i-create-a-bot)) and put it in the settings file
-   - The Telegram bot must be able to access all messages. Talk to [@BotFather](https://t.me/Suppen) to disable privacy mode for the bot
+   - The Telegram bot must be able to access all messages. Talk to [@BotFather](https://t.me/BotFather) to disable privacy mode for the bot
  7. Aquire a bot token for Discord ([How to create a Discord bot](https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token)) and put it in the settings file
  8. Add the Telegram bot to the Telegram chat
    - If the Telegram chat is a supergroup, the bot also needs to be admin of the group, or it won't get the messages. The creator of the supergroup is able to give it admin rights
