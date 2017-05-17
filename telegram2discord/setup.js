@@ -4,13 +4,15 @@
  * Import important stuff *
  **************************/
 
-const fs = require("fs");
-
 const updateGetter = require("./updategetter");
 const settings = require("../settings");
 const handleEntities = require("./handleEntities");
 const wrapFunction = require("./wrapFunction");
 const getDisplayName = require("./getDisplayName");
+const Logger = require("../logger");
+
+/** A logger for the Telegram->Discord direction */
+const logger = new Logger("T2D:");
 
 /**********************
  * The setup function *
@@ -54,8 +56,8 @@ function setup(tgBot, dcBot) {
 		}
 
 		// Pass it on to Discord
-		dcBot.channels.get(settings.discord.channelID).sendMessage(`**${fromName}**: ${message.text}`)
-		.catch(err => console.error("Discord did not accept a text message:", err));
+		dcBot.channels.get(settings.discord.channelID).send(`**${fromName}**: ${message.text}`)
+		.catch(err => logger.error("Discord did not accept a text message:", err));
 	}, tgBot));
 
 	// Set up event listener for photo messages from Telegram
@@ -81,16 +83,20 @@ function setup(tgBot, dcBot) {
 
 			// Send the file when it is fetched
 			fileStream.on("end", () => {
-				dcBot.channels.get(settings.discord.channelID).sendFile(
-					Buffer.concat(buffers),
-					"photo.jpg",	// Telegram will convert it to jpg no matter what filetype is actually sent
-					`**${fromName}**:\n${message.caption}`
+				dcBot.channels.get(settings.discord.channelID).send(
+					`**${fromName}**:\n${message.caption}`,
+					{
+						file: {
+							attachment: Buffer.concat(buffers),
+							name: "photo.jpg",	// Telegram will convert it to jpg no matter what filetype is actually sent
+						}
+					}
 				)
-				.catch(err => console.error("Discord did not accept a photo:", err))
+				.catch(err => logger.error("Discord did not accept a photo:", err))
 			});
 		  })
 		  .catch(err => {
-			console.log("Something went wrong when relaying a photo from Telegram to Discord:", err);
+			logger.log("Something went wrong when relaying a photo from Telegram to Discord:", err);
 		  });
 	}, tgBot));
 
@@ -115,16 +121,20 @@ function setup(tgBot, dcBot) {
 
 			// Send the file when it is fetched
 			fileStream.on("end", () => {
-				dcBot.channels.get(settings.discord.channelID).sendFile(
-					Buffer.concat(buffers),
-					message.document.file_name,
-					`**${fromName}**`
+				dcBot.channels.get(settings.discord.channelID).send(
+					`**${fromName}**`,
+					{
+						file: {
+							attachment: Buffer.concat(buffers),
+							name: message.document.file_name
+						}
+					}
 				)
-				.catch(err => console.error("Discord did not accept a document:", err));
+				.catch(err => logger.error("Discord did not accept a document:", err));
 			});
 		  })
 		  .catch(err => {
-			console.log("Something went wrong when relaying a document from Telegram to Discord:", err);
+			logger.log("Something went wrong when relaying a document from Telegram to Discord:", err);
 		  });
 	});
 
@@ -156,16 +166,20 @@ function setup(tgBot, dcBot) {
 
 			// Send the file when it is fetched
 			fileStream.on("end", () => {
-				dcBot.channels.get(settings.discord.channelID).sendFile(
-					Buffer.concat(buffers),
-					message.audio.title + extension,
-					`**${fromName}**`
+				dcBot.channels.get(settings.discord.channelID).send(
+					`**${fromName}**`,
+					{
+						file: {
+							attachment: Buffer.concat(buffers),
+							name: message.audio.title + extension
+						}
+					}
 				)
-				.catch(err => console.error("Discord did not accept an audio file:", err));
+				.catch(err => logger.error("Discord did not accept an audio file:", err));
 			});
 		  })
 		  .catch(err => {
-			console.log("Something went wrong when relaying an audio file from Telegram to Discord:", err);
+			logger.log("Something went wrong when relaying an audio file from Telegram to Discord:", err);
 		  });
 	});
 
@@ -197,16 +211,20 @@ function setup(tgBot, dcBot) {
 
 			// Send the file when it is fetched
 			fileStream.on("end", () => {
-				dcBot.channels.get(settings.discord.channelID).sendFile(
-					Buffer.concat(buffers),
-					"video" + extension,
-					`**${fromName}**`
+				dcBot.channels.get(settings.discord.channelID).send(
+					`**${fromName}**`,
+					{
+						file: {
+							attachment: Buffer.concat(buffers),
+							name: "video" + extension
+						}
+					}
 				)
-				.catch(err => console.error("Discord did not accept a video:", err))
+				.catch(err => logger.error("Discord did not accept a video:", err))
 			});
 		  })
 		  .catch(err => {
-			console.log("Something went wrong when relaying a video from Telegram to Discord:", err);
+			logger.log("Something went wrong when relaying a video from Telegram to Discord:", err);
 		  });
 	});
 
@@ -237,16 +255,20 @@ function setup(tgBot, dcBot) {
 
 			// Send the file when it is fetched
 			fileStream.on("end", () => {
-				dcBot.channels.get(settings.discord.channelID).sendFile(
-					Buffer.concat(buffers),
-					"sticker.png",
-					`**${fromName}**:\n${message.sticker.emoji}`
+				dcBot.channels.get(settings.discord.channelID).send(
+					`**${fromName}**:\n${message.sticker.emoji}`,
+					{
+						file: {
+							attachment: Buffer.concat(buffers),
+							name: "sticker.png"
+						}
+					}
 				)
-				.catch(err => console.error("Discord did not accept a sticker:", err))
+				.catch(err => logger.error("Discord did not accept a sticker:", err))
 			});
 		  })
 		  .catch(err => {
-			console.log("Something went wrong when relaying a sticker from Telegram to Discord:", err);
+			logger.log("Something went wrong when relaying a sticker from Telegram to Discord:", err);
 		  });
 	}, tgBot));
 }

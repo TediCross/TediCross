@@ -13,5 +13,6 @@
 		"channelID": "DISCORD CHANNEL ID HERE",
 		"serverID": "SERVER (GUILD) ID HERE",
 		"usersfile": "discord_users.json"
-	}
+	},
+	"debug": false
 }

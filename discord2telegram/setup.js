@@ -4,9 +4,14 @@
  * Import important stuff *
  **************************/
 
+const Discord = require("discord.js");
 const settings = require("../settings");
 const DiscordUserMap = require("./DiscordUserMap");
 const md2html = require("./md2html");
+const Logger = require("../logger");
+
+/** A logger for the Discord->Telegram direction */
+const logger = new Logger("D2T:");
 
 /**********************
  * The setup function *
@@ -79,7 +84,7 @@ function setup(dcBot, tgBot) {
 						chat_id: settings.telegram.chatID,
 						text: url
 					})
-					.catch(err => console.error("Telegram did not accept an attachment:", err));
+					.catch(err => logger.error("Telegram did not accept an attachment:", err));
 				});
 
 				// Pass the message on to Telegram
@@ -88,7 +93,7 @@ function setup(dcBot, tgBot) {
 					text: `<b>${senderName}</b>\n${processedMessage}`,
 					parse_mode: "HTML"
 				})
-				.catch(err => console.error("Telegram did not accept a message:", err));
+				.catch(err => logger.error("Telegram did not accept a message:", err));
 			} else if (message.channel.guild.id !== settings.discord.serverID) {	// Check if it is the correct server
 				// Inform the sender that this is a private bot
 				message.reply("This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. If you wish to use TediCross yourself, please download and create an instance. You may ask @Suppen for help");
@@ -97,7 +102,51 @@ function setup(dcBot, tgBot) {
 	});
 
 	// Start the Discord bot
-	dcBot.login(settings.discord.auth.token).catch(err => console.error("Could not authenticate the Discord bot:", err));
+	dcBot.login(settings.discord.auth.token).catch(err => logger.error("Could not authenticate the Discord bot:", err));
+
+	// Listen for the 'disconnected' event
+	dcBot.on("disconnected", evt => {
+		logger.error("Discord bot disconnected!", evt);
+		tgBot.sendMessage({
+			chat_id: settings.telegram.chatID,
+			text: "**TEDICROSS**\nThe discord side of the bot disconnected! Please check the log"
+		});
+	});
+
+	// Listen for debug messages
+	if (settings.debug) {
+		dcBot.on("debug", str => {
+			logger.log(str);
+		});
+
+		// Check the Discord bot's status every now and then
+		setInterval(() => {
+			if (dcBot.status !== Discord.Constants.Status.READY) {
+				let actualStatus = null;
+				switch (dcBot.status) {
+					case Discord.Constants.Status.CONNECTING:
+						actualStatus = "CONNECTING";
+						break;
+					case Discord.Constants.Status.RECONNECTING:
+						actualStatus = "RECONNECTING";
+						break;
+					case Discord.Constants.Status.IDLE:
+						actualStatus = "IDLE";
+						break;
+					case Discord.Constants.Status.NEARLY:
+						actualStatus = "NEARLY";
+						break;
+					case Discord.Constants.Status.DISCONNETED:
+						actualStatus = "DISCONNECTED";
+						break;
+					default:
+						actualStatus = "UNKNOWN";
+						break;
+				}
+				logger.error(`Discord status not ready! Status is'${actualStatus}'`);
+			}
+		}, 1000);
+	}
 }
 
 /*****************************

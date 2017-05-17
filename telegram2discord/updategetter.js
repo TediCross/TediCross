@@ -53,7 +53,7 @@ function updateGetter(bot, timeout = 60) {
 						emitter.emit("photo", message);
 					} else if (message.document !== undefined) {
 						emitter.emit("document", message);
-					} else if (message.audion !== undefined) {
+					} else if (message.audio !== undefined) {
 						emitter.emit("audio", message);
 					} else if (message.video !== undefined) {
 						emitter.emit("video", message);
