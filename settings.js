@@ -18,6 +18,12 @@ if (settings.debug === undefined) {
 	settings.debug = false;
 }
 
+// Set the default name settings
+if (settings.telegram.useFirstNameInsteadOfUsername === undefined) {
+	console.log("Could not figure out if usernames or first names should be sent. Using usernames. See the \"telegram.useFirstNameInsteadOfUsername\" setting");
+	settings.telegram.useFirstNameInsteadOfUsername = false;
+}
+
 /******************************
  * Export the settings object *
  ******************************/

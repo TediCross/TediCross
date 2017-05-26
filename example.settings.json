@@ -3,8 +3,8 @@
 		"auth": {
 			"token": "BOT TOKEN HERE"
 		},
-		"timeout": 5,
-		"chatID": "TELEGRAM CHAT ID HERE"
+		"chatID": "TELEGRAM CHAT ID HERE",
+		"useFirstNameInsteadOfUsername": false
 	},
 	"discord": {
 		"auth": {

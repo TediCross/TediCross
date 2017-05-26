@@ -8,15 +8,13 @@ There is no public TediCross bot. You need to host it yourself. One bot per brid
 Features & known bugs
 ---------------------
 
-Currently, the bot is able to relay ordinary text messages from Telegram to Discord and vice versa. Formatting of the messages, like @-mentions, inline- and block-style code, URLs etc. work.
-
-The bot sometimes crashes for reasons unknown. Just restart the bot, and it works again.
+The bot is able to relay text messages and media files between Discord and Telegram. @-mentions, URLs, code (both inline and block-style) works well
 
 For a list of known bugs, or to submit a bug or feature request, see this repo's "Issues" tab
 
 
 Step by step installation:
--------------
+--------------------------
 Setting up the bot requires basic knowledge of the command line, which is bash or similar on Linux/Mac, and cmd.exe in Windows
 
  1. Install [nodejs](https://nodejs.org)
@@ -55,6 +53,22 @@ Thanks to Etheral for helping make this
 > 
 > Q: I see in the Git repo there's an update to the bot. How do I update it?
 > A: If you cloned the repo, it's as simple as using the command `git pull`. If you downloaded it as a zip, or somehow else, download it again and copy your settings file. It may or may not be necessary to run `npm install` again
+
+Settings
+--------
+
+As mentioned in the step by step installation guide, there is a settings file. Here is a description of what the settings do. 
+
+* `telegram.auth.token`: The Telegram bot's token. It is needed for the bot to authenticate to the Telegram servers and be able to send and receive messages
+* `telegram.chatId`: ID of the chat the Telegram bot is in. The bot must know which chat it should work with, so it knows where to send messages from Discord, and where to get messages from. The easiest way to get this ID is to ask the bot. See the step by step guide
+* `telegram.useFirstNameInsteadOfUsername`: **EXPERIMENTAL** If set to `false`, the messages sent to Discord will be tagged with the sender's username. If set to `true`, the messages sent to Discord will be tagged with the sender's first name (or nickname). Note that Discord users can't @-mention Telegram users by their first name. Defaults to `false`
+* `discord.auth`: The Discord bot's token. It is needed for the bot to authenticate to the Discord servers and be able to send and receive messages
+* `discord.channelId`: ID of the channel the Discord bot should work in. This is the channel all messages will be relayed to/from. It is usually the same as the `serverId`, but can be different. The easiest way to get this ID is to ask the bot. See the step by step guide
+* `discord.serverId`: ID of the server the Discord bot is in. If a message to the bot originates from within this server, but not the correct channel, it is ignored. If it originates from another server, they are tokd to get their own TediCross instance. The easiest way to get this ID is to ask the bot. See the step by step guide
+* `discord.usersfile`: A file which contains the mappings between Discord user names and IDs. Necessary for @-mentions to work from Telegram, and for correct name-tagging of the messages from Discord. This should usually be left as it is
+* `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
+
+The available settings and their default values will occasionaly change. When they do, you will be notified when the bot starts
 
 
 Questions?
