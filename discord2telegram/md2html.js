@@ -15,9 +15,10 @@ function md2html(str) {
 	  .replace(/```\S+\n/g, "```")	// Ignore the language of code blocks. Telegram can't really do anything with that info
 	  .replace(/```((.|\s)+?)```/g, (match, code) => `<pre>${code}</pre>`)
 	  .replace(/`([^`]+)`/g, (match, code) => `<code>${code}</code>`)
-	  .replace(/__(.*?)__/g, (match, text) => `<b>${text}</b>`)	// Telegram doesn't support '<u>', so make it bold instead
 	  .replace(/\*\*(.*?)\*\*/g, (match, text) => `<b>${text}</b>`)
-	  .replace(/(\*|_)(.*?)\1/g, (match, char, text) => `<i>${text}</i>`)
+	  .replace(/__(.*?)__/g, (match, text) => `<b>${text}</b>`)	// Telegram doesn't support '<u>', so make it bold instead
+	  .replace(/\*(.*?)\*/g, (match, text) => `<i>${text}</i>`)
+	  .replace(/_(.*?)_/g, (match, text) => `<i>${text}</i>`)
 	  .trim();
 }
 

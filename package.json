@@ -2,32 +2,13 @@
   "name": "tedicross",
   "version": "0.1.0",
   "description": "Better DiteCross",
-  "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "check": "./node_modules/.bin/happiness",
-    "generate-example-settings": "node taskrunner.js & sleep 1 & touch settings.json",
     "start": "node main.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/trgwii/TediCross.git"
-  },
-  "keywords": [
-    "telegram",
-    "discord",
-    "cross",
-    "bridge"
-  ],
-  "author": "Thomas Rory Gummerson <trgwii@hotmail.com> (http://trgwii.no)",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/trgwii/TediCross/issues"
-  },
-  "homepage": "https://github.com/trgwii/TediCross#readme",
   "dependencies": {
     "discord.js": "^11.1.0",
     "lodash": "^4.17.4",
+    "moment": "^2.18.1",
     "teleapiwrapper": "^2.3.0"
   }
 }

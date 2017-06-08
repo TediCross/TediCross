@@ -63,7 +63,7 @@ function setup(dcBot, tgBot) {
 		}
 
 		// Get info about the sender
-		let senderName = message.author.username;
+		let senderName = message.author.username + (settings.telegram.colonAfterSenderName ? ":" : "");
 		let senderId = message.author.id;
 
 		// Store the UserID/Username mapping
@@ -93,7 +93,10 @@ function setup(dcBot, tgBot) {
 					text: `<b>${senderName}</b>\n${processedMessage}`,
 					parse_mode: "HTML"
 				})
-				.catch(err => logger.error("Telegram did not accept a message:", err));
+				.catch(err => {
+					logger.error("Telegram did not accept a message:", err);
+					logger.error("Failed message:", err);
+				});
 			} else if (message.channel.guild.id !== settings.discord.serverID) {	// Check if it is the correct server
 				// Inform the sender that this is a private bot
 				message.reply("This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. If you wish to use TediCross yourself, please download and create an instance. You may ask @Suppen for help");

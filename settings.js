@@ -24,6 +24,12 @@ if (settings.telegram.useFirstNameInsteadOfUsername === undefined) {
 	settings.telegram.useFirstNameInsteadOfUsername = false;
 }
 
+// Set default colon values
+if (settings.telegram.colonAfterSenderName === undefined) {
+	console.log("Could not figure out if usernames should be postfixed with colon in Telegram. Setting to 'false'. See the \"telegram.colonAfterSenderName\" setting");
+	settings.telegram.colonAfterSenderName = false;
+}
+
 /******************************
  * Export the settings object *
  ******************************/

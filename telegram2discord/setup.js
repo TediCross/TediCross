@@ -57,7 +57,10 @@ function setup(tgBot, dcBot) {
 
 		// Pass it on to Discord
 		dcBot.channels.get(settings.discord.channelID).send(`**${fromName}**: ${message.text}`)
-		.catch(err => logger.error("Discord did not accept a text message:", err));
+		.catch(err => {
+			logger.error("Discord did not accept a text message:", err);
+			logger.error("Failed message:", message.text);
+		})
 	}, tgBot));
 
 	// Set up event listener for photo messages from Telegram
