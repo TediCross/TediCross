@@ -4,8 +4,10 @@
 			"token": "BOT TOKEN HERE"
 		},
 		"chatID": "TELEGRAM CHAT ID HERE",
-		,"useFirstNameInsteadOfUsername": false,
-		"commaAfterSenderName": false
+		"useFirstNameInsteadOfUsername": false,
+		"commaAfterSenderName": false,
+		"colonAfterSenderName": false,
+		"skipOldMessages": true
 	},
 	"discord": {
 		"auth": {

@@ -26,7 +26,7 @@ const logger = new Logger("T2D:");
  */
 function setup(tgBot, dcBot) {
 	// Start longpolling
-	updateGetter(tgBot);
+	updateGetter(tgBot, settings);
 
 	// Set up event listener for text messages from Telegram
 	tgBot.on("text", wrapFunction(message => {

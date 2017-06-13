@@ -30,6 +30,12 @@ if (settings.telegram.colonAfterSenderName === undefined) {
 	settings.telegram.colonAfterSenderName = false;
 }
 
+// Set default skipOldMessages values
+if (settings.telegram.skipOldMessages === undefined) {
+	console.log("Could not figure out if old messages from telegram should be skipped. Setting to 'true'. See the \"telegram.skipOldMessages\" setting");
+	settings.telegram.skipOldMessages = true;
+}
+
 /******************************
  * Export the settings object *
  ******************************/
