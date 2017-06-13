@@ -101,8 +101,8 @@ function updateGetter(bot, settings, timeout = 60) {
 	if (settings.telegram.skipOldMessages) {
 		settings.debug && console.log('[telegram/updategetter] clearing old messages...');
 		return clearInitialUpdates(bot, settings).then(newOffset => {
-			settings.debug && console.log('[telegram/updategetter] initial offset: ' + offset);
 			offset = newOffset;
+			settings.debug && console.log('[telegram/updategetter] initial offset: ' + offset);
 			return fetchUpdates();
 		})
 	} else {
