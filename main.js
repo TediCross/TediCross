@@ -6,20 +6,20 @@
 
 const moment = require("moment");
 
+// Load the settings
+const settings = require("./lib/settings");
+
+// Telegram stuff
+const { BotAPI, InputFile } = require("teleapiwrapper");
+const telegramSetup = require("./lib/telegram2discord/setup");
+
+// Discord stuff
+const Discord = require("discord.js");
+const discordSetup = require("./lib/discord2telegram/setup");
+
 
 // Wrap everything in a try/catch to get a timestamp when a crash occurs
 try {
-	// Load the settings
-	const settings = require("./settings");
-
-	// Telegram stuff
-	const { BotAPI, InputFile } = require("teleapiwrapper");
-	const telegramSetup = require("./telegram2discord/setup");
-
-	// Discord stuff
-	const Discord = require("discord.js");
-	const discordSetup = require("./discord2telegram/setup");
-
 	/*************
 	 * TediCross *
 	 *************/
