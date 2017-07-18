@@ -44,6 +44,3 @@ settings.json
 
 # User map
 discord_users.json
-
-# NPMs package lock file
-package-lock.json
