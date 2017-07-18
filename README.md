@@ -5,6 +5,12 @@ TediCross is a bot which bridges a chat in [Telegram](https://telegram.org) with
 There is no public TediCross bot. You need to host it yourself. One bot per bridge. To host a bot, you need [nodejs](https://nodejs.org). The bot requires NodeJS 6 or higher
 
 
+TediCross News Channel
+----------------------
+
+We now have a Telegram channel where we post news about the bot! Join us at https://t.me/TediCross
+
+
 Features & known bugs
 ---------------------
 
