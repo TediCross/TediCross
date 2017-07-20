@@ -6,6 +6,7 @@
 
 // General stuff
 const Logger = require("./lib/Logger");
+const MessageMap = require("./lib/MessageMap");
 
 // Telegram stuff
 const { BotAPI, InputFile } = require("teleapiwrapper");
@@ -37,6 +38,9 @@ try {
 	// Create a Discord bot
 	const dcBot = new Discord.Client();
 
+	// Create a message ID map
+	const messageMap = new MessageMap();
+
 	// Log data when the bots are ready
 	dcBot.on("ready", () => logger.info(`Discord: ${dcBot.user.username} (${dcBot.user.id})`));
 	tgBot.getMe()
@@ -52,8 +56,8 @@ try {
 	 * Set up the bridge *
 	 *********************/
 
-	discordSetup(dcBot, tgBot, logger, settings, dcUsers);
-	telegramSetup(tgBot, dcBot, logger, settings, dcUsers);
+	discordSetup(dcBot, tgBot, logger, settings, dcUsers, messageMap);
+	telegramSetup(tgBot, dcBot, logger, settings, dcUsers, messageMap);
 } catch (err) {
 	// Log the timestamp and re-throw the error
 	logger.error(err);
