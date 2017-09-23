@@ -39,6 +39,7 @@ try {
 	dcBot.on("ready", () => Application.logger.info(`Discord: ${dcBot.user.username} (${dcBot.user.id})`));
 	tgBot.getMe()
 	  .then(bot => {
+		// Log the bot's info
 		Application.logger.info(`Telegram: ${bot.username} (${bot.id})`)
 
 		// Put the data on the bot
