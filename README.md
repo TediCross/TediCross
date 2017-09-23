@@ -58,7 +58,7 @@ Thanks to Etheral for helping make this
 > A: Doublecheck the Telegram and Discord chat IDs you put into settings.json. Group chats in Telegram always have a negative ID, so they start with a "-"
 > 
 > Q: I see in the Git repo there's an update to the bot. How do I update it?
-> A: If you cloned the repo, it's as simple as using the command `git pull`. If you downloaded it as a zip, or somehow else, download it again and copy your settings file. It may or may not be necessary to run `npm install` again
+> A: If you cloned the repo, it's as simple as using the command `git pull`. If you downloaded it as a zip, or somehow else, download it again and copy your settings file. It may or may not be necessary to run `npm install` again, but running it certainly won't hurt
 
 Settings
 --------
