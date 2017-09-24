@@ -5,6 +5,7 @@
  **************************/
 
 // General stuff
+const path = require("path");
 const Application = require("./lib/Application");
 const MessageMap = require("./lib/MessageMap");
 const DiscordUserMap = require("./lib/discord2telegram/DiscordUserMap");
@@ -24,7 +25,7 @@ const discordSetup = require("./lib/discord2telegram/setup");
 // Wrap everything in a try/catch to get a timestamp if a crash occurs
 try {
 	// Create/Load the discord user map
-	const dcUsers = new DiscordUserMap(Application.settings.discord.usersfile);
+	const dcUsers = new DiscordUserMap(path.join(__dirname, "data", "discord_users.json"));
 
 	// Create a message ID map
 	const messageMap = new MessageMap();

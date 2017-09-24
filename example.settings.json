@@ -14,8 +14,7 @@
 			"token": "BOT TOKEN HERE"
 		},
 		"channelID": "DISCORD CHANNEL ID HERE",
-		"serverID": "SERVER (GUILD) ID HERE",
-		"usersfile": "discord_users.json"
+		"serverID": "SERVER (GUILD) ID HERE"
 	},
 	"debug": false
 }
