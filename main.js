@@ -36,18 +36,6 @@ try {
 	// Create a Discord bot
 	const dcBot = new Discord.Client();
 
-	// Log data when the bots are ready
-	dcBot.on("ready", () => Application.logger.info(`Discord: ${dcBot.user.username} (${dcBot.user.id})`));
-	tgBot.getMe()
-	  .then(bot => {
-		// Log the bot's info
-		Application.logger.info(`Telegram: ${bot.username} (${bot.id})`)
-
-		// Put the data on the bot
-		tgBot.me = bot;
-	  })
-	  .catch(err => Application.logger.error("Failed at getting the Telegram bot's me-object:", err));
-
 	/*********************
 	 * Set up the bridge *
 	 *********************/
