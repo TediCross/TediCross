@@ -3,7 +3,6 @@
 		"auth": {
 			"token": "BOT TOKEN HERE"
 		},
-		"chatID": "TELEGRAM CHAT ID HERE",
 		"useFirstNameInsteadOfUsername": false,
 		"commaAfterSenderName": false,
 		"colonAfterSenderName": false,
@@ -12,9 +11,17 @@
 	"discord": {
 		"auth": {
 			"token": "BOT TOKEN HERE"
-		},
-		"channelID": "DISCORD CHANNEL ID HERE",
-		"serverID": "SERVER (GUILD) ID HERE"
+		}
 	},
+	"chatMap": [
+		{
+			"name": "My chat",
+			"telegram": "<telegram_chat_id>",
+			"discord": {
+				"guild": "<discord_guild_id>",
+				"channel": "<discord_channel_id>"
+			}
+		}
+	],
 	"debug": false
 }
