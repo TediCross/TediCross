@@ -13,7 +13,7 @@
 			"token": "BOT TOKEN HERE"
 		}
 	},
-	"chatMap": [
+	"bridgeMap": [
 		{
 			"name": "My chat",
 			"telegram": "<telegram_chat_id>",
