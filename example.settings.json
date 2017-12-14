@@ -15,11 +15,11 @@
 	},
 	"bridgeMap": [
 		{
-			"name": "My chat",
-			"telegram": "<telegram_chat_id>",
+			"name": "Default bridge",
+			"telegram": "TELEGRAM_CHAT_ID",
 			"discord": {
-				"guild": "<discord_guild_id>",
-				"channel": "<discord_channel_id>"
+				"guild": "DISCORD_GUILD_ID",
+				"channel": "DISCORD_CHANNEL_ID"
 			}
 		}
 	],
