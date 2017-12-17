@@ -46,41 +46,41 @@ FAQ
 Thanks to Etheral for helping make this
 
 > Q: I'm new to this! How do I enter the repo and start issuing commands?
-> A: Open up your command prompt - bash or similar in Linux/Mac or cmd.exe in Windows - and navigate to the directory in which you extracted TediCross. You can use the `cd [directory]` command to navigate there one step at a time, ex. `cd Downloads`. 
-> 
+> A: Open up your command prompt - bash or similar in Linux/Mac or cmd.exe in Windows - and navigate to the directory in which you extracted TediCross. You can use the `cd [directory]` command to navigate there one step at a time, ex. `cd Downloads`.
+>
 > Q: When I enter "npm start", my cmd window starts producing endless errors!
 > A: That might mean you're missing the bot token for Telegram or Discord - both of those should be inserted into their places in the settings.json file.
-> 
+>
 > Q: The bot responds with a generic help message when I ask it for info!
 > A: The command to write is "@botname chatinfo", not "@botname /chatinfo"
-> 
+>
 > Q: My bot is responding to messages sent in one of the chats, but it's responding with a generic help message!
 > A: Doublecheck the Telegram and Discord chat IDs you put into settings.json. Group chats in Telegram always have a negative ID, so they start with a "-"
-> 
+>
 > Q: I see in the Git repo there's an update to the bot. How do I update it?
 > A: If you cloned the repo, it's as simple as using the command `git pull`. If you downloaded it as a zip, or somehow else, download it again and copy your settings file. It may or may not be necessary to run `npm install` again, but running it certainly won't hurt
 
 Settings
 --------
 
-As mentioned in the step by step installation guide, there is a settings file. Here is a description of what the settings do. 
+As mentioned in the step by step installation guide, there is a settings file. Here is a description of what the settings do.
 
 * `telegram.auth.token`: The Telegram bot's token. It is needed for the bot to authenticate to the Telegram servers and be able to send and receive messages
-* `telegram.chatId`: ID of the chat the Telegram bot is in. The bot must know which chat it should work with, so it knows where to send messages from Discord, and where to get messages from. The easiest way to get this ID is to ask the bot. See the step by step guide
 * `telegram.useFirstNameInsteadOfUsername`: **EXPERIMENTAL** If set to `false`, the messages sent to Discord will be tagged with the sender's username. If set to `true`, the messages sent to Discord will be tagged with the sender's first name (or nickname). Note that Discord users can't @-mention Telegram users by their first name. Defaults to `false`
 * `telegram.colonAfterSenderName`: Whether or not to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name`. Defaults to false
 * `telegram.skipOldMessages`: Whether or not to skip through all previous messages cached from the telegram-side and start processing new messages ONLY. Defaults to true
 * `discord.auth`: The Discord bot's token. It is needed for the bot to authenticate to the Discord servers and be able to send and receive messages
-* `discord.channelId`: ID of the channel the Discord bot should work in. This is the channel all messages will be relayed to/from. It is usually the same as the `serverId`, but can be different. The easiest way to get this ID is to ask the bot. See the step by step guide
-* `discord.serverId`: ID of the server the Discord bot is in. If a message to the bot originates from within this server, but not the correct channel, it is ignored. If it originates from another server, they are tokd to get their own TediCross instance. The easiest way to get this ID is to ask the bot. See the step by step guide
 * `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
+* `bridgeMap`: An array containing all your chats and channels. For each object in this array, you should have the following properties:
+	* `name`: A internal name of the chat. Appears in the log
+	* `telegram`: ID of the chat that is the Telegram end of this bridge. See step 11 on how to aquire it
+	* `discord.guild`: ID of the server the Discord end of the bridge is in. If a message to the bot originates from within this server, but not the correct channel, it is ignored, instead of triggering a reply telling the sender to get their own bot. See step 11 on how to aquire it
+	* `discord.channel`: ID of the channel the Discord end of the bridge is in. See step 11 on how to aquire it
 
-The available settings and their default values will occasionaly change. When they do, you will be notified when the bot starts
+The available settings will occasionally change. The bot takes care of this automatically
 
 
 Questions?
 ----------
 
 If you need any help, ask [@Suppen](https://t.me/Suppen) on Telegram
-
-

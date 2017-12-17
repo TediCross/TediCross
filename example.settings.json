@@ -3,7 +3,6 @@
 		"auth": {
 			"token": "BOT TOKEN HERE"
 		},
-		"chatID": "TELEGRAM CHAT ID HERE",
 		"useFirstNameInsteadOfUsername": false,
 		"commaAfterSenderName": false,
 		"colonAfterSenderName": false,
@@ -12,9 +11,17 @@
 	"discord": {
 		"auth": {
 			"token": "BOT TOKEN HERE"
-		},
-		"channelID": "DISCORD CHANNEL ID HERE",
-		"serverID": "SERVER (GUILD) ID HERE"
+		}
 	},
+	"bridgeMap": [
+		{
+			"name": "Default bridge",
+			"telegram": "TELEGRAM_CHAT_ID",
+			"discord": {
+				"guild": "DISCORD_GUILD_ID",
+				"channel": "DISCORD_CHANNEL_ID"
+			}
+		}
+	],
 	"debug": false
 }
