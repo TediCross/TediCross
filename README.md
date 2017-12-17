@@ -72,12 +72,12 @@ As mentioned in the step by step installation guide, there is a settings file. H
 * `discord.auth`: The Discord bot's token. It is needed for the bot to authenticate to the Discord servers and be able to send and receive messages
 * `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
 * `bridgeMap`: An array containing all your chats and channels. For each object in this array, you should have the following properties:
-	* `name`: A internal name of the chat, so you can distinguish the chats when looking at log errors etc.
-	* `telegram`: ID of the chat the Telegram bot is in. The bot must know which chat it should work with, so it knows where to send messages from Discord, and where to get messages from. The easiest way to get this ID is to ask the bot. See the step by step guide
-	* `discord.guild`: ID of the server the Discord bot is in. If a message to the bot originates from within this server, but not the correct channel, it is ignored. If it originates from another server, they are told to get their own TediCross instance. The easiest way to get this ID is to ask the bot. See the step by step guide
-	* `discord.channel`: ID of the channel the Discord bot should work in. This is the channel all messages will be relayed to/from. It is usually the same as the `discord.guild`, but can be different. The easiest way to get this ID is to ask the bot. See the step by step guide
+	* `name`: A internal name of the chat. Appears in the log
+	* `telegram`: ID of the chat that is the Telegram end of this bridge. See step 11 on how to aquire it
+	* `discord.guild`: ID of the server the Discord end of the bridge is in. If a message to the bot originates from within this server, but not the correct channel, it is ignored, instead of triggering a reply telling the sender to get their own bot. See step 11 on how to aquire it
+	* `discord.channel`: ID of the channel the Discord end of the bridge is in. See step 11 on how to aquire it
 
-The available settings and their default values will occasionally change. When they do, you will be notified when the bot starts
+The available settings will occasionally change. The bot takes care of this automatically
 
 
 Questions?
