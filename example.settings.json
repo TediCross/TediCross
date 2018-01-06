@@ -6,7 +6,8 @@
 		"useFirstNameInsteadOfUsername": false,
 		"commaAfterSenderName": false,
 		"colonAfterSenderName": false,
-		"skipOldMessages": true
+		"skipOldMessages": true,
+		"sendEmojiWithStickers": true
 	},
 	"discord": {
 		"auth": {
