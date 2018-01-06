@@ -43,22 +43,36 @@ Done! You now have a nice bridge between a Telegram chat and a Discord channel
 FAQ
 ---
 
-Thanks to Etheral for helping make this
+### What kind of machine do I need to run this?
 
-> Q: I'm new to this! How do I enter the repo and start issuing commands?
-> A: Open up your command prompt - bash or similar in Linux/Mac or cmd.exe in Windows - and navigate to the directory in which you extracted TediCross. You can use the `cd [directory]` command to navigate there one step at a time, ex. `cd Downloads`.
->
-> Q: When I enter "npm start", my cmd window starts producing endless errors!
-> A: That might mean you're missing the bot token for Telegram or Discord - both of those should be inserted into their places in the settings.json file.
->
-> Q: The bot responds with a generic help message when I ask it for info!
-> A: The command to write is "@botname chatinfo", not "@botname /chatinfo"
->
-> Q: My bot is responding to messages sent in one of the chats, but it's responding with a generic help message!
-> A: Doublecheck the Telegram and Discord chat IDs you put into settings.json. Group chats in Telegram always have a negative ID, so they start with a "-"
->
-> Q: I see in the Git repo there's an update to the bot. How do I update it?
-> A: If you cloned the repo, it's as simple as using the command `git pull`. If you downloaded it as a zip, or somehow else, download it again and copy your settings file. It may or may not be necessary to run `npm install` again, but running it certainly won't hurt
+Anything capable of running [NodeJS](https://nodejs.org) should be able to run TediCross. People have had success running it on ordinary laptops, raspberry pis, Amazon Web Services, Google Cloud Platform, and other machines. It runs on both Linux and Windows, and probably also macOS.
+
+The machine must be on for TediCross to work
+
+### Just how much knowledge of the command line do I need to get the bot working?
+
+Not much at all. Almost all the commands are written in the installation guide exactly as they should be entered. The only thing you need to know in addition is the [`cd`](https://en.wikipedia.org/wiki/Cd_(command)) command, in order to navigate to wherever you unpacked TediCross
+
+### The bot just responds with a generic message telling me to get my own TediCross instance
+
+This happens when you have not entered correct chat IDs in the settings file. See step 11 in the step by step installation guide for instructions on how to get these.
+
+A small gotcha here is that Telegram group chats always have a negative chat ID. Remember to include the "-" in the settings file!
+
+### The Telegram bot doesn't relay messages sent by other bots
+
+The Telegram team unfortunately decided that bots cannot interact with each other, fearing they would get stuck in infinite loops. This means it is impossible, under any circumstances, for TediCross to relay messages from other Telegram bots to Discord. Discord does not have this limitation, and the Discord side of the bot will happily relay messages from other Discord bots to Telegram
+
+See https://core.telegram.org/bots/faq#why-doesn-39t-my-bot-see-messages-from-other-bots
+
+### How do I update the bot?
+
+Most updates are annouced on the [TediCross News channel](https://t.me/TediCross). Only very minor ones are not
+
+If you downloaded TediCross as a zip, do step 2 and 3 in the installation guide again. Then move the settings file from the old version to the new one and start
+
+If you cloned the git repo, just do a `git pull`. Running `npm install` may or may not be necessary. It doesn't hurt to run it anyway
+
 
 Settings
 --------
@@ -66,12 +80,12 @@ Settings
 As mentioned in the step by step installation guide, there is a settings file. Here is a description of what the settings do.
 
 * `telegram`: Object authorizing and defining the Telegram bot's behaviour
-	* `auth.token`: The Telegram bot's token. It is needed for the bot to authenticate to the Telegram servers and be able to send and receive messages
+	* `auth.token`: The Telegram bot's token. It is needed for the bot to authenticate to the Telegram servers and be able to send and receive messages. If set to `"env"`, TediCross will read the token from the environment variable `TELEGRAM_BOT_TOKEN`
 	* `useFirstNameInsteadOfUsername`: **EXPERIMENTAL** If set to `false`, the messages sent to Discord will be tagged with the sender's username. If set to `true`, the messages sent to Discord will be tagged with the sender's first name (or nickname). Note that Discord users can't @-mention Telegram users by their first name. Defaults to `false`
 	* `colonAfterSenderName`: Whether or not to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name`. Defaults to false
 	* `skipOldMessages`: Whether or not to skip through all previous messages cached from the telegram-side and start processing new messages ONLY. Defaults to true
 * `discord`: Object authorizing and defining the Discord bot's behaviour
-	* `auth`: The Discord bot's token. It is needed for the bot to authenticate to the Discord servers and be able to send and receive messages
+	* `auth.token`: The Discord bot's token. It is needed for the bot to authenticate to the Discord servers and be able to send and receive messages. If set to `"env"`, TediCross will read the token from the environment variable `DISCORD_BOT_TOKEN`
 * `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
 * `bridgeMap`: An array containing all your chats and channels. For each object in this array, you should have the following properties:
 	* `name`: A internal name of the chat. Appears in the log
