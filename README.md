@@ -40,6 +40,28 @@ Setting up the bot requires basic knowledge of the command line, which is bash o
 
 Done! You now have a nice bridge between a Telegram chat and a Discord channel
 
+
+Settings
+--------
+
+As mentioned in the step by step installation guide, there is a settings file. Here is a description of what the settings do.
+
+* `telegram`: Object authorizing and defining the Telegram bot's behaviour
+	* `auth.token`: The Telegram bot's token. It is needed for the bot to authenticate to the Telegram servers and be able to send and receive messages. If set to `"env"`, TediCross will read the token from the environment variable `TELEGRAM_BOT_TOKEN`
+	* `useFirstNameInsteadOfUsername`: **EXPERIMENTAL** If set to `false`, the messages sent to Discord will be tagged with the sender's username. If set to `true`, the messages sent to Discord will be tagged with the sender's first name (or nickname). Note that Discord users can't @-mention Telegram users by their first name. Defaults to `false`
+	* `colonAfterSenderName`: Whether or not to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name`. Defaults to false
+	* `skipOldMessages`: Whether or not to skip through all previous messages cached from the telegram-side and start processing new messages ONLY. Defaults to true
+* `discord`: Object authorizing and defining the Discord bot's behaviour
+	* `auth.token`: The Discord bot's token. It is needed for the bot to authenticate to the Discord servers and be able to send and receive messages. If set to `"env"`, TediCross will read the token from the environment variable `DISCORD_BOT_TOKEN`
+* `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
+* `bridgeMap`: An array containing all your chats and channels. For each object in this array, you should have the following properties:
+	* `name`: A internal name of the chat. Appears in the log
+	* `telegram`: ID of the chat that is the Telegram end of this bridge. See step 11 on how to aquire it
+	* `discord.guild`: ID of the server the Discord end of the bridge is in. If a message to the bot originates from within this server, but not the correct channel, it is ignored, instead of triggering a reply telling the sender to get their own bot. See step 11 on how to aquire it
+	* `discord.channel`: ID of the channel the Discord end of the bridge is in. See step 11 on how to aquire it
+
+The available settings will occasionally change. The bot takes care of this automatically
+
 FAQ
 ---
 
@@ -69,7 +91,13 @@ See https://core.telegram.org/bots/faq#why-doesn-39t-my-bot-see-messages-from-ot
 
 The [Discord library](https://discord.js.org/#/) TediCross is using has support for audio channels and voice chat. For this, it needs some additional libraries, like [node-opus](https://www.npmjs.com/package/node-opus), [libsodium](https://www.npmjs.com/package/libsodium) and others. TediCross does not do audio, so these warnings can safely be ignored
 
-### How do I update the bot?
+### TediCross spams errors in the console saying "terminated by other long poll or web hook"
+
+This happens when two applications use the same Telegram bot token, or someone has set a webhook on the Telegram bot token. You may simply have accidently launched two instances of TediCross, or someone else has somehow gotten hold of your token
+
+If you haven't accidently launched two instances of TediCross, assume the token is compromised. First, talk to [@BotFather](https://t.me/BotFather) to generate a new token for the bot. Then go to https://api.telegram.org/bot<TOKEN>/deleteWebhook (with `<TOKEN>` replaced with your actual token) to get rid of any webhook set for the bot. Then update the settings file, and restart the bot
+
+### How do I update TediCross?
 
 Most updates are annouced on the [TediCross News channel](https://t.me/TediCross). Only very minor ones are not
 
@@ -78,29 +106,7 @@ If you downloaded TediCross as a zip, do step 2 and 3 in the installation guide 
 If you cloned the git repo, just do a `git pull`. Running `npm install` may or may not be necessary. It doesn't hurt to run it anyway
 
 
-Settings
---------
-
-As mentioned in the step by step installation guide, there is a settings file. Here is a description of what the settings do.
-
-* `telegram`: Object authorizing and defining the Telegram bot's behaviour
-	* `auth.token`: The Telegram bot's token. It is needed for the bot to authenticate to the Telegram servers and be able to send and receive messages. If set to `"env"`, TediCross will read the token from the environment variable `TELEGRAM_BOT_TOKEN`
-	* `useFirstNameInsteadOfUsername`: **EXPERIMENTAL** If set to `false`, the messages sent to Discord will be tagged with the sender's username. If set to `true`, the messages sent to Discord will be tagged with the sender's first name (or nickname). Note that Discord users can't @-mention Telegram users by their first name. Defaults to `false`
-	* `colonAfterSenderName`: Whether or not to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name`. Defaults to false
-	* `skipOldMessages`: Whether or not to skip through all previous messages cached from the telegram-side and start processing new messages ONLY. Defaults to true
-* `discord`: Object authorizing and defining the Discord bot's behaviour
-	* `auth.token`: The Discord bot's token. It is needed for the bot to authenticate to the Discord servers and be able to send and receive messages. If set to `"env"`, TediCross will read the token from the environment variable `DISCORD_BOT_TOKEN`
-* `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
-* `bridgeMap`: An array containing all your chats and channels. For each object in this array, you should have the following properties:
-	* `name`: A internal name of the chat. Appears in the log
-	* `telegram`: ID of the chat that is the Telegram end of this bridge. See step 11 on how to aquire it
-	* `discord.guild`: ID of the server the Discord end of the bridge is in. If a message to the bot originates from within this server, but not the correct channel, it is ignored, instead of triggering a reply telling the sender to get their own bot. See step 11 on how to aquire it
-	* `discord.channel`: ID of the channel the Discord end of the bridge is in. See step 11 on how to aquire it
-
-The available settings will occasionally change. The bot takes care of this automatically
-
-
-Questions?
-----------
+Other questions?
+----------------
 
 If you need any help, ask [@Suppen](https://t.me/Suppen) on Telegram
