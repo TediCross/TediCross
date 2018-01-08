@@ -65,6 +65,10 @@ The Telegram team unfortunately decided that bots cannot interact with each othe
 
 See https://core.telegram.org/bots/faq#why-doesn-39t-my-bot-see-messages-from-other-bots
 
+### When running `npm install`, it complains about missing dependencies?
+
+The [Discord library](https://discord.js.org/#/) TediCross is using has support for audio channels and voice chat. For this, it needs some additional libraries, like [node-opus](https://www.npmjs.com/package/node-opus), [libsodium](https://www.npmjs.com/package/libsodium) and others. TediCross does not do audio, so these warnings can safely be ignored
+
 ### How do I update the bot?
 
 Most updates are annouced on the [TediCross News channel](https://t.me/TediCross). Only very minor ones are not
