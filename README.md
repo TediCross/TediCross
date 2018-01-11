@@ -50,9 +50,10 @@ As mentioned in the step by step installation guide, there is a settings file. H
 	* `auth.token`: The Telegram bot's token. It is needed for the bot to authenticate to the Telegram servers and be able to send and receive messages. If set to `"env"`, TediCross will read the token from the environment variable `TELEGRAM_BOT_TOKEN`
 	* `useFirstNameInsteadOfUsername`: **EXPERIMENTAL** If set to `false`, the messages sent to Discord will be tagged with the sender's username. If set to `true`, the messages sent to Discord will be tagged with the sender's first name (or nickname). Note that Discord users can't @-mention Telegram users by their first name. Defaults to `false`
 	* `colonAfterSenderName`: Whether or not to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name`. Defaults to false
-	* `skipOldMessages`: Whether or not to skip through all previous messages cached from the telegram-side and start processing new messages ONLY. Defaults to true
+	* `skipOldMessages`: Whether or not to skip through all previous messages cached from the telegram-side and start processing new messages ONLY. Defaults to true. Note that there is no guarantee the old messages will arrive at Discord in order
 * `discord`: Object authorizing and defining the Discord bot's behaviour
 	* `auth.token`: The Discord bot's token. It is needed for the bot to authenticate to the Discord servers and be able to send and receive messages. If set to `"env"`, TediCross will read the token from the environment variable `DISCORD_BOT_TOKEN`
+	* `skipOldMessages`: Whether or not to skip through all previous messages sent since the bot was last turned off and start processing new messages ONLY. Defaults to true. Note that there is no guarantee the old messages will arrive at Telegram in order. **NOTE:** [Telegram has a limit](https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this) on how quickly a bot can send messages. If there is a big backlog, this will cause problems
 * `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
 * `bridgeMap`: An array containing all your chats and channels. For each object in this array, you should have the following properties:
 	* `name`: A internal name of the chat. Appears in the log
@@ -67,7 +68,7 @@ FAQ
 
 ### What kind of machine do I need to run this?
 
-Anything capable of running [NodeJS](https://nodejs.org) should be able to run TediCross. People have had success running it on ordinary laptops, raspberry pis, Amazon Web Services, Google Cloud Platform, and other machines. It runs on both Linux and Windows, and probably also macOS.
+Anything capable of running [NodeJS](https://nodejs.org) should be able to run TediCross. People have had success running it on ordinary laptops, raspberry pis, Amazon Web Services, Google Cloud Platform, and other machines. It runs on both Linux and Windows, and probably also macOS. It does NOT, however, run on [Heroku](https://heroku.com)
 
 The machine must be on for TediCross to work
 
@@ -101,9 +102,9 @@ If you haven't accidently launched two instances of TediCross, assume the token 
 
 Most updates are annouced on the [TediCross News channel](https://t.me/TediCross). Only very minor ones are not
 
-If you downloaded TediCross as a zip, do step 2 and 3 in the installation guide again. Then move the settings file from the old version to the new one and start
-
 If you cloned the git repo, just do a `git pull`. Running `npm install` may or may not be necessary. It doesn't hurt to run it anyway
+
+If you downloaded TediCross as a zip, do step 2, 3 and 4 in the installation guide again. Then move `settings.json` and the whole `data/` directory from the old version to the new one and start it.
 
 
 Other questions?

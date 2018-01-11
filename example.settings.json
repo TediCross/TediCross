@@ -12,7 +12,8 @@
 	"discord": {
 		"auth": {
 			"token": "BOT TOKEN HERE"
-		}
+		},
+		"skipOldMessages": true
 	},
 	"bridgeMap": [
 		{
