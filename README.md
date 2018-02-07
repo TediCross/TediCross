@@ -110,4 +110,4 @@ If you downloaded TediCross as a zip, do step 2, 3 and 4 in the installation gui
 Other questions?
 ----------------
 
-If you need any help, ask [@Suppen](https://t.me/Suppen) on Telegram
+If you need any help, [join our group](https://t.me/joinchat/BZ06zxHEyP9evCnfpY6KbQ) on Telegram
