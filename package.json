@@ -6,11 +6,11 @@
     "start": "node main.js"
   },
   "dependencies": {
-    "discord.js": "^11.2.1",
-    "lodash": "^4.17.4",
+    "discord.js": "^11.3.0",
+    "lodash": "^4.17.5",
     "mime": "^2.2.0",
     "moment": "^2.18.1",
-    "simple-markdown": "^0.2.1",
-    "teleapiwrapper": "^2.3.0"
+    "simple-markdown": "^0.3.2",
+    "teleapiwrapper": "^2.3.1"
   }
 }
