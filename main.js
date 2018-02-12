@@ -9,6 +9,7 @@ const path = require("path");
 const Application = require("./lib/Application");
 const MessageMap = require("./lib/MessageMap");
 const DiscordUserMap = require("./lib/discord2telegram/DiscordUserMap");
+const BridgeMap = require("./lib/BridgeMap");
 
 // Telegram stuff
 const { BotAPI, InputFile } = require("teleapiwrapper");
@@ -30,6 +31,9 @@ try {
 	// Create a message ID map
 	const messageMap = new MessageMap();
 
+	// Create the bridge map
+	const bridgeMap = new BridgeMap(Application.settings.bridgeMap);
+
 	// Create a Telegram bot
 	const tgBot = new BotAPI(Application.settings.telegram.auth.token);
 
@@ -40,8 +44,8 @@ try {
 	 * Set up the bridge *
 	 *********************/
 
-	discordSetup(dcBot, tgBot, dcUsers, messageMap);
-	telegramSetup(tgBot, dcBot, dcUsers, messageMap);
+	discordSetup(dcBot, tgBot, dcUsers, messageMap, bridgeMap);
+	telegramSetup(tgBot, dcBot, dcUsers, messageMap, bridgeMap);
 } catch (err) {
 	// Log the timestamp and re-throw the error
 	Application.logger.error(err);
