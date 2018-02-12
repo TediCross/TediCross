@@ -9,6 +9,7 @@ const path = require("path");
 const Application = require("./lib/Application");
 const MessageMap = require("./lib/MessageMap");
 const DiscordUserMap = require("./lib/discord2telegram/DiscordUserMap");
+const Bridge = require("./lib/Bridge");
 const BridgeMap = require("./lib/BridgeMap");
 const Settings = require("./lib/Settings");
 
@@ -40,7 +41,9 @@ try {
 	const messageMap = new MessageMap();
 
 	// Create the bridge map
-	const bridgeMap = new BridgeMap(settings.bridges);
+	const bridgeMap = new BridgeMap(settings.bridges.map(({name, telegram, discord: {channel, guild}}) => {
+		return new Bridge(name, Number.parseInt(telegram), channel, guild);
+	}));
 
 	// Create a Telegram bot
 	const tgBot = new BotAPI(settings.telegramToken);
