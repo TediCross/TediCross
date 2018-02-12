@@ -10,6 +10,7 @@ const Application = require("./lib/Application");
 const MessageMap = require("./lib/MessageMap");
 const DiscordUserMap = require("./lib/discord2telegram/DiscordUserMap");
 const BridgeMap = require("./lib/BridgeMap");
+const Settings = require("./lib/Settings");
 
 // Telegram stuff
 const { BotAPI, InputFile } = require("teleapiwrapper");
@@ -26,7 +27,11 @@ const discordSetup = require("./lib/discord2telegram/setup");
 // Wrap everything in a try/catch to get a timestamp if a crash occurs
 try {
 	// Get the settings
-	const settings = require("./lib/settings");
+	const settingsPath = path.join(__dirname, "settings.json");
+	const settings = Settings.fromFile(settingsPath);
+
+	// Save the settings
+	settings.toFile(settingsPath);
 
 	// Create/Load the discord user map
 	const dcUsers = new DiscordUserMap(path.join(__dirname, "data", "discord_users.json"));
@@ -38,7 +43,7 @@ try {
 	const bridgeMap = new BridgeMap(settings.bridgeMap);
 
 	// Create a Telegram bot
-	const tgBot = new BotAPI(settings.telegram.auth.token);
+	const tgBot = new BotAPI(settings.telegramToken);
 
 	// Create a Discord bot
 	const dcBot = new Discord.Client();
