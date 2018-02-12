@@ -40,7 +40,7 @@ try {
 	const messageMap = new MessageMap();
 
 	// Create the bridge map
-	const bridgeMap = new BridgeMap(settings.bridgeMap);
+	const bridgeMap = new BridgeMap(settings.bridges);
 
 	// Create a Telegram bot
 	const tgBot = new BotAPI(settings.telegramToken);

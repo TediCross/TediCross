@@ -15,7 +15,7 @@
 		},
 		"skipOldMessages": true
 	},
-	"bridgeMap": [
+	"bridges": [
 		{
 			"name": "Default bridge",
 			"telegram": "TELEGRAM_CHAT_ID",
