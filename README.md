@@ -55,11 +55,13 @@ As mentioned in the step by step installation guide, there is a settings file. H
 	* `auth.token`: The Discord bot's token. It is needed for the bot to authenticate to the Discord servers and be able to send and receive messages. If set to `"env"`, TediCross will read the token from the environment variable `DISCORD_BOT_TOKEN`
 	* `skipOldMessages`: Whether or not to skip through all previous messages sent since the bot was last turned off and start processing new messages ONLY. Defaults to true. Note that there is no guarantee the old messages will arrive at Telegram in order. **NOTE:** [Telegram has a limit](https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this) on how quickly a bot can send messages. If there is a big backlog, this will cause problems
 * `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
-* `bridgeMap`: An array containing all your chats and channels. For each object in this array, you should have the following properties:
+* `bridges`: An array containing all your chats and channels. For each object in this array, you should have the following properties:
 	* `name`: A internal name of the chat. Appears in the log
-	* `telegram`: ID of the chat that is the Telegram end of this bridge. See step 11 on how to aquire it
+	* `telegram.chatId`: ID of the chat that is the Telegram end of this bridge. See step 11 on how to aquire it
+	* `telegram.relayJoinLeaveMessages`: Whether or not to relay messages to Discord about people joining/leaving the Telegram chat
 	* `discord.guild`: ID of the server the Discord end of the bridge is in. If a message to the bot originates from within this server, but not the correct channel, it is ignored, instead of triggering a reply telling the sender to get their own bot. See step 11 on how to aquire it
 	* `discord.channel`: ID of the channel the Discord end of the bridge is in. See step 11 on how to aquire it
+	* `discord.relayJoinLeaveMessages`: Whether or not to relay messages to Telegram about people joining/leaving the Discord chat
 
 The available settings will occasionally change. The bot takes care of this automatically
 
@@ -105,6 +107,10 @@ Most updates are annouced on the [TediCross News channel](https://t.me/TediCross
 If you cloned the git repo, just do a `git pull`. Running `npm install` may or may not be necessary. It doesn't hurt to run it anyway
 
 If you downloaded TediCross as a zip, do step 2, 3 and 4 in the installation guide again. Then move `settings.json` and the whole `data/` directory from the old version to the new one and start it.
+
+### Do you know of any way to relay messages from Discord to Telegram (or the other way) without bots?
+
+No
 
 
 Other questions?

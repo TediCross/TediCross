@@ -18,10 +18,14 @@
 	"bridges": [
 		{
 			"name": "Default bridge",
-			"telegram": "TELEGRAM_CHAT_ID",
+			"telegram": {
+				"chatId": "TELEGRAM_CHAT_ID",
+				"relayJoinLeaveMessages": true
+			},
 			"discord": {
-				"guild": "DISCORD_GUILD_ID",
-				"channel": "DISCORD_CHANNEL_ID"
+				"serverId": "DISCORD_GUILD_ID",
+				"channelId": "DISCORD_CHANNEL_ID",
+				"relayJoinLeaveMessages": true
 			}
 		}
 	],
