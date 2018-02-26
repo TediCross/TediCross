@@ -41,9 +41,7 @@ try {
 	const messageMap = new MessageMap();
 
 	// Create the bridge map
-	const bridgeMap = new BridgeMap(settings.bridges.map(({name, telegram, discord: {channel, guild}}) => {
-		return new Bridge(name, Number.parseInt(telegram), channel, guild);
-	}));
+	const bridgeMap = new BridgeMap(settings.bridges.map((bridgeSettings) => new Bridge(bridgeSettings)));
 
 	// Create a Telegram bot
 	const tgBot = new BotAPI(settings.telegramToken);
