@@ -99,7 +99,7 @@ The [Discord library](https://discord.js.org/#/) TediCross is using has support 
 
 This happens when two applications use the same Telegram bot token, or someone has set a webhook on the Telegram bot token. You may simply have accidently launched two instances of TediCross, or someone else has somehow gotten hold of your token
 
-If you haven't accidently launched two instances of TediCross, assume the token is compromised. First, talk to [@BotFather](https://t.me/BotFather) to generate a new token for the bot. Then go to https://api.telegram.org/bot<TOKEN>/deleteWebhook (with `<TOKEN>` replaced with your actual token) to get rid of any webhook set for the bot. Then update the settings file, and restart the bot
+If you haven't accidently launched two instances of TediCross, assume the token is compromised. First, talk to [@BotFather](https://t.me/BotFather) to generate a new token for the bot. Then go to https://api.telegram.org/botTOKEN/deleteWebhook (with `TOKEN` replaced with your actual token) to get rid of any webhook set for the bot. Then update the settings file, and restart the bot
 
 ### How do I update TediCross?
 
