@@ -9,8 +9,8 @@ const path = require("path");
 const Application = require("./lib/Application");
 const MessageMap = require("./lib/MessageMap");
 const DiscordUserMap = require("./lib/discord2telegram/DiscordUserMap");
-const Bridge = require("./lib/Bridge");
-const BridgeMap = require("./lib/BridgeMap");
+const Bridge = require("./lib/bridgestuff/Bridge");
+const BridgeMap = require("./lib/bridgestuff/BridgeMap");
 const Settings = require("./lib/Settings");
 
 // Telegram stuff
