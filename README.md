@@ -95,6 +95,32 @@ See https://core.telegram.org/bots/faq#why-doesn-39t-my-bot-see-messages-from-ot
 
 The [Discord library](https://discord.js.org/#/) TediCross is using has support for audio channels and voice chat. For this, it needs some additional libraries, like [node-opus](https://www.npmjs.com/package/node-opus), [libsodium](https://www.npmjs.com/package/libsodium) and others. TediCross does not do audio, so these warnings can safely be ignored
 
+### How do I create more bridges?
+
+TediCross supports a theoretically infinite number of bridges, limited only by your hardware. Even a simple Raspberry Pi is powerful enough to run multiple bridges, so don't worry about making more
+
+To make more bridges, just copy the one you have, paste it right below and make necessary changes:
+
+```
+...
+bridges: [
+    {
+        name: "Default bridge",
+        direction: "both",
+        ...
+    },
+    {
+        name: "Another bridge",
+        direction: "both",
+        ...
+    }
+]
+...
+```
+
+All but the last '}' must have a trailing comma
+
+
 ### TediCross spams errors in the console saying "terminated by other long poll or web hook"
 
 This happens when two applications use the same Telegram bot token, or someone has set a webhook on the Telegram bot token. You may simply have accidently launched two instances of TediCross, or someone else has somehow gotten hold of your token
