@@ -11,7 +11,7 @@ const MessageMap = require("./lib/MessageMap");
 const DiscordUserMap = require("./lib/discord2telegram/DiscordUserMap");
 const Bridge = require("./lib/bridgestuff/Bridge");
 const BridgeMap = require("./lib/bridgestuff/BridgeMap");
-const Settings = require("./lib/Settings");
+const Settings = require("./lib/settings/Settings");
 
 // Telegram stuff
 const { BotAPI, InputFile } = require("teleapiwrapper");

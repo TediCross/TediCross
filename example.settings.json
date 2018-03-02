@@ -1,8 +1,6 @@
 {
 	"telegram": {
-		"auth": {
-			"token": "BOT TOKEN HERE"
-		},
+		"token": "BOT TOKEN HERE",
 		"useFirstNameInsteadOfUsername": false,
 		"commaAfterSenderName": false,
 		"colonAfterSenderName": false,
@@ -10,9 +8,7 @@
 		"sendEmojiWithStickers": true
 	},
 	"discord": {
-		"auth": {
-			"token": "BOT TOKEN HERE"
-		},
+		"token": "BOT TOKEN HERE",
 		"skipOldMessages": true
 	},
 	"bridges": [
