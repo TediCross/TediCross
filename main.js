@@ -31,8 +31,14 @@ try {
 	const settingsPath = path.join(__dirname, "settings.json");
 	const settings = Settings.fromFile(settingsPath);
 
-	// Save the settings
+	// Save the settings, as they might have changed
 	settings.toFile(settingsPath);
+
+	// Create a Telegram bot
+	const tgBot = new BotAPI(settings.telegramToken);
+
+	// Create a Discord bot
+	const dcBot = new Discord.Client();
 
 	// Create/Load the discord user map
 	const dcUsers = new DiscordUserMap(path.join(__dirname, "data", "discord_users.json"));
@@ -42,12 +48,6 @@ try {
 
 	// Create the bridge map
 	const bridgeMap = new BridgeMap(settings.bridges.map((bridgeSettings) => new Bridge(bridgeSettings)));
-
-	// Create a Telegram bot
-	const tgBot = new BotAPI(settings.telegramToken);
-
-	// Create a Discord bot
-	const dcBot = new Discord.Client();
 
 	/*********************
 	 * Set up the bridge *
