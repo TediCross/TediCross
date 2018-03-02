@@ -35,7 +35,7 @@ try {
 	settings.toFile(settingsPath);
 
 	// Create a Telegram bot
-	const tgBot = new BotAPI(settings.telegramToken);
+	const tgBot = new BotAPI(settings.telegram.token);
 
 	// Create a Discord bot
 	const dcBot = new Discord.Client();

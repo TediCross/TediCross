@@ -2,7 +2,6 @@
 	"telegram": {
 		"token": "BOT TOKEN HERE",
 		"useFirstNameInsteadOfUsername": false,
-		"commaAfterSenderName": false,
 		"colonAfterSenderName": false,
 		"skipOldMessages": true,
 		"sendEmojiWithStickers": true
