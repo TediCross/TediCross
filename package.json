@@ -9,7 +9,7 @@
     "discord.js": "^11.3.0",
     "lodash": "^4.17.5",
     "mime": "^2.2.0",
-    "moment": "^2.18.1",
+    "moment": "^2.21.0",
     "simple-markdown": "^0.3.2",
     "teleapiwrapper": "^2.3.1"
   }
