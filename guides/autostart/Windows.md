@@ -13,8 +13,8 @@ Hi, this is a short guide on how to make your TediCross bot instance start up au
 * Click "OK"
 * Click the "Actions" tab
 * Click "New..."
-* Enter `C:\Program Files\nodejs\node.exe` in "Program/script:"
-* Enter `.` in "Add arguments (optional):"
+* Enter `"C:\Program Files\nodejs\node.exe"` in "Program/script:"
+* Enter `main.js` in "Add arguments (optional):"
 * Enter `C:\Path\to\bot\folder` in "Start in (optional):"
 * Click "OK"
 * Click "OK"
