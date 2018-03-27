@@ -15,7 +15,7 @@ The setup is quite simple. Make the file `/etc/systemd/system/tedicross.service`
 
 ```
 [Service]
-ExecStart=/usr/bin/node main.js
+ExecStart=/usr/bin/npm start
 WorkingDirectory=/home/tedicross/TediCross
 Restart=always
 StandardOutput=syslog
