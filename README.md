@@ -132,7 +132,7 @@ If you haven't accidently launched two instances of TediCross, assume the token 
 
 ### How do I make the bot run automatically when my computer/server starts?
 
-Take a look in [guides/autostarts/](guides/autostart/) of this repo
+Take a look in [guides/autostart/](guides/autostart/) of this repo
 
 
 ### How do I update TediCross?
