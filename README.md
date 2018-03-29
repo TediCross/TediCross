@@ -118,7 +118,9 @@ bridges: [
 ...
 ```
 
-All but the last '}' must have a trailing comma
+All but the last '}' must have a trailing comma.
+
+The names of the bridges are practically only log identifiers. They can be whatever string you want them to be. Note, however, that the setting `discord.skipOldMessages` uses the names to know which messages was last sent from which channel, so they should be unique.
 
 
 ### TediCross spams errors in the console saying "terminated by other long poll or web hook"
@@ -126,6 +128,12 @@ All but the last '}' must have a trailing comma
 This happens when two applications use the same Telegram bot token, or someone has set a webhook on the Telegram bot token. You may simply have accidently launched two instances of TediCross, or someone else has somehow gotten hold of your token
 
 If you haven't accidently launched two instances of TediCross, assume the token is compromised. First, talk to [@BotFather](https://t.me/BotFather) to generate a new token for the bot. Then go to https://api.telegram.org/botTOKEN/deleteWebhook (with `TOKEN` replaced with your actual token) to get rid of any webhook set for the bot. Then update the settings file, and restart the bot
+
+
+### How do I make the bot run automatically when my computer/server starts?
+
+Take a look in [guides/autostarts/](guides/autostart/) of this repo
+
 
 ### How do I update TediCross?
 
