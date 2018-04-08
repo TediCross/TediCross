@@ -59,10 +59,12 @@ As mentioned in the step by step installation guide, there is a settings file. H
 	* `name`: A internal name of the chat. Appears in the log
 	* `direction`: Direction of the bridge. "both" for bidirectional, "d2t" for discord-to-telegram, "t2d" for telegram-to-discord
 	* `telegram.chatId`: ID of the chat that is the Telegram end of this bridge. See step 11 on how to aquire it
-	* `telegram.relayJoinLeaveMessages`: Whether or not to relay messages to Discord about people joining/leaving the Telegram chat
+	* `telegram.relayJoinMessages`: Whether or not to relay messages to Discord about people joining the Telegram chat
+	* `telegram.relayLeaveMessages`: Whether or not to relay messages to Discord about people leaving the Telegram chat
 	* `discord.guild`: ID of the server the Discord end of the bridge is in. If a message to the bot originates from within this server, but not the correct channel, it is ignored, instead of triggering a reply telling the sender to get their own bot. See step 11 on how to aquire it
 	* `discord.channel`: ID of the channel the Discord end of the bridge is in. See step 11 on how to aquire it
-	* `discord.relayJoinLeaveMessages`: Whether or not to relay messages to Telegram about people joining/leaving the Discord chat
+	* `discord.relayJoinMessages`: Whether or not to relay messages to Telegram about people joining the Discord chat
+	* `discord.relayLeaveMessages`: Whether or not to relay messages to Telegram about people leaving the Discord chat
 
 The available settings will occasionally change. The bot takes care of this automatically
 
