@@ -8,10 +8,11 @@ telegram:
   sendEmojiWithStickers: true
 discord:
   auth:
-          token: DISCORD_BOT_TOKEN_HERE       # Discord bot tokens look like this: MjI3MDA1NzIvOBQ2MzAzMiMz.DRf-aw.N0MVYtDxXYPSQew4g2TPqvQve2c
+    token: DISCORD_BOT_TOKEN_HERE       # Discord bot tokens look like this: MjI3MDA1NzIvOBQ2MzAzMiMz.DRf-aw.N0MVYtDxXYPSQew4g2TPqvQve2c
   skipOldMessages: true
 bridges:
   - name: Default bridge
+    direction: both
     telegram:
       chatId: TELEGRAM_CHAT_ID
       relayJoinMessages: true
