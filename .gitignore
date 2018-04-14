@@ -40,7 +40,7 @@ jspm_packages
 *.swp
 
 # Project settings
-settings.json
+settings.yaml
 
 # Everything in the data directory
 data/

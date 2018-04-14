@@ -12,6 +12,7 @@ const DiscordUserMap = require("./lib/discord2telegram/DiscordUserMap");
 const Bridge = require("./lib/bridgestuff/Bridge");
 const BridgeMap = require("./lib/bridgestuff/BridgeMap");
 const Settings = require("./lib/settings/Settings");
+const migrateSettingsToYAML = require("./lib/migrateSettingsToYAML");
 
 // Telegram stuff
 const { BotAPI, InputFile } = require("teleapiwrapper");
@@ -27,12 +28,16 @@ const discordSetup = require("./lib/discord2telegram/setup");
 
 // Wrap everything in a try/catch to get a timestamp if a crash occurs
 try {
+	// Migrate the settings from JSON to YAML
+	const settingsPathJSON = path.join(__dirname, "settings.json");
+	const settingsPathYAML = path.join(__dirname, "settings.yaml");
+	migrateSettingsToYAML(path.join(__dirname, "settings.json"), path.join(__dirname, "settings.yaml"))
+
 	// Get the settings
-	const settingsPath = path.join(__dirname, "settings.json");
-	const settings = Settings.fromFile(settingsPath);
+	const settings = Settings.fromFile(settingsPathYAML);
 
 	// Save the settings, as they might have changed
-	settings.toFile(settingsPath);
+	settings.toFile(settingsPathYAML);
 
 	// Create a Telegram bot
 	const tgBot = new BotAPI(settings.telegram.token);

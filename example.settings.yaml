@@ -1,0 +1,23 @@
+telegram:
+  token: TELEGRAM_BOT_TOKEN_HERE      # Telegram bot tokens look like this: 113031530:AAH_4c5Gt9gsVu82OVNjUV7poU7PodYiNsA
+  useFirstNameInsteadOfUsername: false
+  commaAfterSenderName: false
+  colonAfterSenderName: false
+  skipOldMessages: true
+  sendEmojiWithStickers: true
+discord:
+  token: DISCORD_BOT_TOKEN_HERE       # Discord bot tokens look like this: MjI3MDA1NzIvOBQ2MzAzMiMz.DRf-aw.N0MVYtDxXYPSQew4g2TPqvQve2c
+  skipOldMessages: true
+bridges:
+  - name: Default bridge
+    direction: both
+    telegram:
+      chatId: TELEGRAM_CHAT_ID  # Remember that Telegram group and channel IDs are negative. Include the `-` if you are bridging a group or a channel
+      relayJoinMessages: true
+      relayLeaveMessages: true
+    discord:
+      serverId: 'DISCORD_SERVER_ID'         # This ID must be wrapped in single quotes. Example: '244791815503347712'
+      channelId: 'DISCORD_CHANNEL_ID'       # This ID must be wrapped in single quotes. Example: '244791815503347712'
+      relayJoinMessages: true
+      relayLeaveMessages: true
+debug: false
