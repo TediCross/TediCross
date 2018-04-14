@@ -1,6 +1,6 @@
 telegram:
   auth:
-    token: BOT TOKEN HERE
+    token: TELEGRAM_BOT_TOKEN_HERE
   useFirstNameInsteadOfUsername: false
   commaAfterSenderName: false
   colonAfterSenderName: false
@@ -8,15 +8,17 @@ telegram:
   sendEmojiWithStickers: true
 discord:
   auth:
-    token: BOT TOKEN HERE
+    token: DISCORD_BOT_TOKEN_HERE
   skipOldMessages: true
 bridges:
 - name: Default bridge
   telegram:
     chatId: TELEGRAM_CHAT_ID
-    relayJoinLeaveMessages: true
+    relayJoinMessages: true
+    relayLeaveMessages: true
   discord:
-    serverId: DISCORD_GUILD_ID
-    channelId: DISCORD_CHANNEL_ID
-    relayJoinLeaveMessages: true
+    serverId: 'DISCORD_SERVER_ID'         # The ID must be wrapped in single quotes. Example: '244791815503347712'
+    channelId: 'DISCORD_CHANNEL_ID'       # The ID must be wrapped in single quotes. Example: '244791815503347712'
+    relayJoinMessages: true
+    relayLeaveMessages: true
 debug: false
