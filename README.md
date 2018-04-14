@@ -27,7 +27,7 @@ Setting up the bot requires basic knowledge of the command line, which is bash o
  2. Clone this git repo, or download it as a zip or whatever
  3. Enter the repo
  4. `npm install`
- 5. Make a copy of the file `example.settings.json` and name it `settings.json`
+ 5. Make a copy of the file `example.settings.yaml` and name it `settings.yaml`
  6. Aquire a bot token for Telegram ([How to create a Telegram bot](https://core.telegram.org/bots#3-how-do-i-create-a-bot)) and put it in the settings file
    - The Telegram bot must be able to access all messages. Talk to [@BotFather](https://t.me/BotFather) to disable privacy mode for the bot
  7. Aquire a bot token for Discord ([How to create a Discord bot](https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token)) and put it in the settings file. **NOTE** that the token is NOT the "Client Secret". The token is under the section "App bot user" further down the page
@@ -143,7 +143,7 @@ Most updates are annouced on the [TediCross News channel](https://t.me/TediCross
 
 If you cloned the git repo, just do a `git pull`. Running `npm install` may or may not be necessary. It doesn't hurt to run it anyway
 
-If you downloaded TediCross as a zip, do step 2, 3 and 4 in the installation guide again. Then move `settings.json` and the whole `data/` directory from the old version to the new one and start it.
+If you downloaded TediCross as a zip, do step 2, 3 and 4 in the installation guide again. Then move `settings.yaml` (or the deprecated `settings.json`, which will automatically be converted to `settings.yaml`) and the whole `data/` directory from the old version to the new one and start it.
 
 ### Do you know of any way to relay messages from Discord to Telegram (or the other way) without bots?
 

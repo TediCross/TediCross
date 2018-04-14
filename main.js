@@ -12,6 +12,7 @@ const DiscordUserMap = require("./lib/discord2telegram/DiscordUserMap");
 const Bridge = require("./lib/Bridge");
 const BridgeMap = require("./lib/BridgeMap");
 const Settings = require("./lib/Settings");
+const migrateSettingsToYAML = require("./lib/migrateSettingsToYAML");
 
 // Telegram stuff
 const { BotAPI, InputFile } = require("teleapiwrapper");
@@ -27,12 +28,16 @@ const discordSetup = require("./lib/discord2telegram/setup");
 
 // Wrap everything in a try/catch to get a timestamp if a crash occurs
 try {
+	// Migrate the settings from JSON to YAML
+	const settingsPathJSON = path.join(__dirname, "settings.json");
+	const settingsPathYAML = path.join(__dirname, "settings.yaml");
+	migrateSettingsToYAML(path.join(__dirname, "settings.json"), path.join(__dirname, "settings.yaml"))
+
 	// Get the settings
-	const settingsPath = path.join(__dirname, "settings.json");
-	const settings = Settings.fromFile(settingsPath);
+	const settings = Settings.fromFile(settingsPathYAML);
 
 	// Save the settings
-	settings.toFile(settingsPath);
+	settings.toFile(settingsPathYAML);
 
 	// Create/Load the discord user map
 	const dcUsers = new DiscordUserMap(path.join(__dirname, "data", "discord_users.json"));
