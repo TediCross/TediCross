@@ -34,7 +34,9 @@
       ],
       "linebreak-style": "error",
       "quotes": "error",
-      "semi": "error"
+      "semi": "error",
+      "no-var": "error",
+      "prefer-const": "error"
     }
   }
 }
