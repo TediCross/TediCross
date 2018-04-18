@@ -15,7 +15,7 @@ const Settings = require("./lib/settings/Settings");
 const migrateSettingsToYAML = require("./lib/migrateSettingsToYAML");
 
 // Telegram stuff
-const { BotAPI, InputFile } = require("teleapiwrapper");
+const { BotAPI } = require("teleapiwrapper");
 const telegramSetup = require("./lib/telegram2discord/setup");
 
 // Discord stuff
@@ -31,7 +31,7 @@ try {
 	// Migrate the settings from JSON to YAML
 	const settingsPathJSON = path.join(__dirname, "settings.json");
 	const settingsPathYAML = path.join(__dirname, "settings.yaml");
-	migrateSettingsToYAML(path.join(__dirname, "settings.json"), path.join(__dirname, "settings.yaml"))
+	migrateSettingsToYAML(settingsPathJSON, settingsPathYAML);
 
 	// Get the settings
 	const settings = Settings.fromFile(settingsPathYAML);
@@ -60,7 +60,7 @@ try {
 
 	discordSetup(dcBot, tgBot, dcUsers, messageMap, bridgeMap, settings);
 	telegramSetup(tgBot, dcBot, dcUsers, messageMap, bridgeMap, settings);
-} catch (err) {
+} catch (err) {
 	// Log the timestamp and re-throw the error
 	Application.logger.error(err);
 	throw err;

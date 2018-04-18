@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "description": "Better DiteCross",
   "scripts": {
-    "start": "node main.js"
+    "start": "node main.js",
+    "lint": "eslint ."
   },
   "dependencies": {
     "discord.js": "^11.3.0",
@@ -13,5 +14,27 @@
     "moment": "^2.21.0",
     "simple-markdown": "^0.3.2",
     "teleapiwrapper": "^2.3.1"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1"
+  },
+  "eslintConfig": {
+    "env": {
+      "es6": true,
+      "node": true
+    },
+    "extends": "eslint:recommended",
+    "rules": {
+      "indent": [
+        "error",
+        "tab",
+        {
+          "SwitchCase": 1
+        }
+      ],
+      "linebreak-style": "error",
+      "quotes": "error",
+      "semi": "error"
+    }
   }
 }
