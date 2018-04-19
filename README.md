@@ -38,7 +38,7 @@ Setting up the bot requires basic knowledge of the command line, which is bash o
  11. Ask the bots for the remaining details. In the Telegram chat and the Discord channel, write `@<botname> chatinfo`. Put the info you get in the settings file.
    - If you want to bridge a Telegram group or channel, remember that the ID is negative. Include the `-` when entering it into the settings file
    - It is important that the Discord IDs are wrapped with single quotes when entered into the settings file. `'244791815503347712'`, not `244791815503347712`
- 12. Restart TediCross
+ 12. Restart TediCross. You stop it by pressing CTRL + C in the terminal it is running in
 
 Done! You now have a nice bridge between a Telegram chat and a Discord channel
 
