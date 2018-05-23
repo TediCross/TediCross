@@ -137,8 +137,6 @@ bridges:
 ...
 ```
 
-All but the last '}' must have a trailing comma.
-
 The names of the bridges are practically only log identifiers. They can be whatever string you want them to be. Note, however, that the setting `discord.skipOldMessages` uses the names to know which messages was last sent from which channel, so they should be unique.
 
 
