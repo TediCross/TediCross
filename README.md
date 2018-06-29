@@ -2,7 +2,7 @@ TediCross
 =========
 TediCross is a bot which bridges a chat in [Telegram](https://telegram.org) with a channel in [Discord](https://discordapp.com/).
 
-There is no public TediCross bot. You need to host it yourself. To host a bot, you need [nodejs](https://nodejs.org). The bot requires NodeJS 6 or higher
+There is no public TediCross bot. You need to host it yourself. To host a bot, you need [nodejs](https://nodejs.org). The bot requires NodeJS 8 or higher
 
 
 TediCross News Channel
@@ -88,7 +88,7 @@ Not much at all. Almost all the commands are written in the installation guide e
 
 This likely means you are using Ubuntu or another Debian based Linux distro. You get node version 4 when you do `apt-get install nodejs`, and it is called `nodejs` instead of `node`.
 
-TediCross requires node 6 or higher to run. To get node 8 on an Ubuntu machine, run the following two commands:
+TediCross requires node 8 or higher to run. To get node 8 on an Ubuntu machine, run the following two commands:
 
 ```
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
