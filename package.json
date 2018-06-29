@@ -19,6 +19,9 @@
     "eslint": "^4.19.1"
   },
   "eslintConfig": {
+    "parserOptions": {
+      "ecmaVersion": 2017
+    },
     "env": {
       "es6": true,
       "node": true
