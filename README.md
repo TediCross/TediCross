@@ -139,6 +139,13 @@ bridges:
 
 The names of the bridges are practically only log identifiers. They can be whatever string you want them to be. Note, however, that the setting `discord.skipOldMessages` uses the names to know which messages was last sent from which channel, so they should be unique.
 
+Note that the settings file is indentation sensitive. If you do for example
+```
+  - name: Bridge 1
+      direction: both
+```
+it won't work. The "d" in "direction" must be directly below the "n" in "name". See `example.settings.yaml` for proper indentation
+
 
 ### TediCross spams errors in the console saying "terminated by other long poll or web hook"
 
