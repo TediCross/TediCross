@@ -8,7 +8,6 @@
 const path = require("path");
 const Application = require("./lib/Application");
 const MessageMap = require("./lib/MessageMap");
-const DiscordUserMap = require("./lib/discord2telegram/DiscordUserMap");
 const Bridge = require("./lib/bridgestuff/Bridge");
 const BridgeMap = require("./lib/bridgestuff/BridgeMap");
 const Settings = require("./lib/settings/Settings");
@@ -45,9 +44,6 @@ try {
 	// Create a Discord bot
 	const dcBot = new Discord.Client();
 
-	// Create/Load the discord user map
-	const dcUsers = new DiscordUserMap(path.join(__dirname, "data", "discord_users.json"));
-
 	// Create a message ID map
 	const messageMap = new MessageMap();
 
@@ -58,8 +54,8 @@ try {
 	 * Set up the bridge *
 	 *********************/
 
-	discordSetup(dcBot, tgBot, dcUsers, messageMap, bridgeMap, settings);
-	telegramSetup(tgBot, dcBot, dcUsers, messageMap, bridgeMap, settings);
+	discordSetup(dcBot, tgBot, messageMap, bridgeMap, settings);
+	telegramSetup(tgBot, dcBot, messageMap, bridgeMap, settings);
 } catch (err) {
 	// Log the timestamp and re-throw the error
 	Application.logger.error(err);
