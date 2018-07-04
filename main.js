@@ -6,7 +6,7 @@
 
 // General stuff
 const path = require("path");
-const Application = require("./lib/Application");
+const Logger = require("./lib/Logger");
 const MessageMap = require("./lib/MessageMap");
 const Bridge = require("./lib/bridgestuff/Bridge");
 const BridgeMap = require("./lib/bridgestuff/BridgeMap");
@@ -25,15 +25,19 @@ const discordSetup = require("./lib/discord2telegram/setup");
  * TediCross *
  *************/
 
-// Wrap everything in a try/catch to get a timestamp if a crash occurs
-try {
-	// Migrate the settings from JSON to YAML
-	const settingsPathJSON = path.join(__dirname, "settings.json");
-	const settingsPathYAML = path.join(__dirname, "settings.yaml");
-	migrateSettingsToYAML(settingsPathJSON, settingsPathYAML);
+// Migrate the settings from JSON to YAML
+const settingsPathJSON = path.join(__dirname, "settings.json");
+const settingsPathYAML = path.join(__dirname, "settings.yaml");
+migrateSettingsToYAML(settingsPathJSON, settingsPathYAML);
 
-	// Get the settings
-	const settings = Settings.fromFile(settingsPathYAML);
+// Get the settings
+const settings = Settings.fromFile(settingsPathYAML);
+
+// Initialize logger
+const logger = new Logger(settings.debug);
+
+// Wrap most things in a try/catch to get a timestamp if a crash occurs
+try {
 
 	// Save the settings, as they might have changed
 	settings.toFile(settingsPathYAML);
@@ -54,10 +58,10 @@ try {
 	 * Set up the bridge *
 	 *********************/
 
-	discordSetup(dcBot, tgBot, messageMap, bridgeMap, settings);
-	telegramSetup(tgBot, dcBot, messageMap, bridgeMap, settings);
+	discordSetup(logger, dcBot, tgBot, messageMap, bridgeMap, settings);
+	telegramSetup(logger, tgBot, dcBot, messageMap, bridgeMap, settings);
 } catch (err) {
 	// Log the timestamp and re-throw the error
-	Application.logger.error(err);
+	logger.error(err);
 	throw err;
 }
