@@ -36,32 +36,24 @@ const settings = Settings.fromFile(settingsPathYAML);
 // Initialize logger
 const logger = new Logger(settings.debug);
 
-// Wrap most things in a try/catch to get a timestamp if a crash occurs
-try {
+// Save the settings, as they might have changed
+settings.toFile(settingsPathYAML);
 
-	// Save the settings, as they might have changed
-	settings.toFile(settingsPathYAML);
+// Create a Telegram bot
+const tgBot = new BotAPI(settings.telegram.token);
 
-	// Create a Telegram bot
-	const tgBot = new BotAPI(settings.telegram.token);
+// Create a Discord bot
+const dcBot = new Discord.Client();
 
-	// Create a Discord bot
-	const dcBot = new Discord.Client();
+// Create a message ID map
+const messageMap = new MessageMap();
 
-	// Create a message ID map
-	const messageMap = new MessageMap();
+// Create the bridge map
+const bridgeMap = new BridgeMap(settings.bridges.map((bridgeSettings) => new Bridge(bridgeSettings)));
 
-	// Create the bridge map
-	const bridgeMap = new BridgeMap(settings.bridges.map((bridgeSettings) => new Bridge(bridgeSettings)));
+/*********************
+ * Set up the bridge *
+ *********************/
 
-	/*********************
-	 * Set up the bridge *
-	 *********************/
-
-	discordSetup(logger, dcBot, tgBot, messageMap, bridgeMap, settings);
-	telegramSetup(logger, tgBot, dcBot, messageMap, bridgeMap, settings);
-} catch (err) {
-	// Log the timestamp and re-throw the error
-	logger.error(err);
-	throw err;
-}
+discordSetup(logger, dcBot, tgBot, messageMap, bridgeMap, settings);
+telegramSetup(logger, tgBot, dcBot, messageMap, bridgeMap, settings);
