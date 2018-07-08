@@ -51,6 +51,7 @@ As mentioned in the step by step installation guide, there is a settings file. H
 * `telegram`: Object authorizing and defining the Telegram bot's behaviour
 	* `token`: The Telegram bot's token. It is needed for the bot to authenticate to the Telegram servers and be able to send and receive messages. If set to `"env"`, TediCross will read the token from the environment variable `TELEGRAM_BOT_TOKEN`
 	* `useFirstNameInsteadOfUsername`: **EXPERIMENTAL** If set to `false`, the messages sent to Discord will be tagged with the sender's username. If set to `true`, the messages sent to Discord will be tagged with the sender's first name (or nickname). Note that Discord users can't @-mention Telegram users by their first name. Defaults to `false`
+	* `addLastName`: If set to `true`, the last name of the sender will also be added (only works if `useFirstNameInsteadOfUsername` is set to `true`)
 	* `colonAfterSenderName`: Whether or not to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name`. Defaults to false
 	* `skipOldMessages`: Whether or not to skip through all previous messages cached from the telegram-side and start processing new messages ONLY. Defaults to true. Note that there is no guarantee the old messages will arrive at Discord in order
 	* `sendEmojisWithStickers`: Whether or not to send the corresponding emoji when relaying stickers to Discord
