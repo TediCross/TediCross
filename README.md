@@ -48,7 +48,9 @@ Install using Docker
 --------------------
 
 Using the Dockerfile included inside the repository, you can build and run the docker image from this repository. The configuration proccess is like the previous section. The only difference is that you dont need to install nodejs and run `npm install` and `npm start` to run the TediCross. Instead, you can use commands below:
+
 First make sure you have [docker](https://docs.docker.com/install/) installed.
+
 Then run commands below:
 
 `docker build -t tedicross .`
