@@ -13,7 +13,7 @@
     "moment": "^2.21.0",
     "ramda": "^0.25.0",
     "simple-markdown": "^0.3.2",
-    "teleapiwrapper": "^2.3.1"
+    "teleapiwrapper": "^2.3.2"
   },
   "devDependencies": {
     "eslint": "^4.19.1"
