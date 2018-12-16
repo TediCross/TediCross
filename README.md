@@ -24,7 +24,7 @@ Step by step installation:
 Setting up the bot requires basic knowledge of the command line, which is bash or similar on Linux/Mac, and cmd.exe in Windows
 
  1. Install [nodejs](https://nodejs.org)
- 2. Clone this git repo, or download it as a zip or whatever
+ 2. Clone this git repo, or download it as a zip or whatever https://github.com/Myke500/TediCross/
  3. Open a terminal and enter the repo with the [`cd`](https://en.wikipedia.org/wiki/Cd_(command)) command. Something like `cd Downloads/TediCross-master`. Your exact command may differ
  4. Run the command `npm install`
  5. Make a copy of the file `example.settings.yaml` and name it `settings.yaml`
@@ -32,6 +32,7 @@ Setting up the bot requires basic knowledge of the command line, which is bash o
    - The Telegram bot must be able to access all messages. Talk to [@BotFather](https://t.me/BotFather) to disable privacy mode for the bot
    - Do NOT use another bot you already have running. That will cause all sorts of weird problems. Make a new one
  7. Aquire a bot token for Discord ([How to create a Discord bot](https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token)) and put it in the settings file under `discord.token`. **NOTE** that the token is NOT the "Client Secret". The token is under the section "App bot user" further down the page
+Also make it a Real Bot! Scroll down until you see "Create a bot user" and click that. Also click "Yes, do it!"
    - Do NOT use another bot you already have running. That will cause all sorts of weird problems. Make a new one
  8. Add the Telegram bot to the Telegram chat
    - If the Telegram chat is a supergroup, the bot also needs to be admin of the group, or it won't get the messages. The creator of the supergroup is able to give it admin rights
@@ -41,6 +42,7 @@ Setting up the bot requires basic knowledge of the command line, which is bash o
    - If you want to bridge a Telegram group or channel, remember that the ID is negative. Include the `-` when entering it into the settings file
    - It is important that the Discord IDs are wrapped with single quotes when entered into the settings file. `'244791815503347712'`, not `244791815503347712`
  12. Restart TediCross. You stop it by pressing CTRL + C in the terminal it is running in
+ 13. Next you will want to make sure it stays running if you log out. See the options here (https://stackoverflow.com/questions/12701259/how-to-make-a-node-js-application-run-permanently) and choose the one that works best for you. `screen npm start` and then Ctrl+A+D will work as well, but it will not restart if the server is restarted or if the application crashes.
 
 Done! You now have a nice bridge between a Telegram chat and a Discord channel
 
