@@ -8,7 +8,7 @@ There is no public Cross bot. You need to host it yourself. To host a bot, you n
 Cross News Channel
 ----------------------
 
-We now have a Telegram channel where we post news about the bot! Join us at https://t.me/Cross
+We now have a Telegram channel where we post news about the bot! Join us at https://t.me/TediCross
 
 
 Features & known bugs
@@ -24,7 +24,7 @@ Step by step installation:
 Setting up the bot requires basic knowledge of the command line, which is bash or similar on Linux/Mac, and cmd.exe in Windows
 
  1. Install [nodejs](https://nodejs.org)
- 2. Clone this git repo, or download it as a zip or whatever https://github.com/Myke500/Cross/
+ 2. Clone this git repo, or download it as a zip or whatever https://github.com/Myke500/TediCross/
  3. Open a terminal and enter the repo with the [`cd`](https://en.wikipedia.org/wiki/Cd_(command)) command. Something like `cd Downloads/Cross-master`. Your exact command may differ
  4. Run the command `npm install`
  5. Make a copy of the file `example.settings.yaml` and name it `settings.yaml`
