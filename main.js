@@ -14,7 +14,7 @@ const Settings = require("./lib/settings/Settings");
 const migrateSettingsToYAML = require("./lib/migrateSettingsToYAML");
 
 // Telegram stuff
-const { BotAPI } = require("teleapiwrapper");
+const Telegraf = require("telegraf");
 const telegramSetup = require("./lib/telegram2discord/setup");
 
 // Discord stuff
@@ -40,7 +40,7 @@ const logger = new Logger(settings.debug);
 settings.toFile(settingsPathYAML);
 
 // Create a Telegram bot
-const tgBot = new BotAPI(settings.telegram.token);
+const tgBot = new Telegraf(settings.telegram.token, { channelMode: true });
 
 // Create a Discord bot
 const dcBot = new Discord.Client();

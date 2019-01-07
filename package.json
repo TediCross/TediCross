@@ -17,8 +17,9 @@
     "mime": "^2.2.0",
     "moment": "^2.21.0",
     "ramda": "^0.25.0",
+    "request": "^2.88.0",
     "simple-markdown": "^0.3.2",
-    "teleapiwrapper": "^2.3.2"
+    "telegraf": "^3.25.5"
   },
   "devDependencies": {
     "eslint": "^4.19.1"
