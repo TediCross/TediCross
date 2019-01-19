@@ -19,7 +19,7 @@ docker run \
   -v /path/to/data/:/opt/TediCross/data \
   -e TELEGRAM_BOT_TOKEN="Your Telegram token" \
   -e DISCORD_BOT_TOKEN="Your Discord token" \
-  tedicross
+  tedicross/tedicross
 ```
 
 Of course, you can add `-d` or `--rm` or a name or whatever else you want to that command
