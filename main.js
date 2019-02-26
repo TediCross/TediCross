@@ -22,7 +22,7 @@ const Discord = require("discord.js");
 const discordSetup = require("./lib/discord2telegram/setup");
 
 /*************
- * TediCross *
+ * Initialization *
  *************/
 
 // Migrate the settings from JSON to YAML
