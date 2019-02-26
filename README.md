@@ -1,6 +1,7 @@
-GoatBot (Cedit to TediCross: https://github.com/TediCross/TediCross)
+GoatBot
 =========
 GoatBot is a bot which bridges a chat in [Telegram](https://telegram.org) with a channel in [Discord](https://discordapp.com/).
+(Cedit to TediCross: https://github.com/TediCross/TediCross)
 
 There is no public GoatBot. You need to host it yourself. To host a bot, you need [nodejs](https://nodejs.org). The bot requires NodeJS 8 or higher
 
