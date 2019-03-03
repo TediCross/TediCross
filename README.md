@@ -114,6 +114,12 @@ The Telegram team unfortunately decided that bots cannot interact with each othe
 
 See https://core.telegram.org/bots/faq#why-doesn-39t-my-bot-see-messages-from-other-bots
 
+### Deleting a message in Telegram does not delete it in Discord
+
+Telegram bots are unfortunately completely unable to detect when a message is deleted. There is no way to implement T2D cross-deletion until Telegram implements this.
+
+Deleting messaged D2T works.
+
 ### When running `npm install`, it complains about missing dependencies?
 
 The [Discord library](https://discord.js.org/#/) TediCross is using has support for audio channels and voice chat. For this, it needs some additional libraries, like [node-opus](https://www.npmjs.com/package/node-opus), [libsodium](https://www.npmjs.com/package/libsodium) and others. TediCross does not do audio, so these warnings can safely be ignored
