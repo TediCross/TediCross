@@ -17,7 +17,7 @@ Features & known bugs
 
 The bot is able to relay text messages and media files between Discord and Telegram. @-mentions, URLs, code (both inline and block-style) works well.  This includes @everyone and @here, if you don't want these to work, turn it off in the Bot's discord permissions.
 
-For a list of known bugs, or to submit a bug or feature request, see this repo's "Issues" tab https://github.com/TediCross/TediCross
+For a list of known bugs, or to submit a bug or feature request, see TediCross repo's "Issues" tab https://github.com/TediCross/TediCross
 
 
 Step by step installation:
@@ -187,8 +187,12 @@ Maybe hire a guy to do it for you on FIVER?
 
 Other questions?
 ----------------
+GoatBot varys from TediCross.  
+If you have any questions contact @Myke500 on Telegram
 
-If you need any help, [join TediCross group](https://t.me/TediCrossSupport) on Telegram or [TediCross server](https://discord.gg/MfzGMzy) on Discord
+Therefore TediCross will not provide support for GoatBot.
+Telegram:[join TediCross group](https://t.me/TediCrossSupport)
+Discord: [TediCross server](https://discord.gg/MfzGMzy)
 
 Want to donate?
 ---------------
