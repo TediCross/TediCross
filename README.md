@@ -1,15 +1,9 @@
 GoatBot
 =========
 GoatBot is a bot which bridges a chat in [Telegram](https://telegram.org) with a channel in [Discord](https://discordapp.com/).
-(Cedit to TediCross: https://github.com/TediCross/TediCross)
+(Cedit to TediCross: https://github.com/TediCross/TediCross)(Do not contact TediCross for issues with this bot)
 
 There is no public GoatBot. You need to host it yourself. To host a bot, you need [nodejs](https://nodejs.org). The bot requires NodeJS 8 or higher
-
-
-TediCross News Channel
-----------------------
-
-TediCross now has a Telegram channel where they post news about the bot! Join them at https://t.me/TediCross
 
 
 Features & known bugs
@@ -17,16 +11,13 @@ Features & known bugs
 
 The bot is able to relay text messages and media files between Discord and Telegram. @-mentions, URLs, code (both inline and block-style) works well.  This includes @everyone and @here, if you don't want these to work, turn it off in the Bot's discord permissions.
 
-For a list of known bugs, or to submit a bug or feature request, see TediCross repo's "Issues" tab https://github.com/TediCross/TediCross
-
-
 Step by step installation:
 --------------------------
 Setting up the bot requires basic knowledge of the command line, which is bash or similar on Linux/Mac, and cmd.exe in Windows
 
  1. Install [nodejs](https://nodejs.org)
  2. Clone this git repo, or download it as a zip or whatever https://github.com/Myke500/GoatBot/
- 3. Open a terminal and enter the repo with the [`cd`](https://en.wikipedia.org/wiki/Cd_(command)) command. Something like `cd Downloads/Cross-master`. Your exact command may differ
+ 3. Open a terminal and enter the repo with the [`cd`](https://en.wikipedia.org/wiki/Cd_(command)) command. Something like `cd Downloads/goat-master`. Your exact command may differ
  4. Run the command `npm install`
  5. Make a copy of the file `example.settings.yaml` and name it `settings.yaml`
  6. Aquire a bot token for Telegram ([How to create a Telegram bot](https://core.telegram.org/bots#3-how-do-i-create-a-bot)) and put it in the settings file
@@ -94,7 +85,7 @@ The machine must be on for GoatBot to work
 
 ### Just how much knowledge of the command line do I need to get the bot working?
 
-Not much at all. Almost all the commands are written in the installation guide exactly as they should be entered. The only thing you need to know in addition is the [`cd`](https://en.wikipedia.org/wiki/Cd_(command)) command, in order to navigate to wherever you unpacked TediCross
+Not much at all. Almost all the commands are written in the installation guide exactly as they should be entered. The only thing you need to know in addition is the [`cd`](https://en.wikipedia.org/wiki/Cd_(command)) command, in order to navigate to wherever you unpacked.
 
 ### The bot gives an error with the message `node: not found` when I try to run it
 
@@ -109,7 +100,7 @@ sudo apt-get install -y nodejs
 
 Then try to run the bot again
 
-### The bot just responds with a generic message telling me to get my own TediCross instance
+### The bot just responds with a generic message and repeats itself repeates itself repeates itself with every reply
 
 This happens when you have not entered correct chat IDs in the settings file. See step 11 in the step by step installation guide for instructions on how to get these.
 
@@ -173,32 +164,27 @@ Take a look in [guides/autostart/](guides/autostart/) of this repo
 
 ### How do I update GoatBot?
 
-Most updates are annouced on the [TediCross News channel](https://t.me/TediCross). Only very minor ones are not
-
-If you cloned the git repo, just do a `git pull`. Running `npm install` may or may not be necessary. It doesn't hurt to run it anyway
+If you cloned the git repo, just do a `git pull https://github.com/Myke500/GoatBot`. Running `npm install` may or may not be necessary. It doesn't hurt to run it anyway
 
 If you downloaded GoatBot as a zip, do step 2, 3 and 4 in the installation guide again. Then move `settings.yaml` (or the deprecated `settings.json`, which will automatically be converted to `settings.yaml`) and the whole `data/` directory from the old version to the new one and start it.
 
 ### Do you know of any way to relay messages from Discord to Telegram (or the other way) without bots?
 
-No
-Maybe hire a guy to do it for you on FIVER? 
+No, maybe hire a guy to do it for you on FIVER? 
 
 
 Other questions?
 ----------------
-GoatBot varys from TediCross.  
-If you have any questions contact @Myke500 on Telegram
+GoatBot Support:  If you have any questions contact @Myke500 on Telegram
 
-Therefore TediCross will not provide support for GoatBot.
+TediCross will not provide support for GoatBot.
 Telegram:[join TediCross group](https://t.me/TediCrossSupport)
 Discord: [TediCross server](https://discord.gg/MfzGMzy)
+Or install the original TediCross Bot.
 
 Want to donate?
 ---------------
 
 Cryptocoins of the following types are accepted:
 
-* TediCross BTC: 1Gzr9ZyvTiFCPKfy2BshuZgUeFLebAfbFU
-* TediCross ETH: 0x9449D54C85C8FdB079e74379d93A9C9fe611981A
-* Myke500 x42: XNPHSmzXoPzTdKMQMZn2pbwKBpuxcYfEmS
+* Myke500 [x42]: XNPHSmzXoPzTdKMQMZn2pbwKBpuxcYfEmS
