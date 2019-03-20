@@ -39,7 +39,10 @@ const args = yargs
 		type: "string"
 	})
 	.option("data-dir", {
-		alias: "d"
+		alias: "d",
+		default: path.join(__dirname, "data"),
+		describe: "Specify the directory to store data in",
+		type: "string"
 	}).argv;
 
 // Migrate the settings from JSON to YAML
