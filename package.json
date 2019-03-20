@@ -19,7 +19,8 @@
     "ramda": "^0.25.0",
     "request": "^2.88.0",
     "simple-markdown": "^0.3.3",
-    "telegraf": "^3.26.0"
+    "telegraf": "^3.26.0",
+    "yargs": "^13.2.2"
   },
   "devDependencies": {
     "eslint": "^4.19.1"

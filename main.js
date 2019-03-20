@@ -21,13 +21,30 @@ const telegramSetup = require("./lib/telegram2discord/setup");
 const Discord = require("discord.js");
 const discordSetup = require("./lib/discord2telegram/setup");
 
+// Arg parsing
+const yargs = require("yargs");
+
 /*************
  * TediCross *
  *************/
 
+// Get commandline arguments if any
+const args = yargs
+	.alias("v", "version")
+	.alias("h", "help")
+	.option("config", {
+		alias: "c",
+		default: path.join(__dirname, "settings.yaml"),
+		describe: "Specify settings file",
+		type: "string"
+	})
+	.option("data-dir", {
+		alias: "d"
+	}).argv;
+
 // Migrate the settings from JSON to YAML
 const settingsPathJSON = path.join(__dirname, "settings.json");
-const settingsPathYAML = path.join(__dirname, "settings.yaml");
+const settingsPathYAML = args.config || path.join(__dirname, "settings.yaml");
 migrateSettingsToYAML(settingsPathJSON, settingsPathYAML);
 
 // Get the settings
@@ -55,5 +72,5 @@ const bridgeMap = new BridgeMap(settings.bridges.map((bridgeSettings) => new Bri
  * Set up the bridge *
  *********************/
 
-discordSetup(logger, dcBot, tgBot, messageMap, bridgeMap, settings);
-telegramSetup(logger, tgBot, dcBot, messageMap, bridgeMap, settings);
+discordSetup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, args.dataDir);
+telegramSetup(logger, tgBot, dcBot, messageMap, bridgeMap, settings, args.dataDir);
