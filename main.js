@@ -5,6 +5,7 @@
  **************************/
 
 // General stuff
+const yargs = require("yargs");
 const path = require("path");
 const Logger = require("./lib/Logger");
 const MessageMap = require("./lib/MessageMap");
@@ -21,33 +22,30 @@ const telegramSetup = require("./lib/telegram2discord/setup");
 const Discord = require("discord.js");
 const discordSetup = require("./lib/discord2telegram/setup");
 
-// Arg parsing
-const yargs = require("yargs");
-
 /*************
  * TediCross *
  *************/
 
-// Get commandline arguments if any
+// Get command line arguments if any
 const args = yargs
 	.alias("v", "version")
 	.alias("h", "help")
 	.option("config", {
 		alias: "c",
 		default: path.join(__dirname, "settings.yaml"),
-		describe: "Specify settings file",
+		describe: "Specify path to settings file",
 		type: "string"
 	})
 	.option("data-dir", {
 		alias: "d",
 		default: path.join(__dirname, "data"),
-		describe: "Specify the directory to store data in",
+		describe: "Specify the path to the directory to store data in",
 		type: "string"
 	}).argv;
 
 // Migrate the settings from JSON to YAML
 const settingsPathJSON = path.join(__dirname, "settings.json");
-const settingsPathYAML = args.config || path.join(__dirname, "settings.yaml");
+const settingsPathYAML = args.config;
 migrateSettingsToYAML(settingsPathJSON, settingsPathYAML);
 
 // Get the settings
