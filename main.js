@@ -13,6 +13,10 @@ const Bridge = require("./lib/bridgestuff/Bridge");
 const BridgeMap = require("./lib/bridgestuff/BridgeMap");
 const Settings = require("./lib/settings/Settings");
 const migrateSettingsToYAML = require("./lib/migrateSettingsToYAML");
+const jsYaml = require("js-yaml");
+const fs = require("fs");
+const R = require("ramda");
+const os = require("os");
 
 // Telegram stuff
 const Telegraf = require("telegraf");
@@ -49,13 +53,37 @@ const settingsPathYAML = args.config;
 migrateSettingsToYAML(settingsPathJSON, settingsPathYAML);
 
 // Get the settings
-const settings = Settings.fromFile(settingsPathYAML);
+const rawSettingsObj = jsYaml.safeLoad(fs.readFileSync(settingsPathYAML));
+const settings = Settings.fromObj(rawSettingsObj);
 
 // Initialize logger
 const logger = new Logger(settings.debug);
 
-// Save the settings, as they might have changed
-settings.toFile(settingsPathYAML);
+// Write the settings back to the settings file if they have been modified
+const newRawSettingsObj = settings.toObj();
+if (R.not(R.equals(rawSettingsObj, newRawSettingsObj))) {
+	// Turn it into notepad friendly YAML
+	const yaml = jsYaml.safeDump(newRawSettingsObj).replace(/\n/g, "\r\n");
+
+	try {
+		fs.writeFileSync(settingsPathYAML, yaml);
+	} catch (err) {
+		if (err.code === "EACCES") {
+			// The settings file is not writable. Give a warning
+			logger.warn("Changes to TediCross' settings have been introduced. Your settings file it not writable, so it could not be automatically updated. TediCross will still work, with the modified settings, but you will see this warning until you update your settings file");
+
+			// Write the settings to temp instead
+			const tmpPath = path.join(os.tmpdir(), "tedicross-settings.yaml");
+			try {
+				fs.writeFileSync(tmpPath, yaml);
+				logger.info(`The new settings file has instead been written to '${tmpPath}'. Copy it to its proper location to get rid of the warning`);
+			} catch (err) {
+				logger.warn(`An attempt was made to put the modified settings file at '${tmpPath}', but it could not be done. See the following error message`);
+				logger.warn(err);
+			}
+		}
+	}
+}
 
 // Create a Telegram bot
 const tgBot = new Telegraf(settings.telegram.token, { channelMode: true });
