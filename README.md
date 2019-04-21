@@ -73,6 +73,8 @@ As mentioned in the step by step installation guide, there is a settings file. H
 	* `discord.relayJoinMessages`: Whether or not to relay messages to Telegram about people joining the Discord chat
 	* `discord.relayLeaveMessages`: Whether or not to relay messages to Telegram about people leaving the Discord chat
 	* `discord.sendUsernames`: Whether or not to send the sender's name with the messages to Telegram
+	* `discord.displayTelegramReplies`: How to display Telegram replies. Either the string `inline` or `embed`
+	* `discord.replyLength`: How many characters of the original message to display on replies
 
 The available settings will occasionally change. The bot takes care of this automatically
 
