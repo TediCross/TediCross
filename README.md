@@ -60,6 +60,8 @@ As mentioned in the step by step installation guide, there is a settings file. H
 	* `token`: The Discord bot's token. It is needed for the bot to authenticate to the Discord servers and be able to send and receive messages. If set to `"env"`, TediCross will read the token from the environment variable `DISCORD_BOT_TOKEN`
 	* `skipOldMessages`: Whether or not to skip through all previous messages sent since the bot was last turned off and start processing new messages ONLY. Defaults to true. Note that there is no guarantee the old messages will arrive at Telegram in order. **NOTE:** [Telegram has a limit](https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this) on how quickly a bot can send messages. If there is a big backlog, this will cause problems
 	* `useNickname`: Uses the sending user's nickname instead of username when relaying messages to Telegram
+	* `displayTelegramReplies`: How to display Telegram replies. Either the string `inline` or `embed`
+	* `replyLength`: How many characters of the original message to display on replies
 * `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
 * `bridges`: An array containing all your chats and channels. For each object in this array, you should have the following properties:
 	* `name`: A internal name of the chat. Appears in the log
@@ -74,8 +76,6 @@ As mentioned in the step by step installation guide, there is a settings file. H
 	* `discord.relayJoinMessages`: Whether or not to relay messages to Telegram about people joining the Discord chat
 	* `discord.relayLeaveMessages`: Whether or not to relay messages to Telegram about people leaving the Discord chat
 	* `discord.sendUsernames`: Whether or not to send the sender's name with the messages to Telegram
-	* `discord.displayTelegramReplies`: How to display Telegram replies. Either the string `inline` or `embed`
-	* `discord.replyLength`: How many characters of the original message to display on replies
 
 The available settings will occasionally change. The bot takes care of this automatically
 
