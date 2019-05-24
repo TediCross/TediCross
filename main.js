@@ -53,7 +53,16 @@ const settingsPathYAML = args.config;
 migrateSettingsToYAML(settingsPathJSON, settingsPathYAML);
 
 // Get the settings
-const rawSettingsObj = jsYaml.safeLoad(fs.readFileSync(settingsPathYAML));
+try {
+	const rawSettingsObj = jsYaml.safeLoad(fs.readFileSync(settingsPathYAML));
+} catch (err){
+	if (err.code === "ENOENT") {
+		// We might be in a container, try to account for that and try again
+		const containerSettingsPathYAML = path.join("data", settingsPathYAML)
+		const const rawSettingsObj = jsYaml.safeLoad(fs.readFileSync(containerSettingsPathYAML)
+	}
+}
+							     
 const settings = Settings.fromObj(rawSettingsObj);
 
 // Initialize logger
