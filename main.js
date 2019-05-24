@@ -58,8 +58,8 @@ try {
 } catch (err){
 	if (err.code === "ENOENT") {
 		// We might be in a container, try to account for that and try again
-		const containerSettingsPathYAML = path.join("data", settingsPathYAML)
-		const const rawSettingsObj = jsYaml.safeLoad(fs.readFileSync(containerSettingsPathYAML)
+		const containerSettingsPathYAML = path.join(__dirname, "data", "settings.yaml")
+		const rawSettingsObj = jsYaml.safeLoad(fs.readFileSync(containerSettingsPathYAML))
 	}
 }
 							     
