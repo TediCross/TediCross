@@ -51,17 +51,20 @@ const args = yargs
 const settingsPathJSON = path.join(__dirname, "settings.json");
 const settingsPathYAML = args.config;
 migrateSettingsToYAML(settingsPathJSON, settingsPathYAML);
-
-// Get the settings
-try {
-	const rawSettingsObj = jsYaml.safeLoad(fs.readFileSync(settingsPathYAML));
-} catch (err){
-	if (err.code === "ENOENT") {
-		// We might be in a container, try to account for that and try again
-		const containerSettingsPathYAML = path.join(__dirname, "data", "settings.yaml")
-		const rawSettingsObj = jsYaml.safeLoad(fs.readFileSync(containerSettingsPathYAML))
+ 
+// Get the settings from a function
+function getSettings(){
+	try {
+		return jsYaml.safeLoad(fs.readFileSync(settingsPathYAML));
+	} catch (err){
+		if (err.code === "ENOENT") {
+			// We might be in a container, try to account for that and try again
+			const containerSettingsPathYAML = path.join(__dirname, "data", "settings.yaml")
+			return jsYaml.safeLoad(fs.readFileSync(containerSettingsPathYAML))
+		}
 	}
 }
+const rawSettingsObj = getSettings()
 							     
 const settings = Settings.fromObj(rawSettingsObj);
 
