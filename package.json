@@ -12,18 +12,18 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "discord.js": "^11.4.2",
-    "js-yaml": "^3.12.1",
-    "mime": "^2.4.0",
-    "moment": "^2.23.0",
-    "ramda": "^0.25.0",
+    "discord.js": "^11.5.0",
+    "js-yaml": "^3.13.1",
+    "mime": "^2.4.2",
+    "moment": "^2.24.0",
+    "ramda": "^0.26.1",
     "request": "^2.88.0",
     "simple-markdown": "^0.4.4",
-    "telegraf": "^3.26.0",
-    "yargs": "^13.2.2"
+    "telegraf": "^3.29.0",
+    "yargs": "^13.2.4"
   },
   "devDependencies": {
-    "eslint": "^4.19.1"
+    "eslint": "^5.16.0"
   },
   "eslintConfig": {
     "parserOptions": {
