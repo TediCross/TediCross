@@ -11,7 +11,7 @@ discord:
   displayTelegramReplies: embed
   replyLength: 100
 bridges:
-  - name: Default bridge
+  - name: First bridge
     direction: both
     telegram:
       chatId: TELEGRAM_CHAT_ID  # Remember that Telegram group and channel IDs are negative. Include the `-` if you are bridging a group or a channel
