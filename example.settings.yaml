@@ -10,6 +10,7 @@ discord:
   skipOldMessages: true
   displayTelegramReplies: embed
   replyLength: 100
+  maxReplyLines: 2
 bridges:
   - name: First bridge
     direction: both

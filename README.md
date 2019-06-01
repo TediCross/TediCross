@@ -62,6 +62,7 @@ As mentioned in the step by step installation guide, there is a settings file. H
 	* `useNickname`: Uses the sending user's nickname instead of username when relaying messages to Telegram
 	* `displayTelegramReplies`: How to display Telegram replies. Either the string `inline` or `embed`
 	* `replyLength`: How many characters of the original message to display on replies
+	* `maxReplyLines`: How many lines of the original message to display on replies
 * `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
 * `bridges`: An array containing all your chats and channels. For each object in this array, you should have the following properties:
 	* `name`: A internal name of the chat. Appears in the log
