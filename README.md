@@ -122,7 +122,7 @@ See https://core.telegram.org/bots/faq#why-doesn-39t-my-bot-see-messages-from-ot
 
 Telegram bots are unfortunately completely unable to detect when a message is deleted. There is no way to implement T2D cross-deletion until Telegram implements this.
 
-Deleting messaged D2T works.
+Deleting messages D2T works.
 
 ### When running `npm install`, it complains about missing dependencies?
 
