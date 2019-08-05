@@ -7,12 +7,12 @@
 // General stuff
 const yargs = require("yargs");
 const path = require("path");
-const Logger = require("./lib/Logger");
-const MessageMap = require("./lib/MessageMap");
-const Bridge = require("./lib/bridgestuff/Bridge");
-const BridgeMap = require("./lib/bridgestuff/BridgeMap");
-const Settings = require("./lib/settings/Settings");
-const migrateSettingsToYAML = require("./lib/migrateSettingsToYAML");
+const Logger = require("./src/Logger");
+const MessageMap = require("./src/MessageMap");
+const Bridge = require("./src/bridgestuff/Bridge");
+const BridgeMap = require("./src/bridgestuff/BridgeMap");
+const Settings = require("./src/settings/Settings");
+const migrateSettingsToYAML = require("./src/migrateSettingsToYAML");
 const jsYaml = require("js-yaml");
 const fs = require("fs");
 const R = require("ramda");
@@ -20,11 +20,11 @@ const os = require("os");
 
 // Telegram stuff
 const Telegraf = require("telegraf");
-const telegramSetup = require("./lib/telegram2discord/setup");
+const telegramSetup = require("./src/telegram2discord/setup");
 
 // Discord stuff
 const Discord = require("discord.js");
-const discordSetup = require("./lib/discord2telegram/setup");
+const discordSetup = require("./src/discord2telegram/setup");
 
 /*************
  * TediCross *
