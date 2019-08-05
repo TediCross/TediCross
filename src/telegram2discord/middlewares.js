@@ -44,6 +44,11 @@ function createTextObjFromMessage(ctx, message) {
 			)(message),
 			entities: []
 		})],
+		// Locations must be turned into an URL
+		[R.has("location"), ({ location }) => ({
+			raw: `https://maps.google.com/maps?q=${location.latitude},${location.longitude}&ll=${location.latitude},${location.longitude}&z=16`,
+			entities: []
+		})],
 		// Default to undefined
 		[R.T, R.always({ raw: "", entities: [] })]
 	])(message);
