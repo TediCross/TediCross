@@ -478,51 +478,81 @@ function addPreparedObj(ctx, next) {
 	ctx.tediCross.prepared = R.map(
 		bridge => {
 			// Make the header
-			const header = R.ifElse(
-				R.always(bridge.telegram.sendUsernames),
-				tc => {
-					// Get the name of the sender of this message
-					const senderName = From.makeDisplayName(ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername, tc.from);
+			// WARNING! Butt-ugly code! If you see a nice way to clean this up, please do it
+			const header = (() => {
+				// Get the name of the sender of this message
+				const senderName = From.makeDisplayName(ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername, tc.from);
 
-					// Make the default header
-					let header = `**${senderName}**`;
+				// Get the name of the original sender, if this is a forward
+				const originalSender = R.isNil(tc.forwardFrom)
+					? null
+					: From.makeDisplayName(ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername, tc.forwardFrom)
+				;
 
-					if (!R.isNil(tc.replyTo)) {
-						// Add reply info to the header
-						const repliedToName = R.ifElse(
-							R.prop("isReplyToTediCross"),
-							R.compose(
-								username => makeDiscordMention(username, ctx.TediCross.dcBot, bridge.discord.channelId),
-								R.prop("dcUsername")
-							),
-							R.compose(
-								R.partial(From.makeDisplayName, [ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername]),
-								R.prop("originalFrom")
-							)
-						)(tc.replyTo);
+				// Get the name of the replied-to user, if this is a reply
+				const repliedToName = R.isNil(tc.replyTo)
+					? null
+					: R.ifElse(
+						R.prop("isReplyToTediCross"),
+						R.compose(
+							username => makeDiscordMention(username, ctx.TediCross.dcBot, bridge.discord.channelId),
+							R.prop("dcUsername")
+						),
+						R.compose(
+							R.partial(From.makeDisplayName, [ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername]),
+							R.prop("originalFrom")
+						)
+					)(tc.replyTo)
+				;
 
+				// The original text, if this is a reply
+				const repliedToText = R.isNil(tc.replyTo)
+					? null
+					: (ctx.TediCross.settings.discord.displayTelegramReplies === "inline"
+						? makeReplyText(tc.replyTo, ctx.TediCross.settings.discord.replyLength, ctx.TediCross.settings.discord.maxReplyLines)
+						: null
+					)
+				;
 
+				let header = "";
+				if (bridge.telegram.sendUsernames) {
+					if (!R.isNil(tc.forwardFrom)) {
+						// Forward
+						header = `**${originalSender}** (forwarded by **${senderName}**)`;
+					} else if (!R.isNil(tc.replyTo)) {
+						// Reply
 						header = `**${senderName}** (in reply to **${repliedToName}**`;
 
-						if (ctx.TediCross.settings.discord.displayTelegramReplies === "inline") {
-							// Make the reply text
-							const replyText = makeReplyText(tc.replyTo, ctx.TediCross.settings.discord.replyLength, ctx.TediCross.settings.discord.maxReplyLines);
-
-							// Put the reply text in the header, replacing newlines with spaces
-							header = `${header}: _${R.replace(/\n/g, " ", replyText)}_)`;
+						if (!R.isNil(repliedToText)) {
+							header = `${header}: _${R.replace(/\n/g, " ", repliedToText)}_)`;
 						} else {
-							// Append the closing parenthesis
 							header = `${header})`;
 						}
-					} else if (!R.isNil(tc.forwardFrom)) {
-						// Handle forwards
-						const origSender = From.makeDisplayName(ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername, tc.forwardFrom);
-						header = `**${origSender}** (forwarded by **${senderName}**)`;
+					} else {
+						// Ordinary message
+						header = `**${senderName}**`;
 					}
-					return header;
-				},
-				R.always("")
-			)(tc);
+				} else {
+					if (!R.isNil(tc.forwardFrom)) {
+						// Forward
+						header = `(forward from **${originalSender}**)`;
+					} else if (!R.isNil(tc.replyTo)) {
+						// Reply
+						header = `(in reply to **${repliedToName}**`;
+
+						if (!R.isNil(repliedToText)) {
+							header = `${header}: _${R.replace(/\n/g, " ", repliedToText)}_)`;
+						} else {
+							header = `${header})`;
+						}
+					} else {
+						// Ordinary message
+						header = "";
+					}
+				}
+
+				return header;
+			})();
 
 			// Handle embed replies
 			const embed = R.ifElse(
