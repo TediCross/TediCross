@@ -11,6 +11,8 @@ const mime = require("mime/lite");
 const request = require("request");
 const handleEntities = require("./handleEntities");
 const Discord = require("discord.js");
+const { sleepOneMinute } = require("../sleep");
+const helpers = require("./helpers");
 
 /***********
  * Helpers *
@@ -267,7 +269,11 @@ function informThisIsPrivateBot(ctx, next) {
 				{
 					parse_mode: "markdown"
 				}
-			),
+			)
+				// Delete it again after a while
+				.then(sleepOneMinute)
+				.then(helpers.deleteMessage(ctx))
+				.catch(helpers.ignoreAlreadyDeletedError),
 		// Otherwise go to next middleware
 		next
 	)(ctx);

@@ -14,6 +14,7 @@ const Bridge = require("../bridgestuff/Bridge");
 const path = require("path");
 const R = require("ramda");
 const { sleepOneMinute } = require("../sleep");
+const helpers = require("./helpers");
 
 /***********
  * Helpers *
@@ -117,11 +118,7 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 					info.delete(),
 					message.delete()
 				]))
-				.catch(R.ifElse(
-					R.propEq("message", "Unknown Message"),
-					R.always(undefined),
-					err => {throw err;}
-				));
+				.catch(helpers.ignoreAlreadyDeletedError);
 
 			// Don't process the message any further
 			return;
@@ -221,7 +218,11 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 				"This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. "
 				+ "If you wish to use TediCross yourself, please download and create an instance. "
 				+ "See https://github.com/TediCross/TediCross"
-			);
+			)
+				// Delete it again after some time
+				.then(sleepOneMinute)
+				.then(message => message.delete())
+				.catch(helpers.ignoreAlreadyDeletedError);
 		}
 	});
 

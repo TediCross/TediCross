@@ -8,6 +8,7 @@ const R = require("ramda");
 const From = require("./From");
 const MessageMap = require("../MessageMap");
 const { sleepOneMinute } = require("../sleep");
+const helpers = require("./helpers");
 
 /***********
  * Helpers *
@@ -51,20 +52,13 @@ function chatinfo(ctx) {
 		// Wait some time
 		.then(sleepOneMinute)
 		// Delete the info and the command
-		.then(({ message_id, chat }) => Promise.all([
+		.then(message => Promise.all([
 			// Delete the info
-			ctx.telegram.deleteMessage(
-				chat.id,
-				message_id
-			),
+			helpers.deleteMessage(ctx, message),
 			// Delete the command
 			ctx.deleteMessage()
 		]))
-		.catch(R.ifElse(
-			R.propEq("description", "Bad Request: message to delete not found"),
-			R.always(undefined),
-			err => {throw err;}
-		));
+		.catch(helpers.ignoreAlreadyDeletedError);
 }
 
 /**
