@@ -7,7 +7,7 @@
 const R = require("ramda");
 const From = require("./From");
 const MessageMap = require("../MessageMap");
-const messageConverter = require("./messageConverter");
+const { sleepOneMinute } = require("../sleep");
 
 /***********
  * Helpers *
@@ -46,7 +46,25 @@ const createMessageHandler = R.curry((func, ctx) => {
  * @returns {undefined}
  */
 function chatinfo(ctx) {
-	ctx.reply(`chatID: ${ctx.tediCross.message.chat.id}`);
+	// Reply with the info
+	ctx.reply(`chatID: ${ctx.tediCross.message.chat.id}`)
+		// Wait some time
+		.then(sleepOneMinute)
+		// Delete the info and the command
+		.then(({ message_id, chat }) => Promise.all([
+			// Delete the info
+			ctx.telegram.deleteMessage(
+				chat.id,
+				message_id
+			),
+			// Delete the command
+			ctx.deleteMessage()
+		]))
+		.catch(R.ifElse(
+			R.propEq("description", "Bad Request: message to delete not found"),
+			R.always(undefined),
+			err => {throw err;}
+		));
 }
 
 /**

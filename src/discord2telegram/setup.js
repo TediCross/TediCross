@@ -13,6 +13,7 @@ const relayOldMessages = require("./relayOldMessages");
 const Bridge = require("../bridgestuff/Bridge");
 const path = require("path");
 const R = require("ramda");
+const { sleepOneMinute } = require("../sleep");
 
 /***********
  * Helpers *
@@ -110,7 +111,17 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 			message.reply(
 				"serverId: '" + message.guild.id + "'\n" +
 				"channelId: '" + message.channel.id + "'\n"
-			);
+			)
+				.then(sleepOneMinute)
+				.then(info => Promise.all([
+					info.delete(),
+					message.delete()
+				]))
+				.catch(R.ifElse(
+					R.propEq("message", "Unknown Message"),
+					R.always(undefined),
+					err => {throw err;}
+				));
 
 			// Don't process the message any further
 			return;
