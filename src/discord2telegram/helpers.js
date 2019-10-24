@@ -25,10 +25,24 @@ const ignoreAlreadyDeletedError = R.ifElse(
 	err => {throw err;}
 );
 
+/**
+ * Converts characters '&', '<' and '>' in strings into HTML safe strings
+ *
+ * @param {String} text	The text to escape the characters in
+ *
+ * @returns {String}	The escaped string
+ */
+const escapeHTMLSpecialChars = R.compose(
+	R.replace(/>/g, "&gt;"),
+	R.replace(/</g, "&lt;"),
+	R.replace(/&/g, "&amp;")
+);
+
 /***************
  * Export them *
  ***************/
 
 module.exports = {
-	ignoreAlreadyDeletedError
+	ignoreAlreadyDeletedError,
+	escapeHTMLSpecialChars
 };

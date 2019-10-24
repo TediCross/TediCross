@@ -125,7 +125,21 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 		}
 
 		// Get info about the sender
-		const senderName = (useNickname && message.member ? message.member.displayName : message.author.username) + (settings.telegram.colonAfterSenderName ? ":" : "");
+		const senderName = R.compose(
+			// Make it HTML safe
+			helpers.escapeHTMLSpecialChars,
+			// Add a colon if wanted
+			R.when(
+				R.always(settings.telegram.colonAfterSenderName),
+				senderName => senderName + ":"
+			),
+			// Figure out what name to use
+			R.ifElse(
+				message => useNickname && !R.isNil(message.member),
+				R.path(["member", "displayName"]),
+				R.path(["author", "username"])
+			)
+		)(message);
 
 		// Check if the message is from the correct chat
 		const bridges = bridgeMap.fromDiscordChannelId(message.channel.id);

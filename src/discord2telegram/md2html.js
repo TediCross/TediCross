@@ -5,6 +5,7 @@
  **************************/
 
 const simpleMarkdown = require("simple-markdown");
+const { escapeHTMLSpecialChars } = require("./helpers");
 
 /***********
  * Helpers *
@@ -82,10 +83,7 @@ const mdParse = simpleMarkdown.defaultBlockParse;
  */
 function md2html(text) {
 	// Escape HTML in the input
-	const processedText = text
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;");
+	const processedText = escapeHTMLSpecialChars(text);
 
 	// Parse the markdown and build HTML out of it
 	const html = mdParse(processedText)
