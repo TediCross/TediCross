@@ -18,7 +18,6 @@ class BridgeSettingsDiscord {
 	 * Creates a new BridgeSettingsDiscord object
 	 *
 	 * @param {Object} settings	Settings for the Discord side of the bridge
-	 * @param {String} settings.serverId	ID of the Discord server this bridge is part of
 	 * @param {String} settings.channelId	ID of the Discord channel this bridge is part of
 	 * @param {Boolean} settings.relayJoinMessages	Whether or not to relay join messages from Discord to Telegram
 	 * @param {Boolean} settings.relayLeaveMessages	Whether or not to relay leave messages from Discord to Telegram
@@ -27,13 +26,6 @@ class BridgeSettingsDiscord {
 	 */
 	constructor(settings) {
 		BridgeSettingsDiscord.validate(settings);
-
-		/**
-		 * ID of the Discord server this bridge is part of
-		 *
-		 * @type {String}
-		 */
-		this.serverId = settings.serverId;
 
 		/**
 		 * ID of the Discord channel this bridge is part of

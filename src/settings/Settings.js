@@ -187,6 +187,12 @@ class Settings {
 			delete bridge.telegram.ignoreCommands;
 		}
 
+		// 2019-11-08: Remove the `serverId` setting from the discord part of the bridges
+		for (const bridge of settings.bridges) {
+			delete bridge.discord.serverId;
+		}
+
+
 		// All done!
 		return settings;
 	}

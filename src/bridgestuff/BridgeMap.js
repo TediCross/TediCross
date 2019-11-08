@@ -45,22 +45,12 @@ class BridgeMap {
 		 */
 		this._telegramToBridge = new Map();
 
-		/**
-		 * Set of Discord servers which are bridged
-		 *
-		 * @type {Set}
-		 *
-		 * @private
-		 */
-		this._discordServers = new Set();
-
 		// Populate the maps and set
 		bridges.forEach((bridge) => {
 			const d = this._discordToBridge.get(bridge.discord.channelId) || [];
 			const t = this._telegramToBridge.get(bridge.telegram.chatId) || [];
 			this._discordToBridge.set(bridge.discord.channelId, [...d, bridge]);
 			this._telegramToBridge.set(bridge.telegram.chatId, [...t, bridge]);
-			this._discordServers.add(bridge.discord.serverId);
 		});
 	}
 
@@ -84,17 +74,6 @@ class BridgeMap {
 	 */
 	fromDiscordChannelId(discordChannelId) {
 		return R.defaultTo([], this._discordToBridge.get(discordChannelId));
-	}
-
-	/**
-	 * Checks if a Discord server ID is known
-	 *
-	 * @param {String} discordServerId	Discord server ID to check
-	 *
-	 * @returns {Boolean}	True if the server is known, false otherwise
-	 */
-	knownDiscordServer(discordServerId) {
-		return this._discordServers.has(discordServerId);
 	}
 }
 

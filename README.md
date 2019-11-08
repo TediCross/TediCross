@@ -39,7 +39,7 @@ Setting up the bot requires basic knowledge of the command line, which is bash o
  10. Start TediCross: `npm start`
  11. Ask the bots for the remaining details. In the Telegram chat and the Discord channel, write `/chatinfo`. Put the info you get in the settings file.
    - If you want to bridge a Telegram group or channel, remember that the ID is negative. Include the `-` when entering it into the settings file
-   - It is important that the Discord IDs are wrapped with single quotes when entered into the settings file. `'244791815503347712'`, not `244791815503347712`
+   - It is important that the Discord  channel ID is wrapped with single quotes when entered into the settings file. `'244791815503347712'`, not `244791815503347712`
  12. Restart TediCross. You stop it by pressing CTRL + C in the terminal it is running in
 
 Done! You now have a nice bridge between a Telegram chat and a Discord channel
@@ -72,8 +72,7 @@ As mentioned in the step by step installation guide, there is a settings file. H
 	* `telegram.relayLeaveMessages`: Whether or not to relay messages to Discord about people leaving the Telegram chat
 	* `telegram.sendUsernames`: Whether or not to send the sender's name with the messages to Discord
 	* `telegram.relayCommands`: If set to `false`, messages starting with a `/` are not relayed to Discord
-	* `discord.guild`: ID of the server the Discord end of the bridge is in. If a message to the bot originates from within this server, but not the correct channel, it is ignored, instead of triggering a reply telling the sender to get their own bot. See step 11 on how to aquire it
-	* `discord.channel`: ID of the channel the Discord end of the bridge is in. See step 11 on how to aquire it
+	* `discord.channelId`: ID of the channel the Discord end of the bridge is in. See step 11 on how to aquire it
 	* `discord.relayJoinMessages`: Whether or not to relay messages to Telegram about people joining the Discord chat
 	* `discord.relayLeaveMessages`: Whether or not to relay messages to Telegram about people leaving the Discord chat
 	* `discord.sendUsernames`: Whether or not to send the sender's name with the messages to Telegram
