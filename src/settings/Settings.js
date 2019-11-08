@@ -183,8 +183,8 @@ class Settings {
 		for (const bridge of settings.bridges) {
 			if (R.isNil(bridge.telegram.relayCommands)) {
 				bridge.telegram.relayCommands = bridge.telegram.ignoreCommands;
-				delete bridge.telegram.ignoreCommands;
 			}
+			delete bridge.telegram.ignoreCommands;
 		}
 
 		// All done!
