@@ -13,6 +13,8 @@ const relayOldMessages = require("./relayOldMessages");
 const Bridge = require("../bridgestuff/Bridge");
 const path = require("path");
 const R = require("ramda");
+const { sleepOneMinute } = require("../sleep");
+const helpers = require("./helpers");
 
 /***********
  * Helpers *
@@ -112,14 +114,34 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 			// It is. Give it
 			message.reply(
 				"\nchannelId: '" + message.channel.id + "'"
-			);
+			)
+				.then(sleepOneMinute)
+				.then(info => Promise.all([
+					info.delete(),
+					message.delete()
+				]))
+				.catch(helpers.ignoreAlreadyDeletedError);
 
 			// Don't process the message any further
 			return;
 		}
 
 		// Get info about the sender
-		const senderName = (useNickname && message.member ? message.member.displayName : message.author.username) + (settings.telegram.colonAfterSenderName ? ":" : "");
+		const senderName = R.compose(
+			// Make it HTML safe
+			helpers.escapeHTMLSpecialChars,
+			// Add a colon if wanted
+			R.when(
+				R.always(settings.telegram.colonAfterSenderName),
+				senderName => senderName + ":"
+			),
+			// Figure out what name to use
+			R.ifElse(
+				message => useNickname && !R.isNil(message.member),
+				R.path(["member", "displayName"]),
+				R.path(["author", "username"])
+			)
+		)(message);
 
 		// Check if the message is from the correct chat
 		const bridges = bridgeMap.fromDiscordChannelId(message.channel.id);
@@ -212,7 +234,11 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 				"This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. "
 				+ "If you wish to use TediCross yourself, please download and create an instance. "
 				+ "See https://github.com/TediCross/TediCross"
-			);
+			)
+				// Delete it again after some time
+				.then(sleepOneMinute)
+				.then(message => message.delete())
+				.catch(helpers.ignoreAlreadyDeletedError);
 		}
 	});
 

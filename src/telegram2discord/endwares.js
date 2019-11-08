@@ -7,7 +7,8 @@
 const R = require("ramda");
 const From = require("./From");
 const MessageMap = require("../MessageMap");
-const messageConverter = require("./messageConverter");
+const { sleepOneMinute } = require("../sleep");
+const helpers = require("./helpers");
 
 /***********
  * Helpers *
@@ -46,7 +47,18 @@ const createMessageHandler = R.curry((func, ctx) => {
  * @returns {undefined}
  */
 function chatinfo(ctx) {
-	ctx.reply(`chatID: ${ctx.tediCross.message.chat.id}`);
+	// Reply with the info
+	ctx.reply(`chatID: ${ctx.tediCross.message.chat.id}`)
+		// Wait some time
+		.then(sleepOneMinute)
+		// Delete the info and the command
+		.then(message => Promise.all([
+			// Delete the info
+			helpers.deleteMessage(ctx, message),
+			// Delete the command
+			ctx.deleteMessage()
+		]))
+		.catch(helpers.ignoreAlreadyDeletedError);
 }
 
 /**
