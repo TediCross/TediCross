@@ -55,11 +55,11 @@ class BridgeSettingsTelegram {
 		this.sendUsernames = settings.sendUsernames;
 
 		/**
-		 * Whether or not to ignore messages starting with "/" (commands)
+		 * Whether or not to relay messages starting with "/" (commands)
 		 *
 		 * @type {Boolean}
 		 */
-		this.ignoreCommands = settings.ignoreCommands;
+		this.relayCommands = settings.relayCommands;
 	}
 
 	/**
@@ -90,9 +90,9 @@ class BridgeSettingsTelegram {
 			throw new Error("`settings.sendUsernames` must be a boolean");
 		}
 
-		// Check that ignoreCommands is a boolean
-		if (Boolean(settings.ignoreCommands) !== settings.ignoreCommands) {
-			throw new Error("`settings.ignoreCommands` must be a boolean");
+		// Check that relayCommands is a boolean
+		if (Boolean(settings.relayCommands) !== settings.relayCommands) {
+			throw new Error("`settings.relayCommands` must be a boolean");
 		}
 	}
 }

@@ -19,6 +19,7 @@ bridges:
       relayJoinMessages: true
       relayLeaveMessages: true
       sendUsernames: true
+      relayCommands: true
     discord:
       serverId: 'DISCORD_SERVER_ID'         # This ID must be wrapped in single quotes. Example: '244791815503347712'
       channelId: 'DISCORD_CHANNEL_ID'       # This ID must be wrapped in single quotes. Example: '244791815503347712'
