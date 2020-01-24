@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "node main.js",
+    "start-dev": "nodemon main.js",
     "lint": "eslint ."
   },
   "dependencies": {
@@ -23,7 +24,8 @@
     "yargs": "^13.3.0"
   },
   "devDependencies": {
-    "eslint": "^5.16.0"
+    "eslint": "^5.16.0",
+    "nodemon": "^2.0.2"
   },
   "eslintConfig": {
     "parserOptions": {
