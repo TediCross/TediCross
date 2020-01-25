@@ -80,7 +80,7 @@ const newChatMembers = createMessageHandler((ctx, bridge) =>
 		const text = `**${from.firstName} (${R.defaultTo("No username", from.username)})** joined the Telegram side of the chat`;
 
 		// Pass it on
-		ctx.TediCross.dcBot.channels.get(bridge.discord.channelId)
+		helpers.getDiscordChannel(ctx, bridge)
 			.send(text);
 	})(ctx.tediCross.message.new_chat_members)
 );
@@ -102,7 +102,7 @@ const leftChatMember = createMessageHandler((ctx, bridge) => {
 	const text = `**${from.firstName} (${R.defaultTo("No username", from.username)})** left the Telegram side of the chat`;
 
 	// Pass it on
-	ctx.TediCross.dcBot.channels.get(bridge.discord.channelId)
+	helpers.getDiscordChannel(ctx, bridge)
 		.send(text);
 });
 
@@ -118,7 +118,7 @@ const leftChatMember = createMessageHandler((ctx, bridge) => {
 function relayMessage(ctx) {
 	R.forEach(async prepared => {
 		// Get the channel to send to
-		const channel = ctx.TediCross.dcBot.channels.get(prepared.bridge.discord.channelId);
+		const channel = helpers.getDiscordChannel(ctx, prepared.bridge);
 
 		// Make the header
 		let header = prepared.header;
@@ -159,8 +159,7 @@ const handleEdits = createMessageHandler(async (ctx, bridge) => {
 		const [dcMessageId] = ctx.TediCross.messageMap.getCorresponding(MessageMap.TELEGRAM_TO_DISCORD, bridge, tgMessage.message_id);
 
 		// Get the messages from Discord
-		const dcMessage = await ctx.TediCross.dcBot.channels
-			.get(bridge.discord.channelId)
+		const dcMessage = await helpers.getDiscordChannel(ctx, bridge)
 			.fetchMessage(dcMessageId);
 
 		R.forEach(async prepared => {

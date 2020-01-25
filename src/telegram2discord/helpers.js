@@ -39,11 +39,36 @@ const deleteMessage = R.curry((ctx, { chat, message_id }) =>
 		message_id
 	));
 
+/**
+ * Gets a Discord channel by ID from a Discord bot
+ *
+ * @param {Context} ctx	The Telegraf context to use
+ * @param {Bridge} bridge	The bridge to get the channel for
+ *
+ * @returns {Discord.Channel}	The channel
+ *
+ * @throws {Error}	If the channel was not found
+ */
+const getDiscordChannel = R.curry((ctx, { name, discord: { channelId } }) => {
+	// Get the channel
+	const channel = ctx.TediCross.dcBot.channels.get(channelId);
+
+	// Verify it exists
+	if (R.isNil(channel)) {
+		ctx.TediCross.logger.error(`[${name}] Could not get Discord channel with ID '${channelId}'. Please verify it is correct. Remember the quotes!`);
+		throw new Error(`Could not find channel with ID '${channelId}'`);
+	}
+
+	// Return it
+	return channel;
+});
+
 /***************
  * Export them *
  ***************/
 
 module.exports = {
 	ignoreAlreadyDeletedError,
-	deleteMessage
+	deleteMessage,
+	getDiscordChannel
 };
