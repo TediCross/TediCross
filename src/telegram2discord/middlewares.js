@@ -65,7 +65,9 @@ function createTextObjFromMessage(ctx, message) {
  *
  * @returns {String}	The reply text to display
  */
-function makeReplyText(replyTo, replyLength, maxReplyLines) {
+const makeReplyText = (replyTo, replyLength, maxReplyLines) => {
+	const countDoublePipes = str => str.match(/\|\|/g).length;
+
 	// Make the reply string
 	return R.compose(
 		// Add ellipsis if the text was cut
@@ -77,6 +79,18 @@ function makeReplyText(replyTo, replyLength, maxReplyLines) {
 			R.identity,
 			R.concat(R.__, "…")
 		),
+		// Handle spoilers (pairs of "||" in Discord)
+		R.ifElse(
+			// If one of a pair of "||" has been removed
+			quote => R.and(
+				countDoublePipes(quote, "||") % 2 === 1,
+				countDoublePipes(replyTo.text.raw) % 2 === 0
+			),
+			// Add one to the end
+			R.concat(R.__, "||"),
+			// Otherwise do nothing
+			R.identity
+		),
 		// Take only a number of lines
 		R.join("\n"),
 		R.slice(0, maxReplyLines),
@@ -84,7 +98,7 @@ function makeReplyText(replyTo, replyLength, maxReplyLines) {
 		// Take only a portion of the text
 		R.slice(0, replyLength),
 	)(replyTo.text.raw);
-}
+};
 
 /**
  * Makes a discord mention out of a username
@@ -565,7 +579,7 @@ function addPreparedObj(ctx, next) {
 				tc => !R.isNil(tc.replyTo) && ctx.TediCross.settings.discord.displayTelegramReplies === "embed",
 				tc => {
 					// Make the text
-					const replyText = handleEntities(tc.replyTo.text.raw, tc.replyTo.text.entities, ctx.TediCross.dcBot, bridge);
+					const replyText = makeReplyText(tc.replyTo, ctx.TediCross.settings.discord.replyLength, ctx.TediCross.settings.discord.maxReplyLines);
 
 					return new Discord.RichEmbed({
 						// Discord will not accept embeds with more than 2048 characters

@@ -46,7 +46,7 @@ const createMessageHandler = R.curry((func, ctx) => {
  *
  * @returns {undefined}
  */
-function chatinfo(ctx) {
+const chatinfo = ctx => {
 	// Reply with the info
 	ctx.reply(`chatID: ${ctx.tediCross.message.chat.id}`)
 		// Wait some time
@@ -59,7 +59,7 @@ function chatinfo(ctx) {
 			ctx.deleteMessage()
 		]))
 		.catch(helpers.ignoreAlreadyDeletedError);
-}
+};
 
 /**
  * Handles users joining chats
@@ -115,7 +115,7 @@ const leftChatMember = createMessageHandler((ctx, bridge) => {
  *
  * @returns {undefined}
  */
-function relayMessage(ctx) {
+const relayMessage = ctx =>
 	R.forEach(async prepared => {
 		// Get the channel to send to
 		const channel = helpers.getDiscordChannel(ctx, prepared.bridge);
@@ -142,7 +142,6 @@ function relayMessage(ctx) {
 		// Make the mapping so future edits can work XXX Only the last chunk is considered
 		ctx.TediCross.messageMap.insert(MessageMap.TELEGRAM_TO_DISCORD, prepared.bridge, ctx.tediCross.messageId, dcMessage.id);
 	})(ctx.tediCross.prepared);
-}
 
 /**
  * Handles message edits
