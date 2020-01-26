@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node main.js",
-    "start-dev": "nodemon main.js",
+    "start-dev": "nodemon main.js -i data/",
     "lint": "eslint ."
   },
   "dependencies": {
