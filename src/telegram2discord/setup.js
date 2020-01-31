@@ -60,6 +60,9 @@ function setup(logger, tgBot, dcBot, messageMap, bridgeMap, settings) {
 			// Log the bot's info
 			logger.info(`Telegram: ${me.username} (${me.id})`);
 
+			// Set keeping track of where the "This is an instance of TediCross..." has been sent the last minute
+			const antiInfoSpamSet = new Set();
+
 			// Add some global context
 			tgBot.context.TediCross = {
 				me,
@@ -67,7 +70,8 @@ function setup(logger, tgBot, dcBot, messageMap, bridgeMap, settings) {
 				dcBot,
 				settings,
 				messageMap,
-				logger
+				logger,
+				antiInfoSpamSet
 			};
 
 			// Apply middlewares and endwares

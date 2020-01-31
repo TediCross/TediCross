@@ -92,6 +92,9 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 	const latestDiscordMessageIds = new LatestDiscordMessageIds(logger, path.join(datadirPath, "latestDiscordMessageIds.json"));
 	const useNickname = settings.discord.useNickname;
 
+	// Make a set to keep track of where the "This is an instance of TediCross..." message has been sent the last minute
+	const antiInfoSpamSet = new Set();
+
 	// Set of server IDs. Will be filled when the bot is ready
 	const knownServerIds = new Set();
 
@@ -229,16 +232,21 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 				}
 			});
 		} else if (R.isNil(message.channel.guild) || !knownServerIds.has(message.channel.guild.id)) {	// Check if it is the correct server
-			// The message is from the wrong chat. Inform the sender that this is a private bot
-			message.reply(
-				"This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. "
-				+ "If you wish to use TediCross yourself, please download and create an instance. "
-				+ "See https://github.com/TediCross/TediCross"
-			)
-				// Delete it again after some time
-				.then(sleepOneMinute)
-				.then(message => message.delete())
-				.catch(helpers.ignoreAlreadyDeletedError);
+			// The message is from the wrong chat. Inform the sender that this is a private bot, if they have not been informed the last minute
+			if (!antiInfoSpamSet.has(message.channel.id)) {
+				antiInfoSpamSet.add(message.channel.id);
+
+				message.reply(
+					"This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. "
+					+ "If you wish to use TediCross yourself, please download and create an instance. "
+					+ "See https://github.com/TediCross/TediCross"
+				)
+					// Delete it again after some time
+					.then(sleepOneMinute)
+					.then(message => message.delete())
+					.catch(helpers.ignoreAlreadyDeletedError)
+					.then(() => antiInfoSpamSet.delet(message.channel.id));
+			}
 		}
 	});
 
