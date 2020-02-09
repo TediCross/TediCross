@@ -137,19 +137,6 @@ class Settings {
 		// Make a clone, to not operate directly on the provided object
 		const settings = R.clone(rawSettings);
 
-		// 2018-11-25: Add the `sendUsername` option to the bridges
-		for (const bridge of settings.bridges) {
-			// Do the Telegram part
-			if (bridge.telegram.sendUsernames === undefined) {
-				bridge.telegram.sendUsernames = true;
-			}
-
-			// Do the Discord part
-			if (bridge.discord.sendUsernames === undefined) {
-				bridge.discord.sendUsernames = true;
-			}
-		}
-
 		// 2019-02-16: Add the `crossDeleteOnTelegram` option to Discord
 		for (const bridge of settings.bridges) {
 			if (bridge.discord.crossDeleteOnTelegram === undefined) {

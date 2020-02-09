@@ -51,7 +51,7 @@ class DiscordSettings {
 		this.useNickname = settings.useNickname;
 
 		/**
-		 * How to display replies from Telegram. Either `embed` or `inline`
+		 * How to display replies from Telegram. Either `blockquote`, `embed` or `inline`
 		 *
 		 * @type {String}
 		 */
@@ -132,8 +132,8 @@ class DiscordSettings {
 		}
 
 		// Check that `displayTelegramReplies` is an acceptable string
-		if (!["embed", "inline"].includes(settings.displayTelegramReplies)) {
-			throw new Error("`settings.displayTelegramReplies` must be either \"embed\" or \"inline\"");
+		if (!["blockquote", "embed", "inline"].includes(settings.displayTelegramReplies)) {
+			throw new Error("`settings.displayTelegramReplies` must be either \"blockquote\", \"embed\" or \"inline\"");
 		}
 
 		// Check that `replyLength` is an integer

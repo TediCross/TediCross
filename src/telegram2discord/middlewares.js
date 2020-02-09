@@ -66,7 +66,10 @@ function createTextObjFromMessage(ctx, message) {
  * @returns {String}	The reply text to display
  */
 const makeReplyText = (replyTo, replyLength, maxReplyLines) => {
-	const countDoublePipes = str => str.match(/\|\|/g).length;
+	const countDoublePipes = R.tryCatch(
+		str => str.match(/\|\|/g).length,
+		R.always(0)
+	);
 
 	// Make the reply string
 	return R.compose(
@@ -588,9 +591,12 @@ function addPreparedObj(ctx, next) {
 				return header;
 			})();
 
+			// Helper method to shorten code for testing reply display type
+			const isReplyType = R.curry((type, tc)  => !R.isNil(tc.replyTo) && ctx.TediCross.settings.discord.displayTelegramReplies === type);
+
 			// Handle embed replies
 			const embed = R.ifElse(
-				tc => !R.isNil(tc.replyTo) && ctx.TediCross.settings.discord.displayTelegramReplies === "embed",
+				isReplyType("embed"),
 				tc => {
 					// Make the text
 					const replyText = makeReplyText(tc.replyTo, ctx.TediCross.settings.discord.replyLength, ctx.TediCross.settings.discord.maxReplyLines);
@@ -600,6 +606,16 @@ function addPreparedObj(ctx, next) {
 						description: R.slice(0, 2048, replyText)
 					});
 				},
+				R.always(undefined)
+			)(tc);
+
+			// Handle blockquote replies
+			const replyQuote = R.ifElse(
+				isReplyType("blockquote"),
+				R.compose(
+					R.replace(/^/gm, "> "),
+					tc => makeReplyText(tc.replyTo, ctx.TediCross.settings.discord.replyLength, ctx.TediCross.settings.discord.maxReplyLines),
+				),
 				R.always(undefined)
 			)(tc);
 
@@ -614,7 +630,15 @@ function addPreparedObj(ctx, next) {
 			)(tc);
 
 			// Make the text to send
-			const text = handleEntities(tc.text.raw, tc.text.entities, ctx.TediCross.dcBot, bridge);
+			const text = (() => {
+				let text = handleEntities(tc.text.raw, tc.text.entities, ctx.TediCross.dcBot, bridge);
+
+				if (isReplyType("blockquote", tc)) {
+					text = replyQuote + "\n" + text;
+				}
+
+				return text;
+			})();
 
 			return {
 				bridge,
