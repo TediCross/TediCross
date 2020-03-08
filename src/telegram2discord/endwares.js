@@ -120,17 +120,8 @@ const relayMessage = ctx =>
 		// Get the channel to send to
 		const channel = helpers.getDiscordChannel(ctx, prepared.bridge);
 
-		// Make the header
-		let header = prepared.header;
-
-		// Handle embed replies
-		if (prepared.embed) {
-			await channel.send(header, { embed: prepared.embed });
-			header = "";
-		}
-
 		// Discord doesn't handle messages longer than 2000 characters. Split it up into chunks that big
-		const messageText = header + "\n" + prepared.text;
+		const messageText = prepared.header + "\n" + prepared.text;
 		const chunks = R.splitEvery(2000, messageText);
 
 		// Send them in serial, with the attachment first, if there is one

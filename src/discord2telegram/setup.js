@@ -245,7 +245,7 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 					.then(sleepOneMinute)
 					.then(message => message.delete())
 					.catch(helpers.ignoreAlreadyDeletedError)
-					.then(() => antiInfoSpamSet.delet(message.channel.id));
+					.then(() => antiInfoSpamSet.delete(message.channel.id));
 			}
 		}
 	});

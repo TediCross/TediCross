@@ -179,6 +179,10 @@ class Settings {
 			delete bridge.discord.serverId;
 		}
 
+		// 2020-02-09: Removed the `displayTelegramReplies` option from Discord
+		if (!R.isNil(settings.discord.displayTelegramReplies)) {
+			delete settings.discord.displayTelegramReplies;
+		}
 
 		// All done!
 		return settings;

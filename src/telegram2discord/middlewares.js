@@ -542,15 +542,7 @@ function addPreparedObj(ctx, next) {
 					)(tc.replyTo)
 				;
 
-				// The original text, if this is a reply
-				const repliedToText = R.isNil(tc.replyTo)
-					? null
-					: (ctx.TediCross.settings.discord.displayTelegramReplies === "inline"
-						? makeReplyText(tc.replyTo, ctx.TediCross.settings.discord.replyLength, ctx.TediCross.settings.discord.maxReplyLines)
-						: null
-					)
-				;
-
+				// Build the header
 				let header = "";
 				if (bridge.telegram.sendUsernames) {
 					if (!R.isNil(tc.forwardFrom)) {
@@ -558,13 +550,7 @@ function addPreparedObj(ctx, next) {
 						header = `**${originalSender}** (forwarded by **${senderName}**)`;
 					} else if (!R.isNil(tc.replyTo)) {
 						// Reply
-						header = `**${senderName}** (in reply to **${repliedToName}**`;
-
-						if (!R.isNil(repliedToText)) {
-							header = `${header}: _${R.replace(/\n/g, " ", repliedToText)}_)`;
-						} else {
-							header = `${header})`;
-						}
+						header = `**${senderName}** (in reply to **${repliedToName}**)`;
 					} else {
 						// Ordinary message
 						header = `**${senderName}**`;
@@ -575,13 +561,7 @@ function addPreparedObj(ctx, next) {
 						header = `(forward from **${originalSender}**)`;
 					} else if (!R.isNil(tc.replyTo)) {
 						// Reply
-						header = `(in reply to **${repliedToName}**`;
-
-						if (!R.isNil(repliedToText)) {
-							header = `${header}: _${R.replace(/\n/g, " ", repliedToText)}_)`;
-						} else {
-							header = `${header})`;
-						}
+						header = `(in reply to **${repliedToName}**)`;
 					} else {
 						// Ordinary message
 						header = "";
@@ -591,27 +571,9 @@ function addPreparedObj(ctx, next) {
 				return header;
 			})();
 
-			// Helper method to shorten code for testing reply display type
-			const isReplyType = R.curry((type, tc)  => !R.isNil(tc.replyTo) && ctx.TediCross.settings.discord.displayTelegramReplies === type);
-
-			// Handle embed replies
-			const embed = R.ifElse(
-				isReplyType("embed"),
-				tc => {
-					// Make the text
-					const replyText = makeReplyText(tc.replyTo, ctx.TediCross.settings.discord.replyLength, ctx.TediCross.settings.discord.maxReplyLines);
-
-					return new Discord.RichEmbed({
-						// Discord will not accept embeds with more than 2048 characters
-						description: R.slice(0, 2048, replyText)
-					});
-				},
-				R.always(undefined)
-			)(tc);
-
 			// Handle blockquote replies
 			const replyQuote = R.ifElse(
-				isReplyType("blockquote"),
+				tc => !R.isNil(tc.replyTo),
 				R.compose(
 					R.replace(/^/gm, "> "),
 					tc => makeReplyText(tc.replyTo, ctx.TediCross.settings.discord.replyLength, ctx.TediCross.settings.discord.maxReplyLines),
@@ -633,7 +595,7 @@ function addPreparedObj(ctx, next) {
 			const text = (() => {
 				let text = handleEntities(tc.text.raw, tc.text.entities, ctx.TediCross.dcBot, bridge);
 
-				if (isReplyType("blockquote", tc)) {
+				if (!R.isNil(replyQuote)) {
 					text = replyQuote + "\n" + text;
 				}
 
@@ -643,7 +605,6 @@ function addPreparedObj(ctx, next) {
 			return {
 				bridge,
 				header,
-				embed,
 				file,
 				text
 			};
