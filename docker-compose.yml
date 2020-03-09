@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+    tedicross:
+        image: tedicross/tedicross:latest
+        restart: ${DOCKER_RESTART_POLICY:-always}
+        env_file:
+          - .env
+        user: ${TEDICROSS_USER:-node}
+        volumes:
+        - ./${DATA_PATH:-data}:/opt/TediCross/data

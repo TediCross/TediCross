@@ -1,0 +1,7 @@
+/guides
+/data
+/node_modules
+.env.example
+docker-compose.yml
+example.settings.yaml
+.gitignore

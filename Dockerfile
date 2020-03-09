@@ -2,12 +2,12 @@ FROM node:10-alpine
 
 WORKDIR /opt/TediCross/
 
-COPY . .
+RUN chown node:node /opt/TediCross/
+
+USER node
+COPY --chown=node . .
 
 RUN npm install --production
-
-RUN adduser -S tedicross
-USER tedicross
 
 VOLUME /opt/TediCross/data/
 
