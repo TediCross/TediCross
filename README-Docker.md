@@ -25,3 +25,7 @@ docker run \
 Of course, you can add `-d` or `--rm` or a name or whatever else you want to that command
 
 If you have the tokens in the settings file instead of reading them from the environment, you can of course drop the `-e` lines
+
+### Permissions
+
+The dockerfile says the container should start as the user with UID 1000. This should be fine for most single user Linux systems, but may cause problems for multi user systems. If you get a permission error when starting the container, try changing the user the container is using. Find your user's UID with the command `id -u $USER`, then add the argument `-u <UID>` to the `docker run` command. For example `docker run -u 1001 -v ...`
