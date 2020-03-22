@@ -19,7 +19,7 @@
     "moment": "^2.24.0",
     "ramda": "^0.26.1",
     "request": "^2.88.0",
-    "simple-markdown": "^0.4.4",
+    "simple-markdown": "^0.7.2",
     "telegraf": "^3.32.0",
     "yargs": "^13.3.0"
   },
