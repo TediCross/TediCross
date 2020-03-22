@@ -181,6 +181,10 @@ If you cloned the git repo, just do a `git pull`. Running `npm install` may or m
 
 If you downloaded TediCross as a zip, do step 2, 3 and 4 in the installation guide again. Then move `settings.yaml` (or the deprecated `settings.json`, which will automatically be converted to `settings.yaml`) and the whole `data/` directory from the old version to the new one and start it.
 
+### Why don't you use webhooks to send the messages to Discord? They are much better
+
+This has been tried, and it did indeed make the messages much prettier. The bot can impersonate multiple people this way. Unfortunately, messages sent through a webhook does not belong to the bot, meaning the bot cannot edit them. Cross-editing from Telegram to Discord is then lost. In addition, it requires the bot owner to have two-factor authentication activated.
+
 ### Do you know of any way to relay messages from Discord to Telegram (or the other way) without bots?
 
 No
