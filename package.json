@@ -1,31 +1,35 @@
 {
   "name": "GoatBot",
-  "version": "0.1.500",
+  "version": "0.2.500",
   "description": "Almost Better TediCross",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Myke500/GoatBot.git"
-  },
+   },
   "scripts": {
     "start": "node main.js",
+    "start-dev": "nodemon main.js -i data/",
     "lint": "eslint ."
   },
   "dependencies": {
-    "discord.js": "^11.3.0",
-    "js-yaml": "^3.11.0",
-    "mime": "^2.2.0",
-    "moment": "^2.21.0",
-    "ramda": "^0.25.0",
-    "simple-markdown": "^0.7.1",
-    "teleapiwrapper": "^2.3.2"
+    "discord.js": "^11.5.1",
+    "js-yaml": "^3.13.1",
+    "mime": "^2.4.4",
+    "moment": "^2.24.0",
+    "ramda": "^0.26.1",
+    "request": "^2.88.0",
+    "simple-markdown": "^0.4.4",
+    "telegraf": "^3.32.0",
+    "yargs": "^13.3.0"
   },
   "devDependencies": {
-    "eslint": "^4.19.1"
+    "eslint": "^5.16.0",
+    "nodemon": "^2.0.2"
   },
   "eslintConfig": {
     "parserOptions": {
-      "ecmaVersion": 2017
+      "ecmaVersion": 2018
     },
     "env": {
       "es6": true,
