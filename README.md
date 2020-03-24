@@ -3,10 +3,11 @@ GoatBot
 GoatBot is a bot which bridges a chat in [Telegram](https://telegram.org) with a channel in [Discord](https://discordapp.com/).
 (Cedit to TediCross: https://github.com/TediCross/TediCross)(Do not contact TediCross for issues with this bot)
 
-There is no public GoatBot. You need to host it yourself. To host a bot, you need [nodejs](https://nodejs.org). The bot requires NodeJS 8 or higher
+There is no public GoatBot. You need to host it yourself. 
+To host a bot, you need [nodejs](https://nodejs.org). The bot requires NodeJS 8 or higher
 
 
-Features & known bugs
+Features
 ---------------------
 
 The bot is able to relay text messages and media files between Discord and Telegram. @-mentions, URLs, code (both inline and block-style) works well.  This includes @everyone and @here, if you don't want these to work, turn it off in the Bot's discord permissions.
@@ -20,9 +21,10 @@ Setting up the bot requires basic knowledge of the command line, which is bash o
  3. Open a terminal and enter the repo with the [`cd`](https://en.wikipedia.org/wiki/Cd_(command)) command. Something like `cd Downloads/goat-master`. Your exact command may differ
  4. Run the command `npm install`
  5. Make a copy of the file `example.settings.yaml` and name it `settings.yaml`
- 6. Aquire a bot token for Telegram ([How to create a Telegram bot](https://core.telegram.org/bots#3-how-do-i-create-a-bot)) and put it in the settings file
-   - The Telegram bot must be able to access all messages. Talk to [@BotFather](https://t.me/BotFather) to disable privacy mode for the bot
-   - Do NOT use another bot you already have running. That will cause all sorts of weird problems. Make a new one
+ 6. Aquire a bot token for Telegram (How to create a Telegram bot) and put it in the settings file
+The Telegram bot must be able to access all messages. Talk to @BotFather to disable privacy mode for the bot
+Do NOT use another bot you already have running. That will cause all sorts of weird problems. Make a new one
+
  7. Aquire a bot token for Discord ([How to create a Discord bot](https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token)) and put it in the settings file under `discord.token`. **NOTE** that the token is NOT the "Client Secret". The token is under the section "App bot user" further down the page
 Also make it a Real Bot! Scroll down until you see "Create a bot user" and click that. Also click "Yes, do it!"
    - Do NOT use another bot you already have running. That will cause all sorts of weird problems. Make a new one
@@ -53,11 +55,14 @@ As mentioned in the step by step installation guide, there is a settings file. H
 	* `useFirstNameInsteadOfUsername`: **EXPERIMENTAL** If set to `false`, the messages sent to Discord will be tagged with the sender's username. If set to `true`, the messages sent to Discord will be tagged with the sender's first name (or nickname). Note that Discord users can't @-mention Telegram users by their first name. Defaults to `false`
 	* `colonAfterSenderName`: Whether or not to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name`. Defaults to false
 	* `skipOldMessages`: Whether or not to skip through all previous messages cached from the telegram-side and start processing new messages ONLY. Defaults to true. Note that there is no guarantee the old messages will arrive at Discord in order
-	* `sendEmojisWithStickers`: Whether or not to send the corresponding emoji when relaying stickers to Discord
+	* `sendEmojiWithStickers`: Whether or not to send the corresponding emoji when relaying stickers to Discord
 * `discord`: Object authorizing and defining the Discord bot's behaviour
 	* `token`: The Discord bot's token. It is needed for the bot to authenticate to the Discord servers and be able to send and receive messages. If set to `"env"`, GoatBot will read the token from the environment variable `DISCORD_BOT_TOKEN`
 	* `skipOldMessages`: Whether or not to skip through all previous messages sent since the bot was last turned off and start processing new messages ONLY. Defaults to true. Note that there is no guarantee the old messages will arrive at Telegram in order. **NOTE:** [Telegram has a limit](https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this) on how quickly a bot can send messages. If there is a big backlog, this will cause problems
 	* `useNickname`: Uses the sending user's nickname instead of username when relaying messages to Telegram
+	* `displayTelegramReplies`: How to display Telegram replies. Either the string `blockqoute`, `inline` or `embed`
+	* `replyLength`: How many characters of the original message to display on replies
+	* `maxReplyLines`: How many lines of the original message to display on replies
 * `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
 * `bridges`: An array containing all your chats and channels. For each object in this array, you should have the following properties:
 	* `name`: A internal name of the chat. Appears in the log
@@ -66,8 +71,8 @@ As mentioned in the step by step installation guide, there is a settings file. H
 	* `telegram.relayJoinMessages`: Whether or not to relay messages to Discord about people joining the Telegram chat
 	* `telegram.relayLeaveMessages`: Whether or not to relay messages to Discord about people leaving the Telegram chat
 	* `telegram.sendUsernames`: Whether or not to send the sender's name with the messages to Discord
-	* `discord.guild`: ID of the server the Discord end of the bridge is in. If a message to the bot originates from within this server, but not the correct channel, it is ignored, instead of triggering a reply telling the sender to get their own bot. See step 11 on how to aquire it
-	* `discord.channel`: ID of the channel the Discord end of the bridge is in. See step 11 on how to aquire it
+	* `telegram.relayCommands`: If set to `false`, messages starting with a `/` are not relayed to Discord
+	* `discord.channelId`: ID of the channel the Discord end of the bridge is in. See step 11 on how to aquire it
 	* `discord.relayJoinMessages`: Whether or not to relay messages to Telegram about people joining the Discord chat
 	* `discord.relayLeaveMessages`: Whether or not to relay messages to Telegram about people leaving the Discord chat
 	* `discord.sendUsernames`: Whether or not to send the sender's name with the messages to Telegram
@@ -125,13 +130,13 @@ To make more bridges, just copy the one you have, paste it right below and make 
 ```
 ...
 bridges:
-  - name: Default bridge
+  - name: bridge 1
     direction: both
     telegram:
       ...
     discord:
       ...
-  - name: Another bridge
+  - name: bridge 2
     direction: d2t
     telegram:
       ...
@@ -177,14 +182,13 @@ Other questions?
 ----------------
 GoatBot Support:  If you have any questions contact @Myke500 on Telegram
 
-TediCross will not provide support for GoatBot.
-Telegram:[join TediCross group](https://t.me/TediCrossSupport)
-Discord: [TediCross server](https://discord.gg/MfzGMzy)
-Or install the original TediCross Bot.
 
 Want to donate?
 ---------------
 
 Cryptocoins of the following types are accepted:
 
-* Myke500 [x42]: XNPHSmzXoPzTdKMQMZn2pbwKBpuxcYfEmS
+* x42 coin: XNPHSmzXoPzTdKMQMZn2pbwKBpuxcYfEmS
+* BTC 35rW7sSrxdJDsy6sbRwY3qyd6dbGcedBXg
+* ETH 0xf28852F04e329b30F9A5eeA086199719e631E03c
+* LTC MEXTA5GeRanntN4a6dyDftZs2LdSAQpVP1
