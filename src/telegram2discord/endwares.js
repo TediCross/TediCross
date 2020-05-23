@@ -80,8 +80,10 @@ const newChatMembers = createMessageHandler((ctx, bridge) =>
 		const text = `**${from.firstName} (${R.defaultTo("No username", from.username)})** joined the Telegram side of the chat`;
 
 		// Pass it on
-		helpers.getDiscordChannel(ctx, bridge)
-			.send(text);
+		ctx.TediCross.dcBot.ready.then(() => 
+			helpers.getDiscordChannel(ctx, bridge)
+				.send(text)
+		);
 	})(ctx.tediCross.message.new_chat_members)
 );
 
@@ -102,8 +104,10 @@ const leftChatMember = createMessageHandler((ctx, bridge) => {
 	const text = `**${from.firstName} (${R.defaultTo("No username", from.username)})** left the Telegram side of the chat`;
 
 	// Pass it on
-	helpers.getDiscordChannel(ctx, bridge)
-		.send(text);
+	ctx.TediCross.dcBot.ready.then(() => 
+		helpers.getDiscordChannel(ctx, bridge)
+			.send(text)
+		);
 });
 
 /**
@@ -117,12 +121,15 @@ const leftChatMember = createMessageHandler((ctx, bridge) => {
  */
 const relayMessage = ctx =>
 	R.forEach(async prepared => {
-		// Get the channel to send to
-		const channel = helpers.getDiscordChannel(ctx, prepared.bridge);
-
 		// Discord doesn't handle messages longer than 2000 characters. Split it up into chunks that big
 		const messageText = prepared.header + "\n" + prepared.text;
 		const chunks = R.splitEvery(2000, messageText);
+
+		// Wait for the Discord bot to become ready
+		await ctx.TediCross.dcBot.ready;
+
+		// Get the channel to send to
+		const channel = helpers.getDiscordChannel(ctx, prepared.bridge);
 
 		// Send them in serial, with the attachment first, if there is one
 		let dcMessage = await channel.send(R.head(chunks), { file: prepared.file });
@@ -147,6 +154,9 @@ const handleEdits = createMessageHandler(async (ctx, bridge) => {
 
 		// Find the ID of this message on Discord
 		const [dcMessageId] = ctx.TediCross.messageMap.getCorresponding(MessageMap.TELEGRAM_TO_DISCORD, bridge, tgMessage.message_id);
+
+		// Wait for the Discord bot to become ready
+		await ctx.TediCross.dcBot.ready;
 
 		// Get the messages from Discord
 		const dcMessage = await helpers.getDiscordChannel(ctx, bridge)
