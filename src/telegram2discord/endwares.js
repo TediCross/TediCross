@@ -107,7 +107,7 @@ const leftChatMember = createMessageHandler((ctx, bridge) => {
 	ctx.TediCross.dcBot.ready.then(() => 
 		helpers.getDiscordChannel(ctx, bridge)
 			.send(text)
-		);
+	);
 });
 
 /**
@@ -123,7 +123,7 @@ const relayMessage = ctx =>
 	R.forEach(async prepared => {
 		// Discord doesn't handle messages longer than 2000 characters. Split it up into chunks that big
 		const messageText = prepared.header + "\n" + prepared.text;
-		const chunks = R.splitEvery(2000, messageText);
+		let chunks = R.splitEvery(2000, messageText);
 
 		// Wait for the Discord bot to become ready
 		await ctx.TediCross.dcBot.ready;
@@ -131,11 +131,22 @@ const relayMessage = ctx =>
 		// Get the channel to send to
 		const channel = helpers.getDiscordChannel(ctx, prepared.bridge);
 
-		// Send them in serial, with the attachment first, if there is one
-		let dcMessage = await channel.send(R.head(chunks), { file: prepared.file });
-		if (R.length(chunks) > 1) {
-			dcMessage = await R.reduce((p, chunk) => p.then(() => channel.send(chunk)), Promise.resolve(), R.tail(chunks));
+		let dcMessage = null;
+		// Send the attachment first, if there is one
+		if (!R.isNil(prepared.file)) {
+			try {
+				dcMessage = await channel.send(R.head(chunks), { file: prepared.file });
+				chunks = R.tail(chunks);
+			} catch (err) {
+				if (err.message === "Request entity too large") {
+					dcMessage = await channel.send(`***${prepared.senderName}** on Telegram sent a file, but it was too large for Discord. If you want it, ask them to send it some other way*`);
+				} else {
+					throw err;
+				}
+			}
 		}
+		// Send the rest in serial
+		dcMessage = await R.reduce((p, chunk) => p.then(() => channel.send(chunk)), Promise.resolve(dcMessage), chunks);
 
 		// Make the mapping so future edits can work XXX Only the last chunk is considered
 		ctx.TediCross.messageMap.insert(MessageMap.TELEGRAM_TO_DISCORD, prepared.bridge, ctx.tediCross.messageId, dcMessage.id);

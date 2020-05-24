@@ -514,12 +514,12 @@ function addPreparedObj(ctx, next) {
 
 	ctx.tediCross.prepared = R.map(
 		bridge => {
+			// Get the name of the sender of this message
+			const senderName = From.makeDisplayName(ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername, tc.from);
+
 			// Make the header
 			// WARNING! Butt-ugly code! If you see a nice way to clean this up, please do it
 			const header = (() => {
-				// Get the name of the sender of this message
-				const senderName = From.makeDisplayName(ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername, tc.from);
-
 				// Get the name of the original sender, if this is a forward
 				const originalSender = R.isNil(tc.forwardFrom)
 					? null
@@ -605,6 +605,7 @@ function addPreparedObj(ctx, next) {
 			return {
 				bridge,
 				header,
+				senderName,
 				file,
 				text
 			};
