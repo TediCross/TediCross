@@ -160,29 +160,60 @@ const relayMessage = ctx =>
  * @returns {undefined}
  */
 const handleEdits = createMessageHandler(async (ctx, bridge) => {
-	try {
-		const tgMessage = ctx.tediCross.message;
+	// Function to "delete" a message on Discord
+	const del = async (ctx, bridge) => {
+		try {
+			// Find the ID of this message on Discord
+			const [dcMessageId] = ctx.TediCross.messageMap.getCorresponding(MessageMap.TELEGRAM_TO_DISCORD, bridge, ctx.tediCross.message.message_id);
 
-		// Find the ID of this message on Discord
-		const [dcMessageId] = ctx.TediCross.messageMap.getCorresponding(MessageMap.TELEGRAM_TO_DISCORD, bridge, tgMessage.message_id);
+			// Get the channel to delete on
+			const channel = helpers.getDiscordChannel(ctx, bridge);
 
-		// Wait for the Discord bot to become ready
-		await ctx.TediCross.dcBot.ready;
+			// Delete it on Discord
+			const dp = channel.bulkDelete([dcMessageId]);
 
-		// Get the messages from Discord
-		const dcMessage = await helpers.getDiscordChannel(ctx, bridge)
-			.fetchMessage(dcMessageId);
+			// Delete it on Telegram
+			const tp = ctx.deleteMessage();
 
-		R.forEach(async prepared => {
-			// Discord doesn't handle messages longer than 2000 characters. Take only the first 2000
-			const messageText = R.slice(0, 2000, prepared.header + "\n" + prepared.text);
+			await Promise.all([dp, tp]);
+		} catch (err) {
+			console.error("Could not cross-delete message from Telegram to Discord:", err);
+		}
+	};
 
-			// Send them in serial, with the attachment first, if there is one
-			await dcMessage.edit(messageText, { attachment: prepared.attachment });
-		})(ctx.tediCross.prepared);
-	} catch (err) {
-		// Log it
-		ctx.TediCross.logger.error(`[${bridge.name}] Could not edit Discord message:`, err);
+	// Function to edit a message on Discord
+	const edit = async (ctx, bridge) => {
+		try {
+			const tgMessage = ctx.tediCross.message;
+
+			// Find the ID of this message on Discord
+			const [dcMessageId] = ctx.TediCross.messageMap.getCorresponding(MessageMap.TELEGRAM_TO_DISCORD, bridge, tgMessage.message_id);
+
+			// Wait for the Discord bot to become ready
+			await ctx.TediCross.dcBot.ready;
+
+			// Get the messages from Discord
+			const dcMessage = await helpers.getDiscordChannel(ctx, bridge)
+				.fetchMessage(dcMessageId);
+
+			R.forEach(async prepared => {
+				// Discord doesn't handle messages longer than 2000 characters. Take only the first 2000
+				const messageText = R.slice(0, 2000, prepared.header + "\n" + prepared.text);
+
+				// Send them in serial, with the attachment first, if there is one
+				await dcMessage.edit(messageText, { attachment: prepared.attachment });
+			})(ctx.tediCross.prepared);
+		} catch (err) {
+			// Log it
+			ctx.TediCross.logger.error(`[${bridge.name}] Could not edit Discord message:`, err);
+		}
+	};
+
+	// Check if this is a "delete", meaning it has been edited to a single dot
+	if (bridge.telegram.crossDeleteOnDiscord && ctx.tediCross.text.raw === "." && R.isEmpty(ctx.tediCross.text.entities)) {
+		await del(ctx, bridge);
+	} else {
+		await edit(ctx, bridge);
 	}
 });
 

@@ -137,35 +137,6 @@ class Settings {
 		// Make a clone, to not operate directly on the provided object
 		const settings = R.clone(rawSettings);
 
-		// 2019-02-16: Add the `crossDeleteOnTelegram` option to Discord
-		for (const bridge of settings.bridges) {
-			if (bridge.discord.crossDeleteOnTelegram === undefined) {
-				bridge.discord.crossDeleteOnTelegram = true;
-			}
-		}
-
-		// 2019-04-21: Add the `displayTelegramReplies` option to Discord
-		if (R.isNil(settings.discord.displayTelegramReplies)) {
-			settings.discord.displayTelegramReplies = "embed";
-		}
-
-		// 2019-04-21: Add the `replyLength` option to Discord
-		if (R.isNil(settings.discord.replyLength)) {
-			settings.discord.replyLength = 100;
-		}
-
-		// 2019-04-22: Add the `ignoreCommands` option to Telegram
-		for (const bridge of settings.bridges) {
-			if (R.isNil(bridge.telegram.ignoreCommands) && R.isNil(bridge.telegram.relayCommands)) {
-				bridge.telegram.ignoreCommands = false;
-			}
-		}
-
-		// 2019-05-31: Add the `maxReplyLines` option to Discord
-		if (R.isNil(settings.discord.maxReplyLines)) {
-			settings.discord.maxReplyLines = 2;
-		}
-
 		// 2019-11-08: Turn `ignoreCommands` into `relayCommands`, as `ignoreCommands` accidently did the opposite of what it was supposed to do
 		for (const bridge of settings.bridges) {
 			if (R.isNil(bridge.telegram.relayCommands)) {
@@ -182,6 +153,13 @@ class Settings {
 		// 2020-02-09: Removed the `displayTelegramReplies` option from Discord
 		if (!R.isNil(settings.discord.displayTelegramReplies)) {
 			delete settings.discord.displayTelegramReplies;
+		}
+
+		// 2020-06-30: Added `bridge.telegram.crossDeleteOnDiscord` option
+		for (const bridge of settings.bridges) {
+			if (R.isNil(bridge.telegram.crossDeleteOnDiscord)) {
+				bridge.telegram.crossDeleteOnDiscord = true;
+			}
 		}
 
 		// All done!

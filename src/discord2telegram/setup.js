@@ -314,6 +314,7 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 				);
 			} catch (err) {
 				logger.error(`[${bridge.name}] Could not delete Telegram message:`, err);
+				logger.warn("If the previous message was a result of a message being \"deleted\" on Telegram, you can safely ignore it");
 			}
 		});
 	}
