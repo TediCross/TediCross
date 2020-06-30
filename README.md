@@ -96,10 +96,10 @@ Not much at all. Almost all the commands are written in the installation guide e
 
 This likely means you are using Ubuntu or another Debian based Linux distro. You get node version 4 when you do `apt-get install nodejs`, and it is called `nodejs` instead of `node`.
 
-TediCross requires node 8 or higher to run. To get node 8 on an Ubuntu machine, run the following two commands:
+TediCross requires node 12 or higher to run. To get node 12 on a debian based system (including Ubuntu), run the following two commands:
 
 ```
-curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
