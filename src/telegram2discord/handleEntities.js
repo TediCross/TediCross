@@ -10,8 +10,7 @@ const R = require("ramda");
  * Make some helpers *
  *********************/
 
-// XXX This is also present in `messageConverter`. Merge somehow
-const findFn = (prop, regexp) => 
+const findFn = (prop, regexp) =>
 	R.compose(
 		R.not,
 		R.isEmpty,
@@ -33,7 +32,7 @@ const findFn = (prop, regexp) =>
  *
  * @return {String} The fully converted string
  */
-function handleEntities(text, entities, dcBot, bridge) {
+async function handleEntities(text, entities, dcBot, bridge) {
 	// Don't mess up the original
 	const substitutedText = text !== undefined ? text.split("") : [""];
 
@@ -64,10 +63,11 @@ function handleEntities(text, entities, dcBot, bridge) {
 				// A mention. Substitute the Discord user ID or Discord role ID if one exists
 				// XXX Telegram considers it a mention if it is a valid Telegram username, not necessarily taken. This means the mention matches the regexp /^@[a-zA-Z0-9_]{5,}$/
 				// In turn, this means short usernames and roles in Discord, like '@devs', will not be possible to mention
-				const channel = dcBot.channels.get(bridge.discord.channelId);
+				const channel = await dcBot.channels.fetch(bridge.discord.channelId);
 				const mentionable = new RegExp(`^${part.substring(1)}$`, "i");
 				const dcUser = channel.members.find(findFn("displayName", mentionable));
-				const dcRole = channel.guild.roles.find(findFn("name", mentionable));
+				// XXX Could not find a way to actually search for roles. Looking in the cache will mostly work, but I don't think it is guaranteed
+				const dcRole = channel.guild.roles.cache.find(findFn("name", mentionable));
 				if (!R.isNil(dcUser)) {
 					substitute = `<@${dcUser.id}>`;
 				} else if (!R.isNil(dcRole)) {
@@ -111,11 +111,13 @@ function handleEntities(text, entities, dcBot, bridge) {
 				const channelName = new RegExp(`^${part.substring(1)}$`);
 
 				// Find out if this is a channel on the bridged Discord server
-				const channel = dcBot.channels.get(bridge.discord.channelId).guild.channels.find(findFn("name", channelName));
+				const channel = await dcBot.channels.fetch(bridge.discord.channelId);
+				// XXX Could not find a way to actually search for channels. Looking in the cache will mostly work, but I don't think it is guaranteed
+				const mentionedChannel = channel.guild.channels.cache.find(findFn("name", channelName));
 
 				// Make Discord recognize it as a channel mention
-				if (channel !== null) {
-					substitute = `<#${channel.id}>`;
+				if (mentionedChannel !== null) {
+					substitute = `<#${mentionedChannel.id}>`;
 				}
 				break;
 			}

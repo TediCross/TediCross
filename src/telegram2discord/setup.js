@@ -92,7 +92,7 @@ function setup(logger, tgBot, dcBot, messageMap, bridgeMap, settings) {
 			tgBot.use(middlewares.addForwardFrom);
 			tgBot.use(middlewares.addTextObj);
 			tgBot.use(middlewares.addFileObj);
-			tgBot.use(middlewares.addFileStream);
+			tgBot.use(middlewares.addFileLink);
 			tgBot.use(middlewares.addPreparedObj);
 
 			// Apply endwares

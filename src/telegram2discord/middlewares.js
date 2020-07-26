@@ -112,9 +112,9 @@ const makeReplyText = (replyTo, replyLength, maxReplyLines) => {
  *
  * @returns {String}	A Discord mention of the user
  */
-function makeDiscordMention(username, dcBot, channelId) {
+async function makeDiscordMention(username, dcBot, channelId) {
 	// Get the name of the Discord user this is a reply to
-	const dcUser = dcBot.channels.get(channelId).members.find(R.propEq("displayName", username));
+	const dcUser = await dcBot.channels.fetch(channelId).members.find(R.propEq("displayName", username));
 
 	return R.ifElse(
 		R.isNil,
@@ -232,7 +232,7 @@ function removeBridgesIgnoringCommands(ctx, next) {
 }
 
 /**
- * Removes bridges with `telegram.relayJoinMessages === false` 
+ * Removes bridges with `telegram.relayJoinMessages === false`
  *
  * @param {Object} ctx	The Telegraf context to use
  * @param {Object} ctx.tediCross	The TediCross object on the context
@@ -247,7 +247,7 @@ function removeBridgesIgnoringJoinMessages(ctx, next) {
 }
 
 /**
- * Removes bridges with `telegram.relayLeaveMessages === false` 
+ * Removes bridges with `telegram.relayLeaveMessages === false`
  *
  * @param {Object} ctx	The Telegraf context to use
  * @param {Object} ctx.tediCross	The TediCross object on the context
@@ -485,7 +485,7 @@ function addFileObj(ctx, next) {
 }
 
 /**
- * Adds a file stream to the file object on the tedicross context, if there is one
+ * Adds a file link to the file object on the tedicross context, if there is one
  *
  * @param {Object} ctx	The context to add the property to
  * @param {Object} ctx.tediCross	The tediCross on the context
@@ -493,14 +493,14 @@ function addFileObj(ctx, next) {
  *
  * @returns {Promise}	Promise resolving to nothing when the operation is complete
  */
-function addFileStream(ctx, next) {
+function addFileLink(ctx, next) {
 	return Promise.resolve()
 		.then(() => {
 			// Get a stream to the file, if one was found
 			if (!R.isNil(ctx.tediCross.file)) {
 				return ctx.telegram.getFileLink(ctx.tediCross.file.id)
 					.then(fileLink => {
-						ctx.tediCross.file.stream = request(fileLink);
+						ctx.tediCross.file.link = fileLink;
 					});
 			}
 		})
@@ -508,18 +508,18 @@ function addFileStream(ctx, next) {
 		.then(R.always(undefined));
 }
 
-function addPreparedObj(ctx, next) {
+async function addPreparedObj(ctx, next) {
 	// Shorthand for the tediCross context
 	const tc = ctx.tediCross;
 
-	ctx.tediCross.prepared = R.map(
-		bridge => {
+	ctx.tediCross.prepared = await Promise.all(R.map(
+		async bridge => {
 			// Get the name of the sender of this message
 			const senderName = From.makeDisplayName(ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername, tc.from);
 
 			// Make the header
 			// WARNING! Butt-ugly code! If you see a nice way to clean this up, please do it
-			const header = (() => {
+			const header = await (async () => {
 				// Get the name of the original sender, if this is a forward
 				const originalSender = R.isNil(tc.forwardFrom)
 					? null
@@ -529,7 +529,7 @@ function addPreparedObj(ctx, next) {
 				// Get the name of the replied-to user, if this is a reply
 				const repliedToName = R.isNil(tc.replyTo)
 					? null
-					: R.ifElse(
+					: await R.ifElse(
 						R.prop("isReplyToTediCross"),
 						R.compose(
 							username => makeDiscordMention(username, ctx.TediCross.dcBot, bridge.discord.channelId),
@@ -588,12 +588,12 @@ function addPreparedObj(ctx, next) {
 					R.prop("file")
 				),
 				R.always(undefined),
-				tc => new Discord.Attachment(tc.file.stream, tc.file.name)
+				tc => new Discord.MessageAttachment(tc.file.link, tc.file.name)
 			)(tc);
 
 			// Make the text to send
-			const text = (() => {
-				let text = handleEntities(tc.text.raw, tc.text.entities, ctx.TediCross.dcBot, bridge);
+			const text = await (async () => {
+				let text = await handleEntities(tc.text.raw, tc.text.entities, ctx.TediCross.dcBot, bridge);
 
 				if (!R.isNil(replyQuote)) {
 					text = replyQuote + "\n" + text;
@@ -610,7 +610,7 @@ function addPreparedObj(ctx, next) {
 				text
 			};
 		}
-	)(tc.bridges);
+	)(tc.bridges));
 
 	next();
 }
@@ -634,6 +634,6 @@ module.exports = {
 	addForwardFrom,
 	addTextObj,
 	addFileObj,
-	addFileStream,
+	addFileLink,
 	addPreparedObj
 };

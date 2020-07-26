@@ -33,7 +33,7 @@ const ignoreAlreadyDeletedError = R.ifElse(
  *
  * @returns {Promise}	Promise resolving when the message is deleted
  */
-const deleteMessage = R.curry((ctx, { chat, message_id }) => 
+const deleteMessage = R.curry((ctx, { chat, message_id }) =>
 	ctx.telegram.deleteMessage(
 		chat.id,
 		message_id
@@ -49,9 +49,9 @@ const deleteMessage = R.curry((ctx, { chat, message_id }) =>
  *
  * @throws {Error}	If the channel was not found
  */
-const getDiscordChannel = R.curry((ctx, { name, discord: { channelId } }) => {
+const getDiscordChannel = R.curry(async (ctx, { name, discord: { channelId } }) => {
 	// Get the channel
-	const channel = ctx.TediCross.dcBot.channels.get(channelId);
+	const channel = await ctx.TediCross.dcBot.channels.fetch(channelId);
 
 	// Verify it exists
 	if (R.isNil(channel)) {

@@ -41,10 +41,10 @@ async function relayOldMessages(logger, dcBot, latestDiscordMessageIds, bridgeMa
 			try {
 				// Check if the message exists. This will throw if it does not
 				// XXX If the message does not exist, the following `fetchMessages` call will not throw, but instead return *everything* it can get its hands on, spamming Telegram
-				await dcBot.channels.get(bridge.discord.channelId).fetchMessage(messageId);
+				await dcBot.channels.fetch(bridge.discord.channelId).fetchMessage(messageId);
 
 				// Get messages since that one
-				const messages = await dcBot.channels.get(bridge.discord.channelId).fetchMessages({limit: 100, after: messageId});
+				const messages = await dcBot.channels.fetch(bridge.discord.channelId).fetchMessages({limit: 100, after: messageId});
 
 				// Relay them
 				sortAndRelay(messages.array());

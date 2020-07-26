@@ -398,22 +398,23 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 
 			// Get the server IDs from the channels
 			R.compose(
+				// Mark the bot as ready
+				R.andThen(() => resolve()),
 				// Add them to the known server ID set
-				R.reduce((knownServerIds, serverId) => knownServerIds.add(serverId), knownServerIds),
+				R.andThen(R.reduce((knownServerIds, serverId) => knownServerIds.add(serverId), knownServerIds)),
 				// Remove the invalid channels
-				R.filter(R.complement(R.isNil)),
+				R.andThen(R.filter(R.complement(R.isNil))),
 				// Extract the server IDs from the channels
-				R.map(R.path(["guild", "id"])),
+				R.andThen(R.map(R.path(["guild", "id"]))),
+				// Wait for the channels to be fetched
+				Promise.all.bind(Promise),
 				// Get the channels
-				R.map(channelId => dcBot.channels.get(channelId)),
+				R.map(channelId => dcBot.channels.fetch(channelId)),
 				// Get the channel IDs
 				R.map(R.path(["discord", "channelId"])),
 				// Get the bridges
 				R.prop("bridges")
 			)(bridgeMap);
-
-			// Mark the bot as ready
-			resolve();
 		});
 	});
 

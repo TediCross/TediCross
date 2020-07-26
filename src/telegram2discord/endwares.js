@@ -80,9 +80,8 @@ const newChatMembers = createMessageHandler((ctx, bridge) =>
 		const text = `**${from.firstName} (${R.defaultTo("No username", from.username)})** joined the Telegram side of the chat`;
 
 		// Pass it on
-		ctx.TediCross.dcBot.ready.then(() => 
-			helpers.getDiscordChannel(ctx, bridge)
-				.send(text)
+		ctx.TediCross.dcBot.ready.then(() =>
+			helpers.getDiscordChannel(ctx, bridge).then(channel => channel.send(text))
 		);
 	})(ctx.tediCross.message.new_chat_members)
 );
@@ -104,9 +103,8 @@ const leftChatMember = createMessageHandler((ctx, bridge) => {
 	const text = `**${from.firstName} (${R.defaultTo("No username", from.username)})** left the Telegram side of the chat`;
 
 	// Pass it on
-	ctx.TediCross.dcBot.ready.then(() => 
-		helpers.getDiscordChannel(ctx, bridge)
-			.send(text)
+	ctx.TediCross.dcBot.ready.then(() =>
+		helpers.getDiscordChannel(ctx, bridge).then(channel => channel.send(text))
 	);
 });
 
@@ -129,13 +127,13 @@ const relayMessage = ctx =>
 		await ctx.TediCross.dcBot.ready;
 
 		// Get the channel to send to
-		const channel = helpers.getDiscordChannel(ctx, prepared.bridge);
+		const channel = await helpers.getDiscordChannel(ctx, prepared.bridge);
 
 		let dcMessage = null;
 		// Send the attachment first, if there is one
 		if (!R.isNil(prepared.file)) {
 			try {
-				dcMessage = await channel.send(R.head(chunks), { file: prepared.file });
+				dcMessage = await channel.send(R.head(chunks), prepared.file);
 				chunks = R.tail(chunks);
 			} catch (err) {
 				if (err.message === "Request entity too large") {
@@ -167,7 +165,7 @@ const handleEdits = createMessageHandler(async (ctx, bridge) => {
 			const [dcMessageId] = ctx.TediCross.messageMap.getCorresponding(MessageMap.TELEGRAM_TO_DISCORD, bridge, ctx.tediCross.message.message_id);
 
 			// Get the channel to delete on
-			const channel = helpers.getDiscordChannel(ctx, bridge);
+			const channel = await helpers.getDiscordChannel(ctx, bridge);
 
 			// Delete it on Discord
 			const dp = channel.bulkDelete([dcMessageId]);

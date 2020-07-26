@@ -9,15 +9,15 @@
   },
   "scripts": {
     "start": "node main.js",
-    "start-dev": "nodemon main.js -i data/",
+    "start:dev": "nodemon main.js -i data/",
     "lint": "eslint ."
   },
   "dependencies": {
-    "discord.js": "^11.5.1",
+    "discord.js": "^12.2.0",
     "js-yaml": "^3.13.1",
     "mime": "^2.4.4",
     "moment": "^2.24.0",
-    "ramda": "^0.26.1",
+    "ramda": "^0.27.0",
     "request": "^2.88.0",
     "simple-markdown": "^0.7.2",
     "telegraf": "^3.32.0",
