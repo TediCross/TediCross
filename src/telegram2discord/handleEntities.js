@@ -116,7 +116,7 @@ async function handleEntities(text, entities, dcBot, bridge) {
 				const mentionedChannel = channel.guild.channels.cache.find(findFn("name", channelName));
 
 				// Make Discord recognize it as a channel mention
-				if (mentionedChannel !== null) {
+				if (!R.isNil(mentionedChannel)) {
 					substitute = `<#${mentionedChannel.id}>`;
 				}
 				break;

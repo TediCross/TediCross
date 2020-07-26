@@ -191,8 +191,7 @@ const handleEdits = createMessageHandler(async (ctx, bridge) => {
 			await ctx.TediCross.dcBot.ready;
 
 			// Get the messages from Discord
-			const dcMessage = await helpers.getDiscordChannel(ctx, bridge)
-				.fetchMessage(dcMessageId);
+			const dcMessage = await helpers.getDiscordChannel(ctx, bridge).then(channel => channel.messages.fetch(dcMessageId));
 
 			R.forEach(async prepared => {
 				// Discord doesn't handle messages longer than 2000 characters. Take only the first 2000
