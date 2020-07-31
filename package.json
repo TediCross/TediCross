@@ -19,7 +19,7 @@
     "moment": "^2.24.0",
     "ramda": "^0.27.0",
     "simple-markdown": "^0.7.2",
-    "telegraf": "^3.32.0",
+    "telegraf": "^3.38.0",
     "yargs": "^13.3.0"
   },
   "devDependencies": {
