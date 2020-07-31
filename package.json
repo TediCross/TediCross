@@ -18,37 +18,15 @@
     "mime": "^2.4.4",
     "moment": "^2.24.0",
     "ramda": "^0.27.0",
-    "request": "^2.88.0",
     "simple-markdown": "^0.7.2",
     "telegraf": "^3.32.0",
     "yargs": "^13.3.0"
   },
   "devDependencies": {
-    "eslint": "^5.16.0",
-    "nodemon": "^2.0.2"
-  },
-  "eslintConfig": {
-    "parserOptions": {
-      "ecmaVersion": 2018
-    },
-    "env": {
-      "es6": true,
-      "node": true
-    },
-    "extends": "eslint:recommended",
-    "rules": {
-      "indent": [
-        "error",
-        "tab",
-        {
-          "SwitchCase": 1
-        }
-      ],
-      "linebreak-style": "error",
-      "quotes": "error",
-      "semi": "error",
-      "no-var": "error",
-      "prefer-const": "error"
-    }
+    "eslint": "^7.5.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "nodemon": "^2.0.2",
+    "prettier": "^2.0.5"
   }
 }

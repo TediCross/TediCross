@@ -1,0 +1,28 @@
+{
+	"root": true,
+	"env": {
+		"es6": true,
+		"jest": true,
+		"node": true
+	},
+	"extends": [
+		"eslint:recommended",
+		"plugin:prettier/recommended"
+	],
+	"parserOptions": {
+		"ecmaVersion": 2020,
+		"sourceType": "script"
+	},
+	"plugins": [
+		"prettier"
+	],
+	"rules": {
+		"no-var": "error",
+		"prefer-const": "warn",
+		"eqeqeq": "error",
+		"class-methods-use-this": "warn",
+		"prettier/prettier": "error",
+		"no-eval": "error",
+		"no-multi-spaces": "error"
+	}
+}
