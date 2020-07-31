@@ -70,15 +70,21 @@ if (R.not(R.equals(rawSettingsObj, newRawSettingsObj))) {
 	} catch (err) {
 		if (err.code === "EACCES") {
 			// The settings file is not writable. Give a warning
-			logger.warn("Changes to TediCross' settings have been introduced. Your settings file it not writable, so it could not be automatically updated. TediCross will still work, with the modified settings, but you will see this warning until you update your settings file");
+			logger.warn(
+				"Changes to TediCross' settings have been introduced. Your settings file it not writable, so it could not be automatically updated. TediCross will still work, with the modified settings, but you will see this warning until you update your settings file"
+			);
 
 			// Write the settings to temp instead
 			const tmpPath = path.join(os.tmpdir(), "tedicross-settings.yaml");
 			try {
 				fs.writeFileSync(tmpPath, yaml);
-				logger.info(`The new settings file has instead been written to '${tmpPath}'. Copy it to its proper location to get rid of the warning`);
+				logger.info(
+					`The new settings file has instead been written to '${tmpPath}'. Copy it to its proper location to get rid of the warning`
+				);
 			} catch (err) {
-				logger.warn(`An attempt was made to put the modified settings file at '${tmpPath}', but it could not be done. See the following error message`);
+				logger.warn(
+					`An attempt was made to put the modified settings file at '${tmpPath}', but it could not be done. See the following error message`
+				);
 				logger.warn(err);
 			}
 		}
@@ -95,7 +101,7 @@ const dcBot = new Discord.Client();
 const messageMap = new MessageMap();
 
 // Create the bridge map
-const bridgeMap = new BridgeMap(settings.bridges.map((bridgeSettings) => new Bridge(bridgeSettings)));
+const bridgeMap = new BridgeMap(settings.bridges.map(bridgeSettings => new Bridge(bridgeSettings)));
 
 /*********************
  * Set up the bridge *

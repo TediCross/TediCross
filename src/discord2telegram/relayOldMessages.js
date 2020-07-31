@@ -5,6 +5,7 @@
  **************************/
 
 const R = require("ramda");
+const fetchDiscordChannel = require("../fetchDiscordChannel");
 
 /*********************************
  * The relayOldMessages function *
@@ -32,27 +33,40 @@ async function relayOldMessages(logger, dcBot, latestDiscordMessageIds, bridgeMa
 	);
 
 	// Find the latest message IDs for all bridges
-	return bridgeMap.bridges.map((bridge) => ({
-		bridge,
-		messageId: latestDiscordMessageIds.getLatest(bridge)
-	}))
-		// Get messages which have arrived on each bridge since the bot was last shut down
-		.map(async ({bridge, messageId}) => {
-			try {
-				// Check if the message exists. This will throw if it does not
-				// XXX If the message does not exist, the following `fetchMessages` call will not throw, but instead return *everything* it can get its hands on, spamming Telegram
-				await dcBot.channels.fetch(bridge.discord.channelId).fetchMessage(messageId);
-
-				// Get messages since that one
-				const messages = await dcBot.channels.fetch(bridge.discord.channelId).fetchMessages({limit: 100, after: messageId});
-
-				// Relay them
-				sortAndRelay(messages.array());
-			} catch (err) {
-				logger.error(err);
-				logger.log("The previous error is probably nothing to worry about");
-			}
-		});
+	return (
+		Promise.all(
+			bridgeMap.bridges
+				.map(bridge => ({
+					bridge,
+					messageId: latestDiscordMessageIds.getLatest(bridge)
+				}))
+				// Get messages which have arrived on each bridge since the bot was last shut down
+				.map(({ bridge, messageId }) =>
+					// Get the bridge's discord channel
+					fetchDiscordChannel(dcBot, bridge)
+						.then(channel =>
+							// Check if the message exists. If it doesn't exist, and this is not checked, the following `fetch` will get every single message the channel has ever seen, spamming down Telegram
+							channel.messages
+								.fetch(messageId)
+								// Fetch all messages after it
+								.then(message =>
+									channel.messages.fetch({
+										limit: 100,
+										after: message.id
+									})
+								)
+								.then(messages => sortAndRelay(messages.array()))
+						)
+						.catch(err => {
+							logger.error(
+								`Could not fetch old messages for channel ${bridge.discord.channelId} in bridge ${bridge.name}: ${err.message}`
+							);
+						})
+				)
+		)
+			// Always resolve to nothing
+			.finally(R.always(undefined))
+	);
 }
 
 /*************

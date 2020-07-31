@@ -9,6 +9,7 @@ const From = require("./From");
 const MessageMap = require("../MessageMap");
 const { sleepOneMinute } = require("../sleep");
 const helpers = require("./helpers");
+const fetchDiscordChannel = require("../fetchDiscordChannel");
 
 /***********
  * Helpers *
@@ -26,9 +27,7 @@ const helpers = require("./helpers");
  */
 const createMessageHandler = R.curry((func, ctx) => {
 	// Wait for the Discord bot to become ready
-	ctx.TediCross.dcBot.ready.then(() =>
-		R.forEach(bridge => func(ctx, bridge))(ctx.tediCross.bridges)
-	);
+	ctx.TediCross.dcBot.ready.then(() => R.forEach(bridge => func(ctx, bridge))(ctx.tediCross.bridges));
 });
 
 /*************************
@@ -52,12 +51,14 @@ const chatinfo = ctx => {
 		// Wait some time
 		.then(sleepOneMinute)
 		// Delete the info and the command
-		.then(message => Promise.all([
-			// Delete the info
-			helpers.deleteMessage(ctx, message),
-			// Delete the command
-			ctx.deleteMessage()
-		]))
+		.then(message =>
+			Promise.all([
+				// Delete the info
+				helpers.deleteMessage(ctx, message),
+				// Delete the command
+				ctx.deleteMessage()
+			])
+		)
 		.catch(helpers.ignoreAlreadyDeletedError);
 };
 
@@ -77,12 +78,21 @@ const newChatMembers = createMessageHandler((ctx, bridge) =>
 	R.forEach(user => {
 		// Make the text to send
 		const from = From.createFromObjFromUser(user);
-		const text = `**${from.firstName} (${R.defaultTo("No username", from.username)})** joined the Telegram side of the chat`;
+		const text = `**${from.firstName} (${R.defaultTo(
+			"No username",
+			from.username
+		)})** joined the Telegram side of the chat`;
 
 		// Pass it on
-		ctx.TediCross.dcBot.ready.then(() =>
-			helpers.getDiscordChannel(ctx, bridge).then(channel => channel.send(text))
-		);
+		ctx.TediCross.dcBot.ready
+			.then(() =>
+				fetchDiscordChannel(ctx.TediCross.dcBot, bridge).then(channel => channel.send(text))
+			)
+			.catch(err =>
+				console.error(
+					`Could not tell Discord about a new chat member on bridge ${bridge.name}: ${err.message}`
+				)
+			);
 	})(ctx.tediCross.message.new_chat_members)
 );
 
@@ -100,12 +110,19 @@ const newChatMembers = createMessageHandler((ctx, bridge) =>
 const leftChatMember = createMessageHandler((ctx, bridge) => {
 	// Make the text to send
 	const from = From.createFromObjFromUser(ctx.tediCross.message.left_chat_member);
-	const text = `**${from.firstName} (${R.defaultTo("No username", from.username)})** left the Telegram side of the chat`;
+	const text = `**${from.firstName} (${R.defaultTo(
+		"No username",
+		from.username
+	)})** left the Telegram side of the chat`;
 
 	// Pass it on
-	ctx.TediCross.dcBot.ready.then(() =>
-		helpers.getDiscordChannel(ctx, bridge).then(channel => channel.send(text))
-	);
+	ctx.TediCross.dcBot.ready
+		.then(() => fetchDiscordChannel(ctx.TediCross.dcBot, bridge).then(channel => channel.send(text)))
+		.catch(err =>
+			console.error(
+				`Could not tell Discord about a chat member who left on bridge ${bridge.name}: ${err.message}`
+			)
+		);
 });
 
 /**
@@ -119,35 +136,52 @@ const leftChatMember = createMessageHandler((ctx, bridge) => {
  */
 const relayMessage = ctx =>
 	R.forEach(async prepared => {
-		// Discord doesn't handle messages longer than 2000 characters. Split it up into chunks that big
-		const messageText = prepared.header + "\n" + prepared.text;
-		let chunks = R.splitEvery(2000, messageText);
+		try {
+			// Discord doesn't handle messages longer than 2000 characters. Split it up into chunks that big
+			const messageText = prepared.header + "\n" + prepared.text;
+			let chunks = R.splitEvery(2000, messageText);
 
-		// Wait for the Discord bot to become ready
-		await ctx.TediCross.dcBot.ready;
+			// Wait for the Discord bot to become ready
+			await ctx.TediCross.dcBot.ready;
 
-		// Get the channel to send to
-		const channel = await helpers.getDiscordChannel(ctx, prepared.bridge);
+			// Get the channel to send to
+			const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, prepared.bridge);
 
-		let dcMessage = null;
-		// Send the attachment first, if there is one
-		if (!R.isNil(prepared.file)) {
-			try {
-				dcMessage = await channel.send(R.head(chunks), prepared.file);
-				chunks = R.tail(chunks);
-			} catch (err) {
-				if (err.message === "Request entity too large") {
-					dcMessage = await channel.send(`***${prepared.senderName}** on Telegram sent a file, but it was too large for Discord. If you want it, ask them to send it some other way*`);
-				} else {
-					throw err;
+			let dcMessage = null;
+			// Send the attachment first, if there is one
+			if (!R.isNil(prepared.file)) {
+				try {
+					dcMessage = await channel.send(R.head(chunks), prepared.file);
+					chunks = R.tail(chunks);
+				} catch (err) {
+					if (err.message === "Request entity too large") {
+						dcMessage = await channel.send(
+							`***${prepared.senderName}** on Telegram sent a file, but it was too large for Discord. If you want it, ask them to send it some other way*`
+						);
+					} else {
+						throw err;
+					}
 				}
 			}
-		}
-		// Send the rest in serial
-		dcMessage = await R.reduce((p, chunk) => p.then(() => channel.send(chunk)), Promise.resolve(dcMessage), chunks);
+			// Send the rest in serial
+			dcMessage = await R.reduce(
+				(p, chunk) => p.then(() => channel.send(chunk)),
+				Promise.resolve(dcMessage),
+				chunks
+			);
 
-		// Make the mapping so future edits can work XXX Only the last chunk is considered
-		ctx.TediCross.messageMap.insert(MessageMap.TELEGRAM_TO_DISCORD, prepared.bridge, ctx.tediCross.messageId, dcMessage.id);
+			// Make the mapping so future edits can work XXX Only the last chunk is considered
+			ctx.TediCross.messageMap.insert(
+				MessageMap.TELEGRAM_TO_DISCORD,
+				prepared.bridge,
+				ctx.tediCross.messageId,
+				dcMessage.id
+			);
+		} catch (err) {
+			console.error(
+				`Could not relay a message to Discord on bridge ${prepared.bridge.name}: ${err.message}`
+			);
+		}
 	})(ctx.tediCross.prepared);
 
 /**
@@ -162,10 +196,14 @@ const handleEdits = createMessageHandler(async (ctx, bridge) => {
 	const del = async (ctx, bridge) => {
 		try {
 			// Find the ID of this message on Discord
-			const [dcMessageId] = ctx.TediCross.messageMap.getCorresponding(MessageMap.TELEGRAM_TO_DISCORD, bridge, ctx.tediCross.message.message_id);
+			const [dcMessageId] = ctx.TediCross.messageMap.getCorresponding(
+				MessageMap.TELEGRAM_TO_DISCORD,
+				bridge,
+				ctx.tediCross.message.message_id
+			);
 
 			// Get the channel to delete on
-			const channel = await helpers.getDiscordChannel(ctx, bridge);
+			const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, bridge);
 
 			// Delete it on Discord
 			const dp = channel.bulkDelete([dcMessageId]);
@@ -175,7 +213,9 @@ const handleEdits = createMessageHandler(async (ctx, bridge) => {
 
 			await Promise.all([dp, tp]);
 		} catch (err) {
-			console.error("Could not cross-delete message from Telegram to Discord:", err);
+			console.error(
+				`Could not cross-delete message from Telegram to Discord on bridge ${bridge.name}: ${err.message}`
+			);
 		}
 	};
 
@@ -185,13 +225,19 @@ const handleEdits = createMessageHandler(async (ctx, bridge) => {
 			const tgMessage = ctx.tediCross.message;
 
 			// Find the ID of this message on Discord
-			const [dcMessageId] = ctx.TediCross.messageMap.getCorresponding(MessageMap.TELEGRAM_TO_DISCORD, bridge, tgMessage.message_id);
+			const [dcMessageId] = ctx.TediCross.messageMap.getCorresponding(
+				MessageMap.TELEGRAM_TO_DISCORD,
+				bridge,
+				tgMessage.message_id
+			);
 
 			// Wait for the Discord bot to become ready
 			await ctx.TediCross.dcBot.ready;
 
 			// Get the messages from Discord
-			const dcMessage = await helpers.getDiscordChannel(ctx, bridge).then(channel => channel.messages.fetch(dcMessageId));
+			const dcMessage = await fetchDiscordChannel(ctx.TediCross.dcBot, bridge).then(channel =>
+				channel.messages.fetch(dcMessageId)
+			);
 
 			R.forEach(async prepared => {
 				// Discord doesn't handle messages longer than 2000 characters. Take only the first 2000
@@ -202,12 +248,18 @@ const handleEdits = createMessageHandler(async (ctx, bridge) => {
 			})(ctx.tediCross.prepared);
 		} catch (err) {
 			// Log it
-			ctx.TediCross.logger.error(`[${bridge.name}] Could not edit Discord message:`, err);
+			console.error(
+				`Could not cross-edit message from Telegram to Discord on bridge ${bridge.name}: ${err.message}`
+			);
 		}
 	};
 
 	// Check if this is a "delete", meaning it has been edited to a single dot
-	if (bridge.telegram.crossDeleteOnDiscord && ctx.tediCross.text.raw === "." && R.isEmpty(ctx.tediCross.text.entities)) {
+	if (
+		bridge.telegram.crossDeleteOnDiscord &&
+		ctx.tediCross.text.raw === "." &&
+		R.isEmpty(ctx.tediCross.text.entities)
+	) {
 		await del(ctx, bridge);
 	} else {
 		await edit(ctx, bridge);

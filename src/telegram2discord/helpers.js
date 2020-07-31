@@ -22,7 +22,9 @@ const R = require("ramda");
 const ignoreAlreadyDeletedError = R.ifElse(
 	R.propEq("description", "Bad Request: message to delete not found"),
 	R.always(undefined),
-	err => {throw err;}
+	err => {
+		throw err;
+	}
 );
 
 /**
@@ -33,35 +35,7 @@ const ignoreAlreadyDeletedError = R.ifElse(
  *
  * @returns {Promise}	Promise resolving when the message is deleted
  */
-const deleteMessage = R.curry((ctx, { chat, message_id }) =>
-	ctx.telegram.deleteMessage(
-		chat.id,
-		message_id
-	));
-
-/**
- * Gets a Discord channel by ID from a Discord bot
- *
- * @param {Context} ctx	The Telegraf context to use
- * @param {Bridge} bridge	The bridge to get the channel for
- *
- * @returns {Discord.Channel}	The channel
- *
- * @throws {Error}	If the channel was not found
- */
-const getDiscordChannel = R.curry(async (ctx, { name, discord: { channelId } }) => {
-	// Get the channel
-	const channel = await ctx.TediCross.dcBot.channels.fetch(channelId);
-
-	// Verify it exists
-	if (R.isNil(channel)) {
-		ctx.TediCross.logger.error(`[${name}] Could not get Discord channel with ID '${channelId}'. Please verify it is correct. Remember the quotes!`);
-		throw new Error(`Could not find channel with ID '${channelId}'`);
-	}
-
-	// Return it
-	return channel;
-});
+const deleteMessage = R.curry((ctx, { chat, message_id }) => ctx.telegram.deleteMessage(chat.id, message_id));
 
 /***************
  * Export them *
@@ -69,6 +43,5 @@ const getDiscordChannel = R.curry(async (ctx, { name, discord: { channelId } }) 
 
 module.exports = {
 	ignoreAlreadyDeletedError,
-	deleteMessage,
-	getDiscordChannel
+	deleteMessage
 };

@@ -8,11 +8,11 @@ const R = require("ramda");
 const Bridge = require("../bridgestuff/Bridge");
 const From = require("./From");
 const mime = require("mime/lite");
-const request = require("request");
 const handleEntities = require("./handleEntities");
 const Discord = require("discord.js");
 const { sleepOneMinute } = require("../sleep");
 const helpers = require("./helpers");
+const fetchDiscordChannel = require("../fetchDiscordChannel");
 
 /***********
  * Helpers *
@@ -28,29 +28,41 @@ const helpers = require("./helpers");
 function createTextObjFromMessage(ctx, message) {
 	return R.cond([
 		// Text
-		[R.has("text"),    ({ text, entities }) => ({
-			raw: text,
-			entities: R.defaultTo([], entities)
-		})],
+		[
+			R.has("text"),
+			({ text, entities }) => ({
+				raw: text,
+				entities: R.defaultTo([], entities)
+			})
+		],
 		// Animation, audio, document, photo, video or voice
-		[R.has("caption"), ({ caption, caption_entities }) => ({
-			raw: caption,
-			entities: R.defaultTo([], caption_entities)
-		})],
+		[
+			R.has("caption"),
+			({ caption, caption_entities }) => ({
+				raw: caption,
+				entities: R.defaultTo([], caption_entities)
+			})
+		],
 		// Stickers have an emoji instead of text
-		[R.has("sticker"), message => ({
-			raw: R.ifElse(
-				() => ctx.TediCross.settings.telegram.sendEmojiWithStickers,
-				R.path(["sticker", "emoji"]),
-				R.always("")
-			)(message),
-			entities: []
-		})],
+		[
+			R.has("sticker"),
+			message => ({
+				raw: R.ifElse(
+					() => ctx.TediCross.settings.telegram.sendEmojiWithStickers,
+					R.path(["sticker", "emoji"]),
+					R.always("")
+				)(message),
+				entities: []
+			})
+		],
 		// Locations must be turned into an URL
-		[R.has("location"), ({ location }) => ({
-			raw: `https://maps.google.com/maps?q=${location.latitude},${location.longitude}&ll=${location.latitude},${location.longitude}&z=16`,
-			entities: []
-		})],
+		[
+			R.has("location"),
+			({ location }) => ({
+				raw: `https://maps.google.com/maps?q=${location.latitude},${location.longitude}&ll=${location.latitude},${location.longitude}&z=16`,
+				entities: []
+			})
+		],
 		// Default to undefined
 		[R.T, R.always({ raw: "", entities: [] })]
 	])(message);
@@ -66,29 +78,20 @@ function createTextObjFromMessage(ctx, message) {
  * @returns {String}	The reply text to display
  */
 const makeReplyText = (replyTo, replyLength, maxReplyLines) => {
-	const countDoublePipes = R.tryCatch(
-		str => str.match(/\|\|/g).length,
-		R.always(0)
-	);
+	const countDoublePipes = R.tryCatch(str => str.match(/\|\|/g).length, R.always(0));
 
 	// Make the reply string
 	return R.compose(
 		// Add ellipsis if the text was cut
-		R.ifElse(
-			R.compose(
-				R.equals(R.length(replyTo.text.raw)),
-				R.length
-			),
-			R.identity,
-			R.concat(R.__, "…")
-		),
+		R.ifElse(R.compose(R.equals(R.length(replyTo.text.raw)), R.length), R.identity, R.concat(R.__, "…")),
 		// Handle spoilers (pairs of "||" in Discord)
 		R.ifElse(
 			// If one of a pair of "||" has been removed
-			quote => R.and(
-				countDoublePipes(quote, "||") % 2 === 1,
-				countDoublePipes(replyTo.text.raw) % 2 === 0
-			),
+			quote =>
+				R.and(
+					countDoublePipes(quote, "||") % 2 === 1,
+					countDoublePipes(replyTo.text.raw) % 2 === 0
+				),
 			// Add one to the end
 			R.concat(R.__, "||"),
 			// Otherwise do nothing
@@ -99,7 +102,7 @@ const makeReplyText = (replyTo, replyLength, maxReplyLines) => {
 		R.slice(0, maxReplyLines),
 		R.split("\n"),
 		// Take only a portion of the text
-		R.slice(0, replyLength),
+		R.slice(0, replyLength)
 	)(replyTo.text.raw);
 };
 
@@ -108,19 +111,21 @@ const makeReplyText = (replyTo, replyLength, maxReplyLines) => {
  *
  * @param {String} username	The username to make the mention from
  * @param {Discord.Client} dcBot	The Discord bot to look up the user's ID with
- * @param {String} channelId	ID of the Discord channel to look up the username in
+ * @param {Bridge} bridge	The bridge to use
  *
  * @returns {String}	A Discord mention of the user
  */
-async function makeDiscordMention(username, dcBot, channelId) {
-	// Get the name of the Discord user this is a reply to
-	const dcUser = await dcBot.channels.fetch(channelId).members.find(R.propEq("displayName", username));
+async function makeDiscordMention(username, dcBot, bridge) {
+	try {
+		// Get the name of the Discord user this is a reply to
+		const channel = await fetchDiscordChannel(dcBot, bridge);
+		const dcUser = await channel.members.find(R.propEq("displayName", username));
 
-	return R.ifElse(
-		R.isNil,
-		R.always(username),
-		dcUser => `<@${dcUser.id}>`
-	)(dcUser);
+		return R.ifElse(R.isNil, R.always(username), dcUser => `<@${dcUser.id}>`)(dcUser);
+	} catch (err) {
+		// Cannot make a mention. Just return the username
+		return username;
+	}
 }
 
 /****************************
@@ -209,9 +214,9 @@ function addBridgesToContext(ctx, next) {
  * @returns {undefined}
  */
 function removeD2TBridges(ctx, next) {
-	ctx.tediCross.bridges = R.reject(
-		R.propEq("direction", Bridge.DIRECTION_DISCORD_TO_TELEGRAM)
-	)(ctx.tediCross.bridges);
+	ctx.tediCross.bridges = R.reject(R.propEq("direction", Bridge.DIRECTION_DISCORD_TO_TELEGRAM))(
+		ctx.tediCross.bridges
+	);
 
 	next();
 }
@@ -273,10 +278,7 @@ function removeBridgesIgnoringLeaveMessages(ctx, next) {
 function informThisIsPrivateBot(ctx, next) {
 	R.ifElse(
 		// If there are no bridges
-		R.compose(
-			R.isEmpty,
-			R.path(["tediCross", "bridges"])
-		),
+		R.compose(R.isEmpty, R.path(["tediCross", "bridges"])),
 		// Inform the user, if enough time has passed since last time
 		R.when(
 			// When there is no timer for the chat in the anti spam map
@@ -288,21 +290,20 @@ function informThisIsPrivateBot(ctx, next) {
 
 				// Send the reply
 				ctx.reply(
-					"This is an instance of a [TediCross](https://github.com/TediCross/TediCross) bot, "
-					+ "bridging a chat in Telegram with one in Discord. "
-					+ "If you wish to use TediCross yourself, please download and create an instance.",
+					"This is an instance of a [TediCross](https://github.com/TediCross/TediCross) bot, " +
+						"bridging a chat in Telegram with one in Discord. " +
+						"If you wish to use TediCross yourself, please download and create an instance.",
 					{
 						parse_mode: "markdown"
 					}
-				)
-					.then(msg =>
-						// Delete it again after a while
-						sleepOneMinute()
-							.then(() => helpers.deleteMessage(ctx, msg))
-							.catch(helpers.ignoreAlreadyDeletedError)
-							// Remove it from the anti spam set again
-							.then(() => ctx.TediCross.antiInfoSpamSet.delete(ctx.message.chat.id))
-					);
+				).then(msg =>
+					// Delete it again after a while
+					sleepOneMinute()
+						.then(() => helpers.deleteMessage(ctx, msg))
+						.catch(helpers.ignoreAlreadyDeletedError)
+						// Remove it from the anti spam set again
+						.then(() => ctx.TediCross.antiInfoSpamSet.delete(ctx.message.chat.id))
+				);
 			}
 		),
 		// Otherwise go to next middleware
@@ -340,12 +341,13 @@ function addReplyObj(ctx, next) {
 
 	if (!R.isNil(repliedToMessage)) {
 		// This is a reply
-		const isReplyToTediCross = !R.isNil(repliedToMessage.from) && R.equals(repliedToMessage.from.id, ctx.TediCross.me.id);
+		const isReplyToTediCross =
+			!R.isNil(repliedToMessage.from) && R.equals(repliedToMessage.from.id, ctx.TediCross.me.id);
 		ctx.tediCross.replyTo = {
 			isReplyToTediCross,
 			message: repliedToMessage,
 			originalFrom: From.createFromObjFromMessage(repliedToMessage),
-			text: createTextObjFromMessage(ctx, repliedToMessage),
+			text: createTextObjFromMessage(ctx, repliedToMessage)
 		};
 
 		// Handle replies to TediCross
@@ -357,7 +359,11 @@ function addReplyObj(ctx, next) {
 
 			// Cut off the first entity (the bold text on the username) and reduce the offset of the rest by the length of the username and the newline
 			ctx.tediCross.replyTo.text.entities = R.compose(
-				R.map(entity => R.mergeRight(entity, { offset: entity.offset - ctx.tediCross.replyTo.dcUsername.length - 1 })),
+				R.map(entity =>
+					R.mergeRight(entity, {
+						offset: entity.offset - ctx.tediCross.replyTo.dcUsername.length - 1
+					})
+				),
 				R.tail
 			)(ctx.tediCross.replyTo.text.entities);
 		}
@@ -470,14 +476,14 @@ function addFileObj(ctx, next) {
 		ctx.tediCross.file = {
 			type: "video",
 			id: message.video.file_id,
-			name: "video" + "." + mime.getExtension(message.video.mime_type),
+			name: "video" + "." + mime.getExtension(message.video.mime_type)
 		};
 	} else if (!R.isNil(message.voice)) {
 		// Voice
 		ctx.tediCross.file = {
 			type: "voice",
 			id: message.voice.file_id,
-			name: "voice" + "." + mime.getExtension(message.voice.mime_type),
+			name: "voice" + "." + mime.getExtension(message.voice.mime_type)
 		};
 	}
 
@@ -498,10 +504,9 @@ function addFileLink(ctx, next) {
 		.then(() => {
 			// Get a stream to the file, if one was found
 			if (!R.isNil(ctx.tediCross.file)) {
-				return ctx.telegram.getFileLink(ctx.tediCross.file.id)
-					.then(fileLink => {
-						ctx.tediCross.file.link = fileLink;
-					});
+				return ctx.telegram.getFileLink(ctx.tediCross.file.id).then(fileLink => {
+					ctx.tediCross.file.link = fileLink;
+				});
 			}
 		})
 		.then(next)
@@ -512,10 +517,13 @@ async function addPreparedObj(ctx, next) {
 	// Shorthand for the tediCross context
 	const tc = ctx.tediCross;
 
-	ctx.tediCross.prepared = await Promise.all(R.map(
-		async bridge => {
+	ctx.tediCross.prepared = await Promise.all(
+		R.map(async bridge => {
 			// Get the name of the sender of this message
-			const senderName = From.makeDisplayName(ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername, tc.from);
+			const senderName = From.makeDisplayName(
+				ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername,
+				tc.from
+			);
 
 			// Make the header
 			// WARNING! Butt-ugly code! If you see a nice way to clean this up, please do it
@@ -523,25 +531,32 @@ async function addPreparedObj(ctx, next) {
 				// Get the name of the original sender, if this is a forward
 				const originalSender = R.isNil(tc.forwardFrom)
 					? null
-					: From.makeDisplayName(ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername, tc.forwardFrom)
-				;
-
+					: From.makeDisplayName(
+							ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername,
+							tc.forwardFrom
+					  );
 				// Get the name of the replied-to user, if this is a reply
 				const repliedToName = R.isNil(tc.replyTo)
 					? null
 					: await R.ifElse(
-						R.prop("isReplyToTediCross"),
-						R.compose(
-							username => makeDiscordMention(username, ctx.TediCross.dcBot, bridge.discord.channelId),
-							R.prop("dcUsername")
-						),
-						R.compose(
-							R.partial(From.makeDisplayName, [ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername]),
-							R.prop("originalFrom")
-						)
-					)(tc.replyTo)
-				;
-
+							R.prop("isReplyToTediCross"),
+							R.compose(
+								username =>
+									makeDiscordMention(
+										username,
+										ctx.TediCross.dcBot,
+										bridge
+									),
+								R.prop("dcUsername")
+							),
+							R.compose(
+								R.partial(From.makeDisplayName, [
+									ctx.TediCross.settings.telegram
+										.useFirstNameInsteadOfUsername
+								]),
+								R.prop("originalFrom")
+							)
+					  )(tc.replyTo);
 				// Build the header
 				let header = "";
 				if (bridge.telegram.sendUsernames) {
@@ -574,26 +589,31 @@ async function addPreparedObj(ctx, next) {
 			// Handle blockquote replies
 			const replyQuote = R.ifElse(
 				tc => !R.isNil(tc.replyTo),
-				R.compose(
-					R.replace(/^/gm, "> "),
-					tc => makeReplyText(tc.replyTo, ctx.TediCross.settings.discord.replyLength, ctx.TediCross.settings.discord.maxReplyLines),
+				R.compose(R.replace(/^/gm, "> "), tc =>
+					makeReplyText(
+						tc.replyTo,
+						ctx.TediCross.settings.discord.replyLength,
+						ctx.TediCross.settings.discord.maxReplyLines
+					)
 				),
 				R.always(undefined)
 			)(tc);
 
 			// Handle file
 			const file = R.ifElse(
-				R.compose(
-					R.isNil,
-					R.prop("file")
-				),
+				R.compose(R.isNil, R.prop("file")),
 				R.always(undefined),
 				tc => new Discord.MessageAttachment(tc.file.link, tc.file.name)
 			)(tc);
 
 			// Make the text to send
 			const text = await (async () => {
-				let text = await handleEntities(tc.text.raw, tc.text.entities, ctx.TediCross.dcBot, bridge);
+				let text = await handleEntities(
+					tc.text.raw,
+					tc.text.entities,
+					ctx.TediCross.dcBot,
+					bridge
+				);
 
 				if (!R.isNil(replyQuote)) {
 					text = replyQuote + "\n" + text;
@@ -609,8 +629,8 @@ async function addPreparedObj(ctx, next) {
 				file,
 				text
 			};
-		}
-	)(tc.bridges));
+		})(tc.bridges)
+	);
 
 	next();
 }
