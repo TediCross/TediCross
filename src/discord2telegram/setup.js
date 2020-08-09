@@ -431,9 +431,9 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 				// Remove the invalid channels
 				R.andThen(R.filter(R.complement(R.isNil))),
 				// Extract the server IDs from the channels
-				R.andThen(R.map(R.path(["guild", "id"]))),
+				R.andThen(R.map(R.path(["value", "guild", "id"]))),
 				// Remove those which failed
-				R.andThen(R.filter(R.propEq("status", "resolved"))),
+				R.andThen(R.filter(R.propEq("status", "fulfilled"))),
 				// Wait for the channels to be fetched
 				Promise.allSettled.bind(Promise),
 				// Get the channels
