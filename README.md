@@ -60,7 +60,6 @@ As mentioned in the step by step installation guide, there is a settings file. H
 	* `token`: The Discord bot's token. It is needed for the bot to authenticate to the Discord servers and be able to send and receive messages. If set to `"env"`, TediCross will read the token from the environment variable `DISCORD_BOT_TOKEN`
 	* `skipOldMessages`: Whether or not to skip through all previous messages sent since the bot was last turned off and start processing new messages ONLY. Defaults to true. Note that there is no guarantee the old messages will arrive at Telegram in order. **NOTE:** [Telegram has a limit](https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this) on how quickly a bot can send messages. If there is a big backlog, this will cause problems
 	* `useNickname`: Uses the sending user's nickname instead of username when relaying messages to Telegram
-	* `displayTelegramReplies`: How to display Telegram replies. Either the string `blockqoute`, `inline` or `embed`
 	* `replyLength`: How many characters of the original message to display on replies
 	* `maxReplyLines`: How many lines of the original message to display on replies
 * `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`

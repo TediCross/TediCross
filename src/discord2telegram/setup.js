@@ -380,34 +380,6 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 		dcBot.on("debug", str => {
 			logger.log(str);
 		});
-
-		// Check the Discord bot's status every now and then
-		setInterval(() => {
-			if (dcBot.status !== Discord.Constants.Status.READY) {
-				let actualStatus = null;
-				switch (dcBot.status) {
-					case Discord.Constants.Status.CONNECTING:
-						actualStatus = "CONNECTING";
-						break;
-					case Discord.Constants.Status.RECONNECTING:
-						actualStatus = "RECONNECTING";
-						break;
-					case Discord.Constants.Status.IDLE:
-						actualStatus = "IDLE";
-						break;
-					case Discord.Constants.Status.NEARLY:
-						actualStatus = "NEARLY";
-						break;
-					case Discord.Constants.Status.DISCONNETED:
-						actualStatus = "DISCONNECTED";
-						break;
-					default:
-						actualStatus = "UNKNOWN";
-						break;
-				}
-				logger.error(`Discord status not ready! Status is '${actualStatus}'`);
-			}
-		}, 1000);
 	}
 
 	// Make a promise which resolves when the dcBot is ready

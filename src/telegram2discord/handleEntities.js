@@ -58,11 +58,12 @@ async function handleEntities(text, entities, dcBot, bridge) {
 					// A mention. Substitute the Discord user ID or Discord role ID if one exists
 					// XXX Telegram considers it a mention if it is a valid Telegram username, not necessarily taken. This means the mention matches the regexp /^@[a-zA-Z0-9_]{5,}$/
 					// In turn, this means short usernames and roles in Discord, like '@devs', will not be possible to mention
-					const channel = await fetchDiscordChannel(dcBot, bridge.discord.channelId);
+					const channel = await fetchDiscordChannel(dcBot, bridge);
 					const mentionable = new RegExp(`^${part.substring(1)}$`, "i");
 					const dcUser = channel.members.find(findFn("displayName", mentionable));
 					// XXX Could not find a way to actually search for roles. Looking in the cache will mostly work, but I don't think it is guaranteed
 					const dcRole = channel.guild.roles.cache.find(findFn("name", mentionable));
+
 					if (!R.isNil(dcUser)) {
 						substitute = `<@${dcUser.id}>`;
 					} else if (!R.isNil(dcRole)) {
