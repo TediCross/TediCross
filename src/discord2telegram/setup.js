@@ -38,7 +38,7 @@ function makeJoinLeaveFunc(logger, verb, bridgeMap, tgBot) {
 	const relaySetting = verb === "joined" ? "relayJoinMessages" : "relayLeaveMessages";
 	return function (member) {
 		// Get the bridges in the guild the member joined/left
-		member.guild.channels
+		member.guild.channels.cache
 			// Get the bridges corresponding to the channels in this guild
 			.map(({ id }) => bridgeMap.fromDiscordChannelId(id))
 			// Remove the ones which are not bridged
