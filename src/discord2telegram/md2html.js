@@ -13,7 +13,7 @@ const { escapeHTMLSpecialChars } = require("./helpers");
 
 /** Map between content types and their HTML tags */
 const tagMap = new Proxy({
-	u: "b",	// Telegram does not support underlined text. Make it bold instead
+	u: "u",	// Telegram does not support underlined text. Make it bold instead
 	strong: "b",
 	em: "em",
 	inlineCode: "code",
