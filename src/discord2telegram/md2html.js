@@ -107,8 +107,6 @@ function md2html(text) {
 			// Telegram doesn't support nested tags, so only apply tags to the outer nodes
 			// Get the tag type of this node
 			const tags = tagMap[node.type];
-			console.log(node.type);
-			console.log(tags);
 
 			// Build the HTML
 			return html + `${tags.start}${extractText(node)}${tags.end}`;
