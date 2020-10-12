@@ -107,6 +107,11 @@ async function handleEntities(text, entities, dcBot, bridge) {
 				substitute = "*" + part + "*";
 				break;
 			}
+			case "underline": {
+				// Underlined text
+				substitute = "__" + part + "__";
+				break;
+			}
 			case "hashtag": {
 				try {
 					// Possible name of a Discord channel on the same Discord server
@@ -134,6 +139,7 @@ async function handleEntities(text, entities, dcBot, bridge) {
 			case "bot_command":
 			case "email":
 			default: {
+				console.log(e.type);
 				// Just leave it as it is
 				break;
 			}
