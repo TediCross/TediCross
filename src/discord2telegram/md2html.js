@@ -2,6 +2,7 @@
 
 const simpleMarkdown = require("simple-markdown");
 const { escapeHTMLSpecialChars } = require("./helpers");
+const R = require("ramda");
 
 /***********
  * Helpers *
@@ -81,6 +82,10 @@ const mdParse = simpleMarkdown.defaultBlockParse;
  * @return {String}	Telegram-friendly HTML
  */
 function md2html(text) {
+	// XXX Some users get a space after @ in mentions bridged to Telegram. See #148
+	// This is compensation for that discord error
+	text = R.replace("@\u200B", "@", text);
+
 	// Escape HTML in the input
 	const processedText = escapeHTMLSpecialChars(text);
 
