@@ -99,7 +99,7 @@ class MessageMap {
 		const keyToIdsMap = this._map.get(bridge);
 		if (keyToIdsMap !== undefined) {
 			// Find the ID
-			const [key]  = [...keyToIdsMap].find(([, ids]) => ids.has(toId));
+			const [key] = [...keyToIdsMap].find(([, ids]) => ids.has(toId));
 			fromId = key.split(" ");
 			fromId.shift();
 		}
