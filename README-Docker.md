@@ -3,7 +3,7 @@ TediCross with Docker
 
 **This document assumes you know how to use [Docker](https://en.wikipedia.org/wiki/Docker_(software)). If you are completely clueless, please disregard Docker and follow the ordinary [install instructions](README.md#step-by-step-installation)**
 
-TediCross is available as a Docker image, through [DockerHub](https://cloud.docker.com/u/tedicross/repository/docker/tedicross/tedicross)
+TediCross is available as a Docker image, through [DockerHub](https://hub.docker.com/r/tedicross/tedicross)
 
 It requires the `data/` directory to be mounted as a volume.
 
