@@ -8,7 +8,6 @@ discord:
   useNickname: false
   token: DISCORD_BOT_TOKEN_HERE       # Discord bot tokens look like this: MjI3MDA1NzIvOBQ2MzAzMiMz.DRf-aw.N0MVYtDxXYPSQew4g2TPqvQve2c
   skipOldMessages: true
-  displayTelegramReplies: embed
   replyLength: 100
   maxReplyLines: 2
 bridges:

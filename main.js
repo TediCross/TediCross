@@ -5,6 +5,7 @@
  **************************/
 
 // General stuff
+const semver = require("semver");
 const yargs = require("yargs");
 const path = require("path");
 const Logger = require("./src/Logger");
@@ -25,6 +26,11 @@ const telegramSetup = require("./src/telegram2discord/setup");
 // Discord stuff
 const Discord = require("discord.js");
 const discordSetup = require("./src/discord2telegram/setup");
+
+if (!semver.gte(process.version, "14.9.0")) {
+	console.log(`TediCross requires at least nodejs 14.9. Your version is ${process.version}`);
+	process.exit();
+}
 
 /*************
  * TediCross *

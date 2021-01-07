@@ -2,7 +2,7 @@ TediCross
 =========
 TediCross is a bot which bridges a chat in [Telegram](https://telegram.org) with a channel in [Discord](https://discordapp.com/).
 
-There is no public TediCross bot. You need to host it yourself. To host a bot, you need [nodejs](https://nodejs.org). The bot requires NodeJS 12 or higher
+There is no public TediCross bot. You need to host it yourself. To host a bot, you need [nodejs](https://nodejs.org). The bot requires NodeJS 14.9 or higher
 
 
 TediCross News Channel
@@ -23,7 +23,7 @@ Step by step installation:
 --------------------------
 Setting up the bot requires basic knowledge of the command line, which is bash or similar on Linux/Mac, and cmd.exe in Windows
 
- 1. Install [nodejs](https://nodejs.org). TediCross requires at least node version 12
+ 1. Install [nodejs](https://nodejs.org). TediCross requires at least node version 14.9
  2. Clone this git repo, or download it as a zip or whatever
  3. Open a terminal and enter the repo with the [`cd`](https://en.wikipedia.org/wiki/Cd_(command)) command. Something like `cd Downloads/TediCross-master`. Your exact command may differ
  4. Run the command `npm install --production`
@@ -97,10 +97,10 @@ Not much at all. Almost all the commands are written in the installation guide e
 
 This likely means you are using Ubuntu or another Debian based Linux distro. You get node version 4 when you do `apt-get install nodejs`, and it is called `nodejs` instead of `node`.
 
-TediCross requires node 12 or higher to run. To get node 12 on a debian based system (including Ubuntu), run the following two commands:
+TediCross requires node 14.9 or higher to run. To get node 14 on a debian based system (including Ubuntu), run the following two commands:
 
 ```
-curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
