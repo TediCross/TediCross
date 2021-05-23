@@ -4,7 +4,6 @@
  * Import important stuff *
  **************************/
 
-const Discord = require("discord.js");
 const md2html = require("./md2html");
 const MessageMap = require("../MessageMap");
 const LatestDiscordMessageIds = require("./LatestDiscordMessageIds");

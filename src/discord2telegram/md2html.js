@@ -84,7 +84,7 @@ const mdParse = simpleMarkdown.defaultBlockParse;
 function md2html(text) {
 	// XXX Some users get a space after @ in mentions bridged to Telegram. See #148
 	// This is compensation for that discord error
-	text = R.replace("@\u200B", "@", text);
+	text = R.replace("@\u200B", "@", R.defaultTo("", text));
 
 	// Escape HTML in the input
 	const processedText = escapeHTMLSpecialChars(text);
@@ -100,8 +100,10 @@ function md2html(text) {
 			}
 			return content;
 		})
-		.reduce((flattened, nodes) => flattened.concat([newlineNode, newlineNode], nodes), []) // Flatten the resulting structure
-		.slice(2) // Remove the two initial newlines created by the previous line
+		// Flatten the resulting structure
+		.reduce((flattened, nodes) => flattened.concat([newlineNode, newlineNode], nodes), [])
+		// Remove the two initial newlines created by the previous line
+		.slice(2)
 		.reduce((html, node) => {
 			// Turn the nodes into HTML
 			// Telegram doesn't support nested tags, so only apply tags to the outer nodes
