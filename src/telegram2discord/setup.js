@@ -8,6 +8,7 @@ const R = require("ramda");
 const middlewares = require("./middlewares");
 const endwares = require("./endwares");
 const { sleep } = require("../sleep");
+const { TimeoutError } = require("telegraf");
 
 /***********
  * Helpers *
@@ -23,8 +24,8 @@ const { sleep } = require("../sleep");
 function clearOldMessages(tgBot, offset = -1) {
 	const timeout = 0;
 	const limit = 100;
-	return tgBot.telegram.getUpdates(timeout, limit, offset)
-		.then(R.ifElse(
+	return tgBot.telegram.getUpdates(timeout, limit, offset).then(
+		R.ifElse(
 			R.isEmpty,
 			R.always(undefined),
 			R.compose(
@@ -33,7 +34,8 @@ function clearOldMessages(tgBot, offset = -1) {
 				R.prop("update_id"),
 				R.last
 			)
-		));
+		)
+	);
 }
 
 /**********************
@@ -99,6 +101,17 @@ function setup(logger, tgBot, dcBot, messageMap, bridgeMap, settings) {
 			// Apply endwares
 			tgBot.on(["edited_message", "edited_channel_post"], endwares.handleEdits);
 			tgBot.use(endwares.relayMessage);
+
+			// Don't crash on errors
+			tgBot.catch(err => {
+				// The docs says timeout errors should always be rethrown
+				if (err instanceof TimeoutError) {
+					throw err;
+				}
+
+				// Log other errors, but don't do anything with them
+				console.error(err);
+			});
 		})
 		// Start getting updates
 		.then(() => tgBot.startPolling());

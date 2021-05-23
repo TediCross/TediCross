@@ -505,7 +505,7 @@ function addFileLink(ctx, next) {
 			// Get a stream to the file, if one was found
 			if (!R.isNil(ctx.tediCross.file)) {
 				return ctx.telegram.getFileLink(ctx.tediCross.file.id).then(fileLink => {
-					ctx.tediCross.file.link = fileLink;
+					ctx.tediCross.file.link = fileLink.href;
 				});
 			}
 		})

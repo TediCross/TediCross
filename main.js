@@ -20,7 +20,7 @@ const R = require("ramda");
 const os = require("os");
 
 // Telegram stuff
-const Telegraf = require("telegraf");
+const { Telegraf, TimeoutError } = require("telegraf");
 const telegramSetup = require("./src/telegram2discord/setup");
 
 // Discord stuff

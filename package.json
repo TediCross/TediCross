@@ -1,7 +1,7 @@
 {
   "name": "tedicross",
   "version": "0.10.6",
-  "description": "Better DiteCross",
+  "description": "Bridging Telegram and Discord",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -20,7 +20,7 @@
     "ramda": "^0.27.0",
     "semver": "^7.3.4",
     "simple-markdown": "^0.7.2",
-    "telegraf": "^3.38.0",
+    "telegraf": "^4.3.0",
     "yargs": "^13.3.0"
   },
   "devDependencies": {
