@@ -483,7 +483,7 @@ function addFileObj(ctx, next) {
 		ctx.tediCross.file = {
 			type: "voice",
 			id: message.voice.file_id,
-			name: "voice" + "." + mime.getExtension(message.voice.mime_type)
+			name: "voice" + "." + mime.getExtension(message.voice.mime_type).replace('oga', 'ogg')
 		};
 	}
 
