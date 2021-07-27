@@ -105,6 +105,12 @@ function md2html(text) {
 		// Remove the two initial newlines created by the previous line
 		.slice(2)
 		.reduce((html, node) => {
+			if (node.type === "br") {
+				return html + "\n";
+			} else if (node.type === "hr") {
+				return html + "---";
+			}
+
 			// Turn the nodes into HTML
 			// Telegram doesn't support nested tags, so only apply tags to the outer nodes
 			// Get the tag type of this node

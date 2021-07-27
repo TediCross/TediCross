@@ -139,7 +139,6 @@ async function handleEntities(text, entities, dcBot, bridge) {
 			case "bot_command":
 			case "email":
 			default: {
-				console.log(e.type);
 				// Just leave it as it is
 				break;
 			}
