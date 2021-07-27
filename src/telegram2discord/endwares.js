@@ -45,21 +45,25 @@ const createMessageHandler = R.curry((func, ctx) => {
  *
  * @returns {undefined}
  */
-const chatinfo = ctx => {
-	// Reply with the info
-	ctx.reply(`chatID: ${ctx.tediCross.message.chat.id}`)
-		// Wait some time
-		.then(sleepOneMinute)
-		// Delete the info and the command
-		.then(message =>
-			Promise.all([
-				// Delete the info
-				helpers.deleteMessage(ctx, message),
-				// Delete the command
-				ctx.deleteMessage()
-			])
-		)
-		.catch(helpers.ignoreAlreadyDeletedError);
+const chatinfo = (ctx, next) => {
+	if (ctx.tediCross.message.text === "/chatinfo") {
+		// Reply with the info
+		ctx.reply(`chatID: ${ctx.tediCross.message.chat.id}`)
+			// Wait some time
+			.then(sleepOneMinute)
+			// Delete the info and the command
+			.then(message =>
+				Promise.all([
+					// Delete the info
+					helpers.deleteMessage(ctx, message),
+					// Delete the command
+					ctx.deleteMessage()
+				])
+			)
+			.catch(helpers.ignoreAlreadyDeletedError);
+	} else {
+		next();
+	}
 };
 
 /**

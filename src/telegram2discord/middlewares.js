@@ -162,10 +162,10 @@ function addMessageObj(ctx, next) {
 	// Put it on the context
 	ctx.tediCross.message = R.cond([
 		// XXX I tried both R.has and R.hasIn as conditions. Neither worked for some reason
-		[ctx => !R.isNil(ctx.channelPost), R.prop("channelPost")],
-		[ctx => !R.isNil(ctx.editedChannelPost), R.prop("editedChannelPost")],
-		[ctx => !R.isNil(ctx.message), R.prop("message")],
-		[ctx => !R.isNil(ctx.editedMessage), R.prop("editedMessage")]
+		[ctx => !R.isNil(ctx.update.channel_post), R.path(["update", "channel_post"])],
+		[ctx => !R.isNil(ctx.update.edited_channel_post), R.path(["update", "edited_channel_post"])],
+		[ctx => !R.isNil(ctx.update.message), R.path(["update", "message"])],
+		[ctx => !R.isNil(ctx.update.edited_message), R.path(["update", "edited_message"])]
 	])(ctx);
 
 	next();
@@ -282,11 +282,11 @@ function informThisIsPrivateBot(ctx, next) {
 		// Inform the user, if enough time has passed since last time
 		R.when(
 			// When there is no timer for the chat in the anti spam map
-			ctx => R.not(ctx.TediCross.antiInfoSpamSet.has(ctx.message.chat.id)),
+			ctx => R.not(ctx.TediCross.antiInfoSpamSet.has(ctx.tediCross.message.chat.id)),
 			// Inform the chat this is an instance of TediCross
 			ctx => {
 				// Update the anti spam set
-				ctx.TediCross.antiInfoSpamSet.add(ctx.message.chat.id);
+				ctx.TediCross.antiInfoSpamSet.add(ctx.tediCross.message.chat.id);
 
 				// Send the reply
 				ctx.reply(

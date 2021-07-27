@@ -81,7 +81,7 @@ function setup(logger, tgBot, dcBot, messageMap, bridgeMap, settings) {
 			tgBot.use(middlewares.addTediCrossObj);
 			tgBot.use(middlewares.addMessageObj);
 			tgBot.use(middlewares.addMessageId);
-			tgBot.command("chatinfo", endwares.chatinfo);
+			tgBot.use(endwares.chatinfo);
 			tgBot.use(middlewares.addBridgesToContext);
 			tgBot.use(middlewares.informThisIsPrivateBot);
 			tgBot.use(middlewares.removeD2TBridges);
