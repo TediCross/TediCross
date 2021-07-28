@@ -510,7 +510,12 @@ function addFileLink(ctx, next) {
 			}
 		})
 		.then(next)
-		.then(R.always(undefined));
+		.then(R.always(undefined))
+		.catch(err => {
+			if (err.response && err.response.description === "Bad Request: file is too big") {
+				ctx.reply("<i>File is too big for TediCross to handle</i>", { parse_mode: "html" });
+			}
+		});
 }
 
 async function addPreparedObj(ctx, next) {
