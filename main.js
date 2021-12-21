@@ -24,7 +24,7 @@ const { Telegraf, TimeoutError } = require("telegraf");
 const telegramSetup = require("./src/telegram2discord/setup");
 
 // Discord stuff
-const Discord = require("discord.js");
+const { Client, Intents } = require('discord.js');
 const discordSetup = require("./src/discord2telegram/setup");
 
 if (!semver.gte(process.version, "14.9.0")) {
@@ -59,7 +59,7 @@ const settingsPathYAML = args.config;
 migrateSettingsToYAML(settingsPathJSON, settingsPathYAML);
 
 // Get the settings
-const rawSettingsObj = jsYaml.safeLoad(fs.readFileSync(settingsPathYAML));
+const rawSettingsObj = jsYaml.load(fs.readFileSync(settingsPathYAML));
 const settings = Settings.fromObj(rawSettingsObj);
 
 // Initialize logger
@@ -101,7 +101,7 @@ if (R.not(R.equals(rawSettingsObj, newRawSettingsObj))) {
 const tgBot = new Telegraf(settings.telegram.token, { channelMode: true });
 
 // Create a Discord bot
-const dcBot = new Discord.Client();
+const dcBot = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 
 // Create a message ID map
 const messageMap = new MessageMap();

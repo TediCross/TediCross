@@ -13,21 +13,21 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "discord.js": "^12.2.0",
-    "js-yaml": "^3.13.1",
-    "mime": "^2.4.4",
-    "moment": "^2.24.0",
-    "ramda": "^0.27.0",
-    "semver": "^7.3.4",
+    "discord.js": "^13.3.1",
+    "js-yaml": "^4.1.0",
+    "mime": "^3.0.0",
+    "moment": "^2.29.1",
+    "ramda": "^0.27.1",
+    "semver": "^7.3.5",
     "simple-markdown": "^0.7.3",
-    "telegraf": "^4.4.1",
-    "yargs": "^13.3.0"
+    "telegraf": "^4.5.2",
+    "yargs": "^17.3.0"
   },
   "devDependencies": {
-    "eslint": "^7.5.0",
-    "eslint-config-prettier": "^6.11.0",
-    "eslint-plugin-prettier": "^3.1.4",
-    "nodemon": "^2.0.2",
-    "prettier": "^2.0.5"
+    "eslint": "^8.5.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "nodemon": "^2.0.15",
+    "prettier": "^2.5.1"
   }
 }
