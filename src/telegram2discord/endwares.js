@@ -155,7 +155,10 @@ const relayMessage = ctx =>
 			// Send the attachment first, if there is one
 			if (!R.isNil(prepared.file)) {
 				try {
-					dcMessage = await channel.send(R.head(chunks), prepared.file);
+					dcMessage = await channel.send({
+						content: R.head(chunks),
+						files: [prepared.file]
+					});
 					chunks = R.tail(chunks);
 				} catch (err) {
 					if (err.message === "Request entity too large") {

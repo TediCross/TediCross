@@ -103,7 +103,7 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 	dcBot.on("guildMemberRemove", makeJoinLeaveFunc(logger, "left", bridgeMap, tgBot));
 
 	// Listen for Discord messages
-	dcBot.on("message", async message => {
+	dcBot.on("messageCreate", async message => {
 		// Ignore the bot's own messages
 		if (message.author.id === dcBot.user.id) {
 			return;
