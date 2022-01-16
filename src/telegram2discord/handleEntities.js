@@ -118,7 +118,7 @@ async function handleEntities(text, entities, dcBot, bridge) {
 					const channelName = new RegExp(`^${part.substring(1)}$`);
 
 					// Find out if this is a channel on the bridged Discord server
-					const channel = await fetchDiscordChannel(dcBot, bridge.discord.channelId);
+					const channel = await fetchDiscordChannel(dcBot, bridge);
 					// XXX Could not find a way to actually search for channels. Looking in the cache will mostly work, but I don't think it is guaranteed
 					const mentionedChannel = channel.guild.channels.cache.find(
 						findFn("name", channelName)
