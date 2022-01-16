@@ -112,6 +112,11 @@ async function handleEntities(text, entities, dcBot, bridge) {
 				substitute = "__" + part + "__";
 				break;
 			}
+			case "spoiler": {
+				// Spoiler text
+				substitute = "||" + part + "||";
+				break;
+			}
 			case "hashtag": {
 				try {
 					// Possible name of a Discord channel on the same Discord server
