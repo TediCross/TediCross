@@ -1,19 +1,26 @@
-"use strict";
-
-/**************************
- * Import important stuff *
- **************************/
-
-// Nothing
 
 /***********************************
  * The BridgeSettingsDiscord class *
  ***********************************/
 
+export interface BridgeSettingsDiscordProperties {
+	channelId: string;
+	sendUsernames: boolean;
+	relayJoinMessages: boolean;
+	relayLeaveMessages: boolean;
+	crossDeleteOnTelegram: boolean;
+	serverId?: string;
+}
 /**
  * Holds settings for the Discord part of a bridge
  */
-class BridgeSettingsDiscord {
+export class BridgeSettingsDiscord {
+	public channelId: string;
+	public sendUsernames: boolean;
+	public relayJoinMessages: boolean;
+	public relayLeaveMessages: boolean;
+	public crossDeleteOnTelegram: boolean;
+
 	/**
 	 * Creates a new BridgeSettingsDiscord object
 	 *
@@ -24,7 +31,7 @@ class BridgeSettingsDiscord {
 	 *
 	 * @throws {Error}	If the settings object does not validate
 	 */
-	constructor(settings) {
+	constructor(settings: BridgeSettingsDiscordProperties) {
 		BridgeSettingsDiscord.validate(settings);
 
 		/**
@@ -70,7 +77,7 @@ class BridgeSettingsDiscord {
 	 *
 	 * @throws {Error}	If the object is not suitable. The error message says what the problem is
 	 */
-	static validate(settings) {
+	static validate(settings: BridgeSettingsDiscordProperties) {
 		// Check that the settings are indeed in object form
 		if (!(settings instanceof Object)) {
 			throw new Error("`settings` must be an object");
@@ -98,8 +105,3 @@ class BridgeSettingsDiscord {
 	}
 }
 
-/*************
- * Export it *
- *************/
-
-module.exports = BridgeSettingsDiscord;

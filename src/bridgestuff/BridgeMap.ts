@@ -1,10 +1,5 @@
-"use strict";
-
-/**************************
- * Import important stuff *
- **************************/
-
-const R = require("ramda");
+import R from "ramda";
+import { Bridge } from "./Bridge";
 
 /***********************
  * The BridgeMap class *
@@ -13,13 +8,16 @@ const R = require("ramda");
 /**
  * Map between chat IDs and bridges
  */
-class BridgeMap {
+export class BridgeMap {
+	public bridges: Bridge[];
+	private _discordToBridge: Map<number, Bridge[]>;
+	private _telegramToBridge: Map<number, Bridge[]>;
 	/**
 	 * Creates a new bridge map
 	 *
 	 * @param {Bridge[]} bridges	The bridges to map
 	 */
-	constructor(bridges) {
+	constructor(bridges: Bridge[]) {
 		/**
 		 * List of all bridges
 		 *
@@ -47,9 +45,9 @@ class BridgeMap {
 
 		// Populate the maps and set
 		bridges.forEach((bridge) => {
-			const d = this._discordToBridge.get(bridge.discord.channelId) || [];
+			const d = this._discordToBridge.get(Number(bridge.discord.channelId)) || [];
 			const t = this._telegramToBridge.get(bridge.telegram.chatId) || [];
-			this._discordToBridge.set(bridge.discord.channelId, [...d, bridge]);
+			this._discordToBridge.set(Number(bridge.discord.channelId), [...d, bridge]);
 			this._telegramToBridge.set(bridge.telegram.chatId, [...t, bridge]);
 		});
 	}
@@ -61,7 +59,7 @@ class BridgeMap {
 	 *
 	 * @returns {Bridge[]}	The bridges corresponding to the chat ID
 	 */
-	fromTelegramChatId(telegramChatId) {
+	fromTelegramChatId(telegramChatId: number) {
 		return R.defaultTo([], this._telegramToBridge.get(telegramChatId));
 	}
 
@@ -72,13 +70,8 @@ class BridgeMap {
 	 *
 	 * @returns {Bridges[]}	The bridges corresponding to the channel ID
 	 */
-	fromDiscordChannelId(discordChannelId) {
+	fromDiscordChannelId(discordChannelId: number) {
 		return R.defaultTo([], this._discordToBridge.get(discordChannelId));
 	}
 }
 
-/*************
- * Export it *
- *************/
-
-module.exports = BridgeMap;

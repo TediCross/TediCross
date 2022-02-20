@@ -1,31 +1,25 @@
-"use strict";
-
-/**************************
- * Import important stuff *
- **************************/
-
 // General stuff
-const semver = require("semver");
-const yargs = require("yargs");
-const path = require("path");
-const Logger = require("./src/Logger");
-const MessageMap = require("./src/MessageMap");
-const Bridge = require("./src/bridgestuff/Bridge");
-const BridgeMap = require("./src/bridgestuff/BridgeMap");
-const Settings = require("./src/settings/Settings");
-const migrateSettingsToYAML = require("./src/migrateSettingsToYAML");
-const jsYaml = require("js-yaml");
-const fs = require("fs");
-const R = require("ramda");
-const os = require("os");
+import semver from "semver";
+import yargs from "yargs";
+import path from "path";
+import { Logger } from "./src/Logger";
+import { MessageMap } from "./src/MessageMap";
+import { Bridge, BridgeProperties } from "./src/bridgestuff/Bridge";
+import { BridgeMap } from "./src/bridgestuff/BridgeMap";
+import { Settings } from "./src/settings/Settings";
+import { migrateSettingsToYAML } from "./src/migrateSettingsToYAML";
+import jsYaml from "js-yaml";
+import fs from "fs";
+import R from "ramda";
+import os from "os";
 
 // Telegram stuff
-const { Telegraf, TimeoutError } = require("telegraf");
-const telegramSetup = require("./src/telegram2discord/setup");
+import { Telegraf } from "telegraf";
+import { setup as telegramSetup, TediTelegraf } from "./src/telegram2discord/setup";
 
 // Discord stuff
-const Discord = require("discord.js");
-const discordSetup = require("./src/discord2telegram/setup");
+import Discord from "discord.js";
+import { setup as discordSetup } from "./src/discord2telegram/setup";
 
 if (!semver.gte(process.version, "14.9.0")) {
 	console.log(`TediCross requires at least nodejs 14.9. Your version is ${process.version}`);
@@ -51,7 +45,7 @@ const args = yargs
 		default: path.join(__dirname, "data"),
 		describe: "Specify the path to the directory to store data in",
 		type: "string"
-	}).argv;
+	}).argv as Record<string, string | number>;
 
 // Migrate the settings from JSON to YAML
 const settingsPathJSON = path.join(__dirname, "settings.json");
@@ -59,8 +53,10 @@ const settingsPathYAML = args.config;
 migrateSettingsToYAML(settingsPathJSON, settingsPathYAML);
 
 // Get the settings
-const rawSettingsObj = jsYaml.safeLoad(fs.readFileSync(settingsPathYAML));
+const rawSettingsObj = jsYaml.load(fs.readFileSync(settingsPathYAML, "utf-8"));
+
 const settings = Settings.fromObj(rawSettingsObj);
+
 
 // Initialize logger
 const logger = new Logger(settings.debug);
@@ -69,11 +65,12 @@ const logger = new Logger(settings.debug);
 const newRawSettingsObj = settings.toObj();
 if (R.not(R.equals(rawSettingsObj, newRawSettingsObj))) {
 	// Turn it into notepad friendly YAML
-	const yaml = jsYaml.safeDump(newRawSettingsObj).replace(/\n/g, "\r\n");
+	//TODO: Replaced safeDump with dump. It needs to be verified
+	const yaml = jsYaml.dump(newRawSettingsObj).replace(/\n/g, "\r\n");
 
 	try {
 		fs.writeFileSync(settingsPathYAML, yaml);
-	} catch (err) {
+	} catch (err: any) {
 		if (err.code === "EACCES") {
 			// The settings file is not writable. Give a warning
 			logger.warn(
@@ -98,6 +95,7 @@ if (R.not(R.equals(rawSettingsObj, newRawSettingsObj))) {
 }
 
 // Create a Telegram bot
+//@ts-ignore
 const tgBot = new Telegraf(settings.telegram.token, { channelMode: true });
 
 // Create a Discord bot
@@ -107,11 +105,11 @@ const dcBot = new Discord.Client();
 const messageMap = new MessageMap();
 
 // Create the bridge map
-const bridgeMap = new BridgeMap(settings.bridges.map(bridgeSettings => new Bridge(bridgeSettings)));
+const bridgeMap = new BridgeMap(settings.bridges.map((bridgeSettings: BridgeProperties) => new Bridge(bridgeSettings)));
 
 /*********************
  * Set up the bridge *
  *********************/
 
-discordSetup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, args.dataDir);
-telegramSetup(logger, tgBot, dcBot, messageMap, bridgeMap, settings, args.dataDir);
+discordSetup(logger, dcBot, tgBot, messageMap, bridgeMap, settings as any, args.dataDir as string);
+telegramSetup(logger, tgBot as TediTelegraf, dcBot, messageMap, bridgeMap, settings);

@@ -1,14 +1,14 @@
-"use strict";
-
-/**************************
- * Import important stuff *
- **************************/
-
-const R = require("ramda");
-const middlewares = require("./middlewares");
-const endwares = require("./endwares");
-const { sleep } = require("../sleep");
-const { TimeoutError } = require("telegraf");
+import R from "ramda";
+import middlewares from "./middlewares";
+import { sleep } from "../sleep";
+import { Telegraf } from "telegraf";
+import { Logger } from "../Logger";
+import { Client } from "discord.js";
+import { MessageMap } from "../MessageMap";
+import { BridgeMap } from "../bridgestuff/BridgeMap";
+import { Settings } from "../settings/Settings";
+import * as telegraf from "telegraf";
+import { chatinfo, handleEdits, leftChatMember, newChatMembers, relayMessage, TediCrossContext } from "./endwares";
 
 /***********
  * Helpers *
@@ -21,15 +21,16 @@ const { TimeoutError } = require("telegraf");
  *
  * @returns {Promise}	Promise resolving to nothing when the clearing is done
  */
-function clearOldMessages(tgBot, offset = -1) {
+function clearOldMessages(tgBot: Telegraf, offset = -1): Promise<any> {
 	const timeout = 0;
 	const limit = 100;
-	return tgBot.telegram.getUpdates(timeout, limit, offset).then(
+	return tgBot.telegram.getUpdates(timeout, limit, offset, []).then(
 		R.ifElse(
 			R.isEmpty,
 			R.always(undefined),
-			R.compose(
+			R.compose<any, any>(
 				newOffset => clearOldMessages(tgBot, newOffset),
+				//@ts-ignore
 				R.add(1),
 				R.prop("update_id"),
 				R.last
@@ -42,6 +43,12 @@ function clearOldMessages(tgBot, offset = -1) {
  * The setup function *
  **********************/
 
+export interface TediTelegraf extends Telegraf {
+	use: any | TediCrossContext;
+	on: any | ((value: string) => TediCrossContext);
+	context: TediCrossContext
+}
+
 /**
  * Sets up the receiving of Telegram messages, and relaying them to Discord
  *
@@ -52,7 +59,8 @@ function clearOldMessages(tgBot, offset = -1) {
  * @param {BridgeMap} bridgeMap	Map of the bridges to use
  * @param {Settings} settings	The settings to use
  */
-function setup(logger, tgBot, dcBot, messageMap, bridgeMap, settings) {
+export function setup(logger: Logger, tgBot: TediTelegraf, dcBot: Client, messageMap: MessageMap, bridgeMap: BridgeMap, settings: Settings) {
+	//@ts-ignore
 	tgBot.ready = Promise.all([
 		// Get info about the bot
 		tgBot.telegram.getMe(),
@@ -81,15 +89,16 @@ function setup(logger, tgBot, dcBot, messageMap, bridgeMap, settings) {
 			tgBot.use(middlewares.addTediCrossObj);
 			tgBot.use(middlewares.addMessageObj);
 			tgBot.use(middlewares.addMessageId);
-			tgBot.use(endwares.chatinfo);
+			tgBot.use(chatinfo as any);
 			tgBot.use(middlewares.addBridgesToContext);
 			tgBot.use(middlewares.informThisIsPrivateBot);
 			tgBot.use(middlewares.removeD2TBridges);
+			//@ts-ignore telegram expacts a second parameter
 			tgBot.command(middlewares.removeBridgesIgnoringCommands);
 			tgBot.on("new_chat_members", middlewares.removeBridgesIgnoringJoinMessages);
 			tgBot.on("left_chat_member", middlewares.removeBridgesIgnoringLeaveMessages);
-			tgBot.on("new_chat_members", endwares.newChatMembers);
-			tgBot.on("left_chat_member", endwares.leftChatMember);
+			tgBot.on("new_chat_members", newChatMembers);
+			tgBot.on("left_chat_member", leftChatMember);
 			tgBot.use(middlewares.addFromObj);
 			tgBot.use(middlewares.addReplyObj);
 			tgBot.use(middlewares.addForwardFrom);
@@ -99,13 +108,14 @@ function setup(logger, tgBot, dcBot, messageMap, bridgeMap, settings) {
 			tgBot.use(middlewares.addPreparedObj);
 
 			// Apply endwares
-			tgBot.on(["edited_message", "edited_channel_post"], endwares.handleEdits);
-			tgBot.use(endwares.relayMessage);
+			tgBot.on(["edited_message", "edited_channel_post"], handleEdits);
+			tgBot.use(relayMessage as any);
 
 			// Don't crash on errors
-			tgBot.catch(err => {
+			tgBot.catch((err: any) => {
 				// The docs says timeout errors should always be rethrown
-				if (err instanceof TimeoutError) {
+				// @ts-ignore TODO: Telefraf does not exprt the TimoutError, alternative implementation needed
+				if (err instanceof telegraf.TimeoutError) {
 					throw err;
 				}
 
@@ -114,11 +124,6 @@ function setup(logger, tgBot, dcBot, messageMap, bridgeMap, settings) {
 			});
 		})
 		// Start getting updates
+		//@ts-ignore TODO: startPooling is a private method. Maybe use .launch() instead
 		.then(() => tgBot.startPolling());
 }
-
-/*****************************
- * Export the setup function *
- *****************************/
-
-module.exports = setup;

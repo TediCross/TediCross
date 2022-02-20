@@ -1,27 +1,26 @@
-"use strict";
-
 /**************************
  * Import important stuff *
  **************************/
 
-const fs = require("fs");
-const jsYaml = require("js-yaml");
+import fs from "fs";
+import jsYaml from "js-yaml";
 
 /**************************
  * The migration function *
  **************************/
 
-function migrateSettingsToYAML(jsonPath, yamlPath) {
+export function migrateSettingsToYAML(jsonPath: fs.PathLike, yamlPath: fs.PathOrFileDescriptor) {
 	try {
 		// Read the file and parse it
-		const settings = JSON.parse(fs.readFileSync(jsonPath));
+		const settings = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
 
 		// Save it back as YAML
-		fs.writeFileSync(yamlPath, jsYaml.safeDump(settings));
+		//TODO replaced saveDump with dump. Support for saveDump was removed. Check if it still works as expected.
+		fs.writeFileSync(yamlPath, jsYaml.dump(settings));
 
 		// Remove settings.json
 		fs.unlinkSync(jsonPath);
-	} catch (err) {
+	} catch (err: any) {
 		// Could not read it. Check if it exists
 		if (err.code !== "ENOENT") {
 			// It does exist, but can't be read... Pass on the error
@@ -31,8 +30,3 @@ function migrateSettingsToYAML(jsonPath, yamlPath) {
 	}
 }
 
-/*************
- * Export it *
- *************/
-
-module.exports = migrateSettingsToYAML;

@@ -1,10 +1,6 @@
-"use strict";
-
-/**************************
- * Import important stuff *
- **************************/
-
-const fs = require("fs");
+import fs from "fs";
+import { Bridge } from "../bridgestuff/Bridge";
+import { Logger } from "../Logger";
 const promisify = require("util").promisify;
 
 /*************************************
@@ -14,17 +10,22 @@ const promisify = require("util").promisify;
 /**
  * Persistently keeps track of the ID of the latest Discord message per bridge
  */
-class LatestDiscordMessageIds {
+export class LatestDiscordMessageIds {
+	private _logger: Logger;
+	private _filepath: string;
+	private _map: Record<string, any>;
+	private _finishedWriting: Promise<void>;
+
 	/**
 	 * Creates a new instance which keeps track of messages and bridges
 	 *
 	 * @param {Logger} logger	The Logger instance to log messages to
 	 * @param {String} filepath	Path to the file to persistently store the map in
 	 */
-	constructor(logger, filepath) {
+	constructor(logger: Logger, filepath: string) {
 		/**
 		 * The Logger instance to log messages to
-		 * 
+		 *
 		 * @type {Logger}
 		 */
 		this._logger = logger;
@@ -58,7 +59,8 @@ class LatestDiscordMessageIds {
 		// Read the file
 		let data = null;
 		try {
-			data = fs.readFileSync(this._filepath);
+			//TODO added encoding. Check if it still works
+			data = fs.readFileSync(this._filepath, "utf8");
 		} catch (err) {
 			// Well, the file has been confirmed to exist, so there must be no read access
 			this._logger.error(`Cannot read the file ${this._filepath}:`, err);
@@ -94,7 +96,7 @@ class LatestDiscordMessageIds {
 	 * @param {String} message	The latest message from Discord on the bridge
 	 * @param {Object} bridge	The bridge
 	 */
-	setLatest(messageId, bridge) {
+	setLatest(messageId: string, bridge: Bridge) {
 		// Update the bridge map
 		this._map[bridge.name] = messageId;
 
@@ -111,13 +113,8 @@ class LatestDiscordMessageIds {
 	 *
 	 * @returns {String}	ID of the latest Discord message that passed over the bridge
 	 */
-	getLatest(bridge) {
+	getLatest(bridge: Bridge) {
 		return this._map[bridge.name] === undefined ? null : this._map[bridge.name];
 	}
 }
 
-/*************
- * Export it *
- *************/
-
-module.exports = LatestDiscordMessageIds;

@@ -1,17 +1,14 @@
-"use strict";
-
-/**************************
- * Import important stuff *
- **************************/
-
-const R = require("ramda");
-const fetchDiscordChannel = require("../fetchDiscordChannel");
+import { Client } from "discord.js";
+import R from "ramda";
+import { MessageEntity } from "telegraf/typings/core/types/typegram";
+import { Bridge } from "../bridgestuff/Bridge";
+import { fetchDiscordChannel } from "../fetchDiscordChannel";
 
 /*********************
  * Make some helpers *
  *********************/
-
-const findFn = (prop, regexp) => R.compose(R.not, R.isEmpty, R.match(regexp), R.prop(prop));
+//@ts-ignore
+const findFn = (prop: string, regexp: RegExp) => R.compose<any, any>(R.not, R.isEmpty, R.match(regexp), R.prop(prop)) as unknown as () => boolean;
 
 /*****************************
  * Define the entity handler *
@@ -27,7 +24,7 @@ const findFn = (prop, regexp) => R.compose(R.not, R.isEmpty, R.match(regexp), R.
  *
  * @return {String} The fully converted string
  */
-async function handleEntities(text, entities, dcBot, bridge) {
+export async function handleEntities(text: string, entities: MessageEntity[], dcBot: Client, bridge: Bridge) {
 	// Don't mess up the original
 	const substitutedText = text !== undefined ? text.split("") : [""];
 
@@ -48,7 +45,7 @@ async function handleEntities(text, entities, dcBot, bridge) {
 		const part = text.substring(e.offset, e.offset + e.length);
 
 		// The string to substitute
-		let substitute = part;
+		let substitute = part as string | Record<string, string>;
 
 		// Do something based on entity type
 		switch (e.type) {
@@ -69,7 +66,7 @@ async function handleEntities(text, entities, dcBot, bridge) {
 					} else if (!R.isNil(dcRole)) {
 						substitute = `<@&${dcRole.id}>`;
 					} // else handled by the default substitute value
-				} catch (err) {
+				} catch (err: any) {
 					console.error(
 						`Could not process a mention for Discord channel ${bridge.discord.channelId} on bridge ${bridge.name}: ${err.message}`
 					);
@@ -128,7 +125,7 @@ async function handleEntities(text, entities, dcBot, bridge) {
 					if (!R.isNil(mentionedChannel)) {
 						substitute = `<#${mentionedChannel.id}>`;
 					}
-				} catch (err) {
+				} catch (err: any) {
 					console.error(
 						`Could not process a hashtag for Discord channel ${bridge.discord.channelId} on bridge ${bridge.name}: ${err.message}`
 					);
@@ -146,7 +143,7 @@ async function handleEntities(text, entities, dcBot, bridge) {
 
 		// Do the substitution if there is a change
 		if (substitute !== part) {
-			substitutedText.splice(e.offset, e.length, substitute);
+			substitutedText.splice(e.offset, e.length, substitute as string);
 		}
 	}
 
@@ -155,10 +152,11 @@ async function handleEntities(text, entities, dcBot, bridge) {
 		substitutedText.push("\n\n");
 		for (let i = 0; i < markdownLinks.length; i++) {
 			// Find out where the corresponding text is
-			const index = substitutedText.findIndex(e => e instanceof Object && e.type === "mdlink");
+			const index = substitutedText.findIndex((e: any) => e instanceof Object && e.type === "mdlink");
 			const obj = substitutedText[index];
 
 			// Replace the object with the proper text and reference
+			//@ts-ignore
 			substitutedText[index] = `${obj.text}[${i + 1}]`;
 
 			// Push the link to the end
@@ -170,8 +168,3 @@ async function handleEntities(text, entities, dcBot, bridge) {
 	return substitutedText.join("");
 }
 
-/***********************
- * Export the function *
- ***********************/
-
-module.exports = handleEntities;

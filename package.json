@@ -10,6 +10,7 @@
   "scripts": {
     "start": "node main.js",
     "start:dev": "nodemon --inspect main.js -i data/",
+    "start:dev:ts": "nodemon --watch './**/*.ts' --exec 'ts-node' main.ts -i data/",
     "lint": "eslint ."
   },
   "dependencies": {
@@ -21,13 +22,20 @@
     "semver": "^7.3.4",
     "simple-markdown": "^0.7.3",
     "telegraf": "^4.4.1",
+    "typescript": "^4.5.5",
     "yargs": "^13.3.0"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.5",
+    "@types/mime": "^2.0.3",
+    "@types/ramda": "^0.27.64",
+    "@types/semver": "^7.3.9",
+    "@types/yargs": "^17.0.8",
     "eslint": "^7.5.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-prettier": "^3.1.4",
-    "nodemon": "^2.0.2",
-    "prettier": "^2.0.5"
+    "nodemon": "^2.0.15",
+    "prettier": "^2.0.5",
+    "ts-node": "^10.5.0"
   }
 }

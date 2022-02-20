@@ -1,10 +1,4 @@
-"use strict";
-
-/**************************
- * Import important stuff *
- **************************/
-
-const R = require("ramda");
+import R from "ramda";
 
 /********************
  * Make the helpers *
@@ -19,7 +13,7 @@ const R = require("ramda");
  *
  * @throws {Error}	The error, if it is another type
  */
-const ignoreAlreadyDeletedError = R.ifElse(
+export const ignoreAlreadyDeletedError = R.ifElse(
 	R.propEq("description", "Bad Request: message to delete not found"),
 	R.always(undefined),
 	err => {
@@ -35,13 +29,5 @@ const ignoreAlreadyDeletedError = R.ifElse(
  *
  * @returns {Promise}	Promise resolving when the message is deleted
  */
-const deleteMessage = R.curry((ctx, { chat, message_id }) => ctx.telegram.deleteMessage(chat.id, message_id));
+export const deleteMessage = R.curry((ctx, { chat, message_id }) => ctx.telegram.deleteMessage(chat.id, message_id));
 
-/***************
- * Export them *
- ***************/
-
-module.exports = {
-	ignoreAlreadyDeletedError,
-	deleteMessage
-};
