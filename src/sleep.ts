@@ -1,8 +1,6 @@
-"use strict";
-
-const util = require("util");
-const R = require("ramda");
-const moment = require("moment");
+import util from "util";
+import R from "ramda";
+import moment from "moment";
 
 /**
  * Makes a promise which resolves after a set number of milliseconds
@@ -12,7 +10,7 @@ const moment = require("moment");
  *
  * @returns {Promise}	Promise resolving after the given number of ms
  */
-const sleep = util.promisify(setTimeout);
+export const sleep = util.promisify(setTimeout);
 
 /**
  * Makes a promise which resolves after one minute
@@ -21,9 +19,5 @@ const sleep = util.promisify(setTimeout);
  *
  * @returns {Promise}	Promise resolving after one minute
  */
-const sleepOneMinute = R.partial(sleep, [moment.duration(1, "minute").asMilliseconds()]);
+export const sleepOneMinute = R.partial(sleep, [moment.duration(1, "minute").asMilliseconds()]);
 
-module.exports = {
-	sleep,
-	sleepOneMinute
-};

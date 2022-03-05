@@ -1,10 +1,5 @@
-"use strict";
 
-/**************************
- * Import important stuff *
- **************************/
-
-const R = require("ramda");
+import R from "ramda";
 
 /********************
  * Make the helpers *
@@ -19,7 +14,7 @@ const R = require("ramda");
  *
  * @throws {Error}      The error, if it is another type
  */
-const ignoreAlreadyDeletedError = R.ifElse(
+export const ignoreAlreadyDeletedError = R.ifElse(
 	R.propEq("message", "Unknown Message"),
 	R.always(undefined),
 	err => {throw err;}
@@ -32,17 +27,9 @@ const ignoreAlreadyDeletedError = R.ifElse(
  *
  * @returns {String}	The escaped string
  */
-const escapeHTMLSpecialChars = R.compose(
+export const escapeHTMLSpecialChars = R.compose(
 	R.replace(/>/g, "&gt;"),
 	R.replace(/</g, "&lt;"),
 	R.replace(/&/g, "&amp;")
 );
 
-/***************
- * Export them *
- ***************/
-
-module.exports = {
-	ignoreAlreadyDeletedError,
-	escapeHTMLSpecialChars
-};

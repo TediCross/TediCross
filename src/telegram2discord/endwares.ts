@@ -1,15 +1,33 @@
-"use strict";
+import R from "ramda";
+import { MessageMap } from "../MessageMap";
+import { sleepOneMinute } from "../sleep";
+import { fetchDiscordChannel } from "../fetchDiscordChannel";
+import { Context } from "telegraf";
+import { deleteMessage, ignoreAlreadyDeletedError } from "./helpers";
+import { createFromObjFromUser } from "./From";
+import { MessageEditOptions } from "discord.js";
+import { Message, User } from "telegraf/typings/core/types/typegram";
 
-/**************************
- * Import important stuff *
- **************************/
 
-const R = require("ramda");
-const From = require("./From");
-const MessageMap = require("../MessageMap");
-const { sleepOneMinute } = require("../sleep");
-const helpers = require("./helpers");
-const fetchDiscordChannel = require("../fetchDiscordChannel");
+export interface TediCrossContext extends Context {
+	TediCross: any;
+	tediCross: {
+		message: Message | any;
+		file: {
+			type: string;
+			id: string;
+			name: string;
+			link?: string;
+		};
+		messageId: string;
+		prepared: any;
+		bridges: any;
+		replyTo: any;
+		text: any;
+		forwardFrom: any;
+		from: any;
+	};
+}
 
 /***********
  * Helpers *
@@ -37,15 +55,13 @@ const createMessageHandler = R.curry((func, ctx) => {
 /**
  * Replies to a message with info about the chat
  *
- * @param {Object} ctx	The Telegraf context
- * @param {Object} ctx.tediCross	The TediCross object on the context
- * @param {Object} ctx.tediCross.message	The message to reply to
- * @param {Object} ctx.tediCross.message.chat	The object of the chat the message is from
- * @param {Integer} ctx.tediCross.message.chat.id	ID of the chat the message is from
- *
- * @returns {undefined}
+ * @param ctx	The Telegraf context
+ * @param ctx.tediCross	The TediCross object on the context
+ * @param ctx.tediCross.message	The message to reply to
+ * @param ctx.tediCross.message.chat	The object of the chat the message is from
+ * @param ctx.tediCross.message.chat.id	ID of the chat the message is from
  */
-const chatinfo = (ctx, next) => {
+export const chatinfo = (ctx: TediCrossContext, next: () => void) => {
 	if (ctx.tediCross.message.text === "/chatinfo") {
 		// Reply with the info
 		ctx.reply(`chatID: ${ctx.tediCross.message.chat.id}`)
@@ -55,12 +71,12 @@ const chatinfo = (ctx, next) => {
 			.then(message =>
 				Promise.all([
 					// Delete the info
-					helpers.deleteMessage(ctx, message),
+					deleteMessage(ctx, message),
 					// Delete the command
 					ctx.deleteMessage()
 				])
 			)
-			.catch(helpers.ignoreAlreadyDeletedError);
+			.catch(ignoreAlreadyDeletedError);
 	} else {
 		next();
 	}
@@ -77,11 +93,11 @@ const chatinfo = (ctx, next) => {
  *
  * @returns {undefined}
  */
-const newChatMembers = createMessageHandler((ctx, bridge) =>
+export const newChatMembers = createMessageHandler((ctx: TediCrossContext, bridge: any) =>
 	// Notify Discord about each user
 	R.forEach(user => {
 		// Make the text to send
-		const from = From.createFromObjFromUser(user);
+		const from = createFromObjFromUser(user as User);
 		const text = `**${from.firstName} (${R.defaultTo(
 			"No username",
 			from.username
@@ -92,7 +108,7 @@ const newChatMembers = createMessageHandler((ctx, bridge) =>
 			.then(() =>
 				fetchDiscordChannel(ctx.TediCross.dcBot, bridge).then(channel => channel.send(text))
 			)
-			.catch(err =>
+			.catch((err: any) =>
 				console.error(
 					`Could not tell Discord about a new chat member on bridge ${bridge.name}: ${err.message}`
 				)
@@ -111,9 +127,9 @@ const newChatMembers = createMessageHandler((ctx, bridge) =>
  *
  * @returns {undefined}
  */
-const leftChatMember = createMessageHandler((ctx, bridge) => {
+export const leftChatMember = createMessageHandler((ctx: TediCrossContext, bridge: any) => {
 	// Make the text to send
-	const from = From.createFromObjFromUser(ctx.tediCross.message.left_chat_member);
+	const from = createFromObjFromUser(ctx.tediCross.message.left_chat_member);
 	const text = `**${from.firstName} (${R.defaultTo(
 		"No username",
 		from.username
@@ -122,7 +138,7 @@ const leftChatMember = createMessageHandler((ctx, bridge) => {
 	// Pass it on
 	ctx.TediCross.dcBot.ready
 		.then(() => fetchDiscordChannel(ctx.TediCross.dcBot, bridge).then(channel => channel.send(text)))
-		.catch(err =>
+		.catch((err: any) =>
 			console.error(
 				`Could not tell Discord about a chat member who left on bridge ${bridge.name}: ${err.message}`
 			)
@@ -132,14 +148,12 @@ const leftChatMember = createMessageHandler((ctx, bridge) => {
 /**
  * Relays a message from Telegram to Discord
  *
- * @param {Object} ctx	The Telegraf context
- * @param {Object} ctx.tediCross	The TediCross context of the message
- * @param {Object} ctx.TediCross	The global TediCross context of the message
- *
- * @returns {undefined}
+ * @param ctx The Telegraf context
+ * @param ctx.tediCross	The TediCross context of the message
+ * @param ctx.TediCross	The global TediCross context of the message
  */
-const relayMessage = ctx =>
-	R.forEach(async prepared => {
+export const relayMessage = (ctx: TediCrossContext) =>
+	R.forEach(async (prepared: any) => {
 		try {
 			// Discord doesn't handle messages longer than 2000 characters. Split it up into chunks that big
 			const messageText = prepared.header + "\n" + prepared.text;
@@ -160,7 +174,7 @@ const relayMessage = ctx =>
 						files: [prepared.file]
 					});
 					chunks = R.tail(chunks);
-				} catch (err) {
+				} catch (err: any) {
 					if (err.message === "Request entity too large") {
 						dcMessage = await channel.send(
 							`***${prepared.senderName}** on Telegram sent a file, but it was too large for Discord. If you want it, ask them to send it some other way*`
@@ -182,9 +196,9 @@ const relayMessage = ctx =>
 				MessageMap.TELEGRAM_TO_DISCORD,
 				prepared.bridge,
 				ctx.tediCross.messageId,
-				dcMessage.id
+				dcMessage?.id
 			);
-		} catch (err) {
+		} catch (err: any) {
 			console.error(
 				`Could not relay a message to Discord on bridge ${prepared.bridge.name}: ${err.message}`
 			);
@@ -198,9 +212,9 @@ const relayMessage = ctx =>
  *
  * @returns {undefined}
  */
-const handleEdits = createMessageHandler(async (ctx, bridge) => {
+export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, bridge: any) => {
 	// Function to "delete" a message on Discord
-	const del = async (ctx, bridge) => {
+	const del = async (ctx: TediCrossContext, bridge: any) => {
 		try {
 			// Find the ID of this message on Discord
 			const [dcMessageId] = ctx.TediCross.messageMap.getCorresponding(
@@ -219,7 +233,7 @@ const handleEdits = createMessageHandler(async (ctx, bridge) => {
 			const tp = ctx.deleteMessage();
 
 			await Promise.all([dp, tp]);
-		} catch (err) {
+		} catch (err: any) {
 			console.error(
 				`Could not cross-delete message from Telegram to Discord on bridge ${bridge.name}: ${err.message}`
 			);
@@ -227,7 +241,7 @@ const handleEdits = createMessageHandler(async (ctx, bridge) => {
 	};
 
 	// Function to edit a message on Discord
-	const edit = async (ctx, bridge) => {
+	const edit = async (ctx: TediCrossContext, bridge: any) => {
 		try {
 			const tgMessage = ctx.tediCross.message;
 
@@ -246,14 +260,14 @@ const handleEdits = createMessageHandler(async (ctx, bridge) => {
 				channel.messages.fetch(dcMessageId)
 			);
 
-			R.forEach(async prepared => {
+			R.forEach(async (prepared: any) => {
 				// Discord doesn't handle messages longer than 2000 characters. Take only the first 2000
 				const messageText = R.slice(0, 2000, prepared.header + "\n" + prepared.text);
 
 				// Send them in serial, with the attachment first, if there is one
-				await dcMessage.edit(messageText, { attachment: prepared.attachment });
+				await dcMessage.edit({ content: messageText, attachment: prepared.attachment } as MessageEditOptions);
 			})(ctx.tediCross.prepared);
-		} catch (err) {
+		} catch (err: any) {
 			// Log it
 			console.error(
 				`Could not cross-edit message from Telegram to Discord on bridge ${bridge.name}: ${err.message}`
@@ -273,14 +287,3 @@ const handleEdits = createMessageHandler(async (ctx, bridge) => {
 	}
 });
 
-/***************
- * Export them *
- ***************/
-
-module.exports = {
-	chatinfo,
-	newChatMembers,
-	leftChatMember,
-	relayMessage,
-	handleEdits
-};

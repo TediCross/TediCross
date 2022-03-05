@@ -1,8 +1,6 @@
-"use strict";
-
-const simpleMarkdown = require("simple-markdown");
-const { escapeHTMLSpecialChars } = require("./helpers");
-const R = require("ramda");
+import simpleMarkdown, { SingleASTNode } from "simple-markdown";
+import { escapeHTMLSpecialChars } from "./helpers";
+import R from "ramda";
 
 /***********
  * Helpers *
@@ -18,7 +16,7 @@ const tagMap = new Proxy(
 		codeBlock: "pre"
 	},
 	{
-		get(target, prop) {
+		get(target: Record<string, any>, prop: string) {
 			// Default to not having any tags
 			const tags = {
 				start: "",
@@ -45,7 +43,7 @@ const newlineNode = { content: "\n", type: "text" };
  *
  * @return {String}	The concatenated text from all leaf nodes of this node
  */
-function extractText(node) {
+function extractText(node: Record<string, any>) {
 	// Extract the text from the node
 	let text = node.content;
 	if (node.content instanceof Array) {
@@ -61,6 +59,7 @@ function extractText(node) {
 
 // Ignore some rules which only creates trouble
 ["list", "heading"].forEach(type => {
+	//@ts-ignore TODO: As per the documentation the defaultRules are only allowed to be read, not written, check for alternative way.
 	simpleMarkdown.defaultRules[type] = {
 		order: Number.POSITIVE_INFINITY,
 		match: () => null // Never match anything in order to ignore this rule
@@ -81,7 +80,7 @@ const mdParse = simpleMarkdown.defaultBlockParse;
  *
  * @return {String}	Telegram-friendly HTML
  */
-function md2html(text) {
+export function md2html(text: string) {
 	// XXX Some users get a space after @ in mentions bridged to Telegram. See #148
 	// This is compensation for that discord error
 	text = R.replace("@\u200B", "@", R.defaultTo("", text));
@@ -101,10 +100,10 @@ function md2html(text) {
 			return content;
 		})
 		// Flatten the resulting structure
-		.reduce((flattened, nodes) => flattened.concat([newlineNode, newlineNode], nodes), [])
+		.reduce((flattened: any, nodes) => flattened.concat([newlineNode, newlineNode], nodes), [])
 		// Remove the two initial newlines created by the previous line
 		.slice(2)
-		.reduce((html, node) => {
+		.reduce((html: string, node: SingleASTNode) => {
 			if (node.type === "br") {
 				return html + "\n";
 			} else if (node.type === "hr") {
@@ -123,8 +122,3 @@ function md2html(text) {
 	return html;
 }
 
-/***********************
- * Export the function *
- ***********************/
-
-module.exports = md2html;

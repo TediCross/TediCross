@@ -1,11 +1,9 @@
-"use strict";
-
 /**************************
  * Import important stuff *
  **************************/
 
-const R = require("ramda");
-const moment = require("moment");
+import R from "ramda";
+import moment from "moment";
 
 const dummy = R.always(undefined);
 
@@ -17,12 +15,13 @@ const dummy = R.always(undefined);
  * Logger utility which works just like the ordinary 'console' but prefixes any message with a timestamp and type of message
  */
 // eslint-disable-next-line no-console
-class Logger extends console.Console {
+export class Logger extends console.Console {
+	private _debugEnabled: boolean;
 	/**
 	 * Creates a new logger
 	 * @param {Boolean} debug
 	 */
-	constructor(debug) {
+	constructor(debug: boolean) {
 		super(process.stdout, process.stderr);
 
 		this._debugEnabled = debug;
@@ -47,8 +46,8 @@ class Logger extends console.Console {
 	 *
 	 * @private
 	 */
-	_wrapper(method, tag) {
-		return (...args) => {
+	_wrapper(method: (...args: any[]) => void, tag: string) {
+		return (...args: any[]) => {
 			// Create the stamp
 			const stamp = `${Logger.timestamp} [${tag}]`;
 			// Put the stamp as the first argument, preserving the inspection of whatever the first argument is
@@ -65,9 +64,3 @@ class Logger extends console.Console {
 		return moment().format("YYYY-MM-DD HH:mm:ss");
 	}
 }
-
-/********************
- * Export the class *
- ********************/
-
-module.exports = Logger;

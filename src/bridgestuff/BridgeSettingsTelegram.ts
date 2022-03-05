@@ -1,19 +1,30 @@
-"use strict";
-
-/**************************
- * Import important stuff *
- **************************/
-
-// Nothing
 
 /************************************
  * The BridgeSettingsTelegram class *
  ************************************/
 
+
+export interface BridgeSettingsTelegramProperties {
+	chatId: number;
+	sendUsernames: boolean;
+	relayCommands: boolean;
+	relayJoinMessages: boolean;
+	relayLeaveMessages: boolean;
+	crossDeleteOnDiscord: boolean;
+	ignoreCommands?: boolean;
+}
+
 /**
  * Holds settings for the Telegram part of a bridge
  */
-class BridgeSettingsTelegram {
+export class BridgeSettingsTelegram {
+	public chatId: number;
+	public sendUsernames: boolean;
+	public relayJoinMessages: boolean;
+	public relayLeaveMessages: boolean;
+	public crossDeleteOnDiscord: boolean;
+	public relayCommands: boolean;
+
 	/**
 	 * Creates a new BridgeSettingsTelegram object
 	 *
@@ -22,7 +33,7 @@ class BridgeSettingsTelegram {
 	 * @param {Boolean} settings.relayJoinMessages	Whether or not to relay join messages from Telegram to Discord
 	 * @param {Boolean} settings.relayLeaveMessages	Whether or not to relay leave messages from Telegram to Discord
 	 */
-	constructor(settings) {
+	constructor(settings: BridgeSettingsTelegramProperties) {
 		// Check that the settings object is valid
 		BridgeSettingsTelegram.validate(settings);
 
@@ -31,7 +42,7 @@ class BridgeSettingsTelegram {
 		 *
 		 * @type {Integer}
 		 */
-		this.chatId = Number.parseInt(settings.chatId);
+		this.chatId = Number.parseInt(settings.chatId.toString());
 
 		/**
 		 * Whether or not to relay join messages from Telegram to Discord
@@ -76,7 +87,7 @@ class BridgeSettingsTelegram {
 	 *
 	 * @throws {Error}	If the object is not suitable. The error message says what the problem is
 	 */
-	static validate(settings) {
+	static validate(settings: BridgeSettingsTelegramProperties) {
 		// Check that the settings are indeed in object form
 		if (!(settings instanceof Object)) {
 			throw new Error("`settings` must be an object");
@@ -109,8 +120,3 @@ class BridgeSettingsTelegram {
 	}
 }
 
-/*************
- * Export it *
- *************/
-
-module.exports = BridgeSettingsTelegram;

@@ -1,10 +1,5 @@
-"use strict";
-
-/**************************
- * Import important stuff *
- **************************/
-
-const moment = require("moment");
+import moment from "moment";
+import { Bridge } from "./bridgestuff/Bridge";
 
 /********************
  * Create the class *
@@ -13,7 +8,11 @@ const moment = require("moment");
 /**
  * Handles mapping between message IDs in discord and telegram, for message editing purposes
  */
-class MessageMap {
+export class MessageMap {
+	private _map: Map<Bridge, any>;
+	//TODO check if _timeoutMap is still needed
+	private _timeoutMap: Map<string, any>;
+
 	constructor() {
 		/**
 		 * The map itself
@@ -38,7 +37,7 @@ class MessageMap {
 	 * @param {String} fromId	Message ID to map from, i.e. the ID of the message the bot received
 	 * @param {String} toId	Message ID to map to, i.e. the ID of the message the bot sent
 	 */
-	insert(direction, bridge, fromId, toId) {
+	insert(direction: string, bridge: Bridge, fromId: string, toId: string) {
 		// Get/create the entry for the bridge
 		let keyToIdsMap = this._map.get(bridge);
 		if (keyToIdsMap === undefined) {
@@ -72,7 +71,7 @@ class MessageMap {
 	 *
 	 * @returns {String[]}	Message IDs of the corresponding message, i.e. the IDs of the messages the bot sent
 	 */
-	getCorresponding(direction, bridge, fromId) {
+	getCorresponding(direction: string, bridge: Bridge, fromId: string) {
 		try {
 			// Get the key-to-IDs map
 			const keyToIdsMap = this._map.get(bridge);
@@ -91,7 +90,7 @@ class MessageMap {
 		}
 	}
 
-	getCorrespondingReverse(direction, bridge, toId) {
+	getCorrespondingReverse(_direction: string, bridge: Bridge, toId: string) {
 		// The ID to return
 		let fromId = [];
 
@@ -122,8 +121,3 @@ class MessageMap {
 	}
 }
 
-/********************
- * Export the class *
- ********************/
-
-module.exports = MessageMap;

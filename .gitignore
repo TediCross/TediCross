@@ -47,3 +47,6 @@ data/
 
 # The npm package lock file
 package-lock.json
+
+# JS files. This is now a TS project
+*.js

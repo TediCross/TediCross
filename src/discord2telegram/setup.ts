@@ -1,20 +1,19 @@
-"use strict";
-
-/**************************
- * Import important stuff *
- **************************/
-
-const md2html = require("./md2html");
-const MessageMap = require("../MessageMap");
-const LatestDiscordMessageIds = require("./LatestDiscordMessageIds");
-const handleEmbed = require("./handleEmbed");
-const relayOldMessages = require("./relayOldMessages");
-const Bridge = require("../bridgestuff/Bridge");
-const path = require("path");
-const R = require("ramda");
-const { sleepOneMinute } = require("../sleep");
-const helpers = require("./helpers");
-const fetchDiscordChannel = require("../fetchDiscordChannel");
+import { md2html } from "./md2html";
+import { MessageMap } from "../MessageMap";
+import { LatestDiscordMessageIds } from "./LatestDiscordMessageIds";
+import { handleEmbed } from "./handleEmbed";
+import { relayOldMessages } from "./relayOldMessages";
+import { Bridge } from "../bridgestuff/Bridge";
+import path from "path";
+import R from "ramda";
+import { sleepOneMinute } from "../sleep";
+import { fetchDiscordChannel } from "../fetchDiscordChannel";
+import { Logger } from "../Logger";
+import { BridgeMap } from "../bridgestuff/BridgeMap";
+import { Telegraf } from "telegraf";
+import { escapeHTMLSpecialChars, ignoreAlreadyDeletedError } from "./helpers";
+import { Client, Message, TextChannel } from "discord.js";
+import { Settings } from "../settings/Settings";
 
 /***********
  * Helpers *
@@ -23,32 +22,32 @@ const fetchDiscordChannel = require("../fetchDiscordChannel");
 /**
  * Creates a function to give to 'guildMemberAdd' or 'guildMemberRemove' on a Discord bot
  *
- * @param {Logger} logger	The Logger instance to log messages to
- * @param {String} verb	Either "joined" or "left"
- * @param {BridgeMap} bridgeMap	Map of existing bridges
- * @param {Telegraf} tgBot	The Telegram bot to send the messages to
+ * @param logger	The Logger instance to log messages to
+ * @param verb	Either "joined" or "left"
+ * @param bridgeMap	Map of existing bridges
+ * @param tgBot	The Telegram bot to send the messages to
  *
- * @returns {Function}	Function which can be given to the 'guildMemberAdd' or 'guildMemberRemove' events of a Discord bot
+ * @returns Function which can be given to the 'guildMemberAdd' or 'guildMemberRemove' events of a Discord bot
  *
  * @private
  */
-function makeJoinLeaveFunc(logger, verb, bridgeMap, tgBot) {
+function makeJoinLeaveFunc(logger: Logger, verb: string, bridgeMap: BridgeMap, tgBot: Telegraf) {
 	// Find out which setting property to check the bridges for
 	const relaySetting = verb === "joined" ? "relayJoinMessages" : "relayLeaveMessages";
-	return function (member) {
+	return function (member: any) {
 		// Get the bridges in the guild the member joined/left
 		member.guild.channels.cache
 			// Get the bridges corresponding to the channels in this guild
-			.map(({ id }) => bridgeMap.fromDiscordChannelId(id))
+			.map(({ id }: { id: number; }) => bridgeMap.fromDiscordChannelId(id))
 			// Remove the ones which are not bridged
-			.filter(bridges => bridges !== undefined)
+			.filter((bridges: any) => bridges !== undefined)
 			// Flatten the bridge arrays
-			.reduce((flattened, bridges) => flattened.concat(bridges))
+			.reduce((flattened: any, bridges: any) => flattened.concat(bridges))
 			// Remove those which do not allow relaying join messages
-			.filter(bridge => bridge.discord[relaySetting])
+			.filter((bridge: any) => bridge.discord[relaySetting])
 			// Ignore the T2D bridges
-			.filter(bridge => bridge.direction !== Bridge.DIRECTION_TELEGRAM_TO_DISCORD)
-			.forEach(async bridge => {
+			.filter((bridge: any) => bridge.direction !== Bridge.DIRECTION_TELEGRAM_TO_DISCORD)
+			.forEach(async (bridge: any) => {
 				// Make the text to send
 				const text = `<b>${member.displayName} (@${member.user.username})</b> ${verb} the Discord side of the chat`;
 
@@ -82,7 +81,7 @@ function makeJoinLeaveFunc(logger, verb, bridgeMap, tgBot) {
  * @param {Settings} settings	Settings to use
  * @param {String} datadirPath	Path to the directory to put data files in
  */
-function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPath) {
+export function setup(logger: Logger, dcBot: Client, tgBot: Telegraf, messageMap: MessageMap, bridgeMap: BridgeMap, settings: Settings, datadirPath: string) {
 	// Create the map of latest message IDs and bridges
 	const latestDiscordMessageIds = new LatestDiscordMessageIds(
 		logger,
@@ -105,27 +104,28 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 	// Listen for Discord messages
 	dcBot.on("messageCreate", async message => {
 		// Ignore the bot's own messages
-		if (message.author.id === dcBot.user.id) {
+		if (message.author.id === dcBot.user?.id) {
 			return;
 		}
 
 		// Check if this is a request for server info
-		if (message.channel.type === "text" && message.cleanContent === "/chatinfo") {
+		if (message.cleanContent === "/chatinfo") {
 			// It is. Give it
 			message.reply("\nchannelId: '" + message.channel.id + "'")
 				.then(sleepOneMinute)
-				.then(info => Promise.all([info.delete(), message.delete()]))
-				.catch(helpers.ignoreAlreadyDeletedError);
+				.then((info: any) => Promise.all([info.delete(), message.delete()]))
+				.catch(ignoreAlreadyDeletedError);
 
 			// Don't process the message any further
 			return;
 		}
 
 		// Get info about the sender
-		const senderName = R.compose(
+		const senderName = R.compose<any, any>(
 			// Make it HTML safe
-			helpers.escapeHTMLSpecialChars,
+			escapeHTMLSpecialChars,
 			// Add a colon if wanted
+			//@ts-ignore
 			R.when(R.always(settings.telegram.colonAfterSenderName), senderName => senderName + ":"),
 			// Figure out what name to use
 			R.ifElse(
@@ -133,10 +133,10 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 				R.path(["member", "displayName"]),
 				R.path(["author", "username"])
 			)
-		)(message);
+		)(message) as string;
 
 		// Check if the message is from the correct chat
-		const bridges = bridgeMap.fromDiscordChannelId(message.channel.id);
+		const bridges = bridgeMap.fromDiscordChannelId(Number(message.channel.id));
 		if (!R.isEmpty(bridges)) {
 			bridges.forEach(async bridge => {
 				// Ignore it if this is a telegram-to-discord bridge
@@ -164,7 +164,7 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 							MessageMap.DISCORD_TO_TELEGRAM,
 							bridge,
 							message.id,
-							tgMessage.message_id
+							tgMessage.message_id.toString()
 						);
 					} catch (err) {
 						logger.error(
@@ -218,7 +218,7 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 							MessageMap.DISCORD_TO_TELEGRAM,
 							bridge,
 							message.id,
-							tgMessage.message_id
+							tgMessage.message_id.toString()
 						);
 					} catch (err) {
 						logger.error(
@@ -229,7 +229,7 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 					}
 				}
 			});
-		} else if (R.isNil(message.channel.guild) || !knownServerIds.has(message.channel.guild.id)) {
+		} else if (R.isNil((message.channel as TextChannel).guild) || !knownServerIds.has((message.channel as TextChannel).guild.id)) {
 			// Check if it is the correct server
 			// The message is from the wrong chat. Inform the sender that this is a private bot, if they have not been informed the last minute
 			if (!antiInfoSpamSet.has(message.channel.id)) {
@@ -237,13 +237,13 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 
 				message.reply(
 					"This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. " +
-						"If you wish to use TediCross yourself, please download and create an instance. " +
-						"See https://github.com/TediCross/TediCross"
+					"If you wish to use TediCross yourself, please download and create an instance. " +
+					"See https://github.com/TediCross/TediCross"
 				)
 					// Delete it again after some time
 					.then(sleepOneMinute)
-					.then(message => message.delete())
-					.catch(helpers.ignoreAlreadyDeletedError)
+					.then((message: any) => message.delete())
+					.catch(ignoreAlreadyDeletedError)
 					.then(() => antiInfoSpamSet.delete(message.channel.id));
 			}
 		}
@@ -252,12 +252,12 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 	// Listen for message edits
 	dcBot.on("messageUpdate", async (_oldMessage, newMessage) => {
 		// Don't do anything with the bot's own messages
-		if (newMessage.author.id === dcBot.user.id) {
+		if (newMessage.author?.id === dcBot.user?.id) {
 			return;
 		}
 
 		// Pass it on to the bridges
-		bridgeMap.fromDiscordChannelId(newMessage.channel.id).forEach(async bridge => {
+		bridgeMap.fromDiscordChannelId(Number(newMessage.channel.id)).forEach(async bridge => {
 			try {
 				// Get the corresponding Telegram message ID
 				const [tgMessageId] = messageMap.getCorresponding(
@@ -270,11 +270,11 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 				const senderName =
 					(useNickname && newMessage.member
 						? newMessage.member.displayName
-						: newMessage.author.username) +
+						: newMessage.author?.username) +
 					(settings.telegram.colonAfterSenderName ? ":" : "");
 
 				// Modify the message to fit Telegram
-				const processedMessage = md2html(newMessage.cleanContent);
+				const processedMessage = md2html(newMessage.cleanContent || "");
 
 				// Send the update to Telegram
 				const textToSend = bridge.discord.sendUsernames
@@ -283,7 +283,7 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 				await tgBot.telegram.editMessageText(
 					bridge.telegram.chatId,
 					tgMessageId,
-					null,
+					undefined,
 					textToSend,
 					{
 						parse_mode: "HTML"
@@ -296,12 +296,12 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 	});
 
 	// Listen for deleted messages
-	function onMessageDelete(message) {
+	function onMessageDelete(message: Message): void {
 		// Check if it is a relayed message
-		const isFromTelegram = message.author.id === dcBot.user.id;
+		const isFromTelegram = message.author.id === dcBot.user?.id;
 
 		// Hand it on to the bridges
-		bridgeMap.fromDiscordChannelId(message.channel.id).forEach(async bridge => {
+		bridgeMap.fromDiscordChannelId(Number(message.channel.id)).forEach(async bridge => {
 			// Ignore it if cross deletion is disabled
 			if (!bridge.discord.crossDeleteOnTelegram) {
 				return;
@@ -309,17 +309,17 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 
 			try {
 				// Get the corresponding Telegram message IDs
-				const tgMessageIds = isFromTelegram
+				const tgMessageIds = (isFromTelegram
 					? messageMap.getCorrespondingReverse(
-							MessageMap.DISCORD_TO_TELEGRAM,
-							bridge,
-							message.id
-					  )
+						MessageMap.DISCORD_TO_TELEGRAM,
+						bridge,
+						message.id
+					)
 					: messageMap.getCorresponding(
-							MessageMap.DISCORD_TO_TELEGRAM,
-							bridge,
-							message.id
-					  );
+						MessageMap.DISCORD_TO_TELEGRAM,
+						bridge,
+						message.id
+					)) as number[];
 				// Try to delete them
 				await Promise.all(
 					tgMessageIds.map(tgMessageId =>
@@ -334,8 +334,8 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 			}
 		});
 	}
-	dcBot.on("messageDelete", onMessageDelete);
-	dcBot.on("messageDeleteBulk", messages => [...messages.values()].forEach(onMessageDelete));
+	dcBot.on("messageDelete", onMessageDelete as any);
+	dcBot.on("messageDeleteBulk", messages => [...messages.values()].forEach(onMessageDelete as any));
 
 	// Start the Discord bot
 	dcBot.login(settings.discord.token)
@@ -359,7 +359,8 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 	});
 
 	// Listen for errors
-	dcBot.on("error", err => {
+	dcBot.on("error", (err: Error) => {
+		//@ts-ignore
 		if (err.code === "ECONNRESET") {
 			// Lost connection to the discord servers
 			logger.warn(
@@ -382,17 +383,19 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 	}
 
 	// Make a promise which resolves when the dcBot is ready
-	dcBot.ready = new Promise(resolve => {
+	//@ts-ignore
+	dcBot.ready = new Promise<void>(resolve => {
 		// Listen for the 'ready' event
 		dcBot.once("ready", () => {
 			// Log the event
-			logger.info(`Discord: ${dcBot.user.username} (${dcBot.user.id})`);
+			logger.info(`Discord: ${dcBot.user?.username} (${dcBot.user?.id})`);
 
 			// Get the server IDs from the channels
 			R.compose(
 				// Mark the bot as ready
 				R.andThen(() => resolve()),
 				// Add them to the known server ID set
+				//@ts-ignore
 				R.andThen(
 					R.reduce(
 						(knownServerIds, serverId) => knownServerIds.add(serverId),
@@ -417,12 +420,8 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 
 	// Relay old messages, if wanted by the user
 	if (!settings.discord.skipOldMessages) {
+		//@ts-ignore
 		dcBot.ready = relayOldMessages(logger, dcBot, latestDiscordMessageIds, bridgeMap);
 	}
 }
 
-/*****************************
- * Export the setup function *
- *****************************/
-
-module.exports = setup;

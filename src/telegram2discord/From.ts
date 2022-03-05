@@ -1,10 +1,5 @@
-"use strict";
-
-/**************************
- * Import important stuff *
- **************************/
-
-const R = require("ramda");
+import R from "ramda";
+import { Message, User } from "telegraf/typings/core/types/typegram";
 
 /**********************
  * The From functions *
@@ -19,6 +14,12 @@ const R = require("ramda");
  * @param {String} username	Username of the sender
  */
 
+interface From {
+	firstName: string;
+	lastName: string;
+	username: string;
+}
+
 /**
  * Creates a new From object
  *
@@ -30,7 +31,7 @@ const R = require("ramda");
  *
  * @memberof From
  */
-function createFromObj(firstName, lastName, username) {
+export function createFromObj(firstName: string, lastName: string, username: string): From {
 	return {
 		firstName,
 		lastName,
@@ -45,16 +46,16 @@ function createFromObj(firstName, lastName, username) {
  *
  * @returns {From}	The from object
  */
-function createFromObjFromMessage(message) {
-	return R.ifElse(
+export function createFromObjFromMessage(message: Message) {
+	return R.ifElse<any, any, any>(
 		// Check if the `from` object exists
 		R.compose(R.isNil, R.prop("from")),
 		// This message is from a channel
-		message => createFromObj(message.chat.title),
+		message => createFromObj(message.chat.title, "", ""),
 		// This message is from a user
 		R.compose(
 			createFromObjFromUser,
-			R.prop("from")
+			R.prop("from") as any
 		)
 	)(message);
 }
@@ -66,8 +67,8 @@ function createFromObjFromMessage(message) {
  *
  * @returns {From}	The From object created from the user
  */
-function createFromObjFromUser(user) {
-	return createFromObj(user.first_name, user.last_name, user.username);
+export function createFromObjFromUser(user: User) {
+	return createFromObj(user.first_name, user.last_name || "", user.username || "");
 }
 
 /**
@@ -77,8 +78,8 @@ function createFromObjFromUser(user) {
  *
  * @returns {From}	The From object created from the chat
  */
-function createFromObjFromChat(chat) {
-	return createFromObj(chat.title);
+export function createFromObjFromChat(chat: Record<string, any>) {
+	return createFromObj(chat.title, "", "");
 }
 
 /**
@@ -91,22 +92,10 @@ function createFromObjFromChat(chat) {
  *
  * @memberof From
  */
-function makeDisplayName(useFirstNameInsteadOfUsername, from) {
+export function makeDisplayName(useFirstNameInsteadOfUsername: boolean, from: From) {
 	return R.ifElse(
 		from => useFirstNameInsteadOfUsername || R.isNil(from.username),
 		R.prop("firstName"),
 		R.prop("username")
 	)(from);
 }
-
-/***************
- * Export them *
- ***************/
-
-module.exports = {
-	createFromObj,
-	createFromObjFromMessage,
-	createFromObjFromUser,
-	createFromObjFromChat,
-	makeDisplayName
-};

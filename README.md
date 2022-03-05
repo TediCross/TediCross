@@ -180,9 +180,9 @@ Take a look in [guides/autostart/](guides/autostart/) of this repo
 
 Most updates are annouced on the [TediCross News channel](https://t.me/TediCross). Only very minor ones are not
 
-If you cloned the git repo, just do a `git pull`. Running `npm install` may or may not be necessary. It doesn't hurt to run it anyway
+If you cloned the git repo, just do a `git pull`, follwed by `npm install --production`.
 
-If you downloaded TediCross as a zip, do step 2, 3 and 4 in the installation guide again. Then move `settings.yaml` (or the deprecated `settings.json`, which will automatically be converted to `settings.yaml`) and the whole `data/` directory from the old version to the new one and start it.
+If you downloaded TediCross as a zip, do step 2, 3 and 4 in the installation guide again. Then move `settings.yaml` and the whole `data/` directory from the old version to the new one and start it.
 
 ### Why don't you use webhooks to send the messages to Discord? They are much better
 

@@ -1,10 +1,6 @@
-"use strict";
 
-/**************************
- * Import important stuff *
- **************************/
-
-const md2html = require("./md2html");
+import { MessageEmbed } from "discord.js";
+import { md2html } from "./md2html";
 
 /****************************
  * The handleEmbed function *
@@ -18,7 +14,7 @@ const md2html = require("./md2html");
  *
  * @returns {String}	A string ready to send to Telegram
  */
-function handleEmbed(embed, senderName) {
+export function handleEmbed(embed: MessageEmbed, senderName: string) {
 	// Construct the text to send
 	let text = `<b>${senderName}</b>\n`;
 
@@ -37,7 +33,7 @@ function handleEmbed(embed, senderName) {
 
 	// Handle the description
 	if (embed.description !== undefined) {
-		text += md2html(embed.description) + "\n";
+		text += md2html(embed.description!) + "\n";
 	}
 
 	// Handle the fields
@@ -60,8 +56,3 @@ function handleEmbed(embed, senderName) {
 	return text;
 }
 
-/*************
- * Export it *
- *************/
-
-module.exports = handleEmbed;

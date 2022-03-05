@@ -1,11 +1,15 @@
-"use strict";
+import { BridgeSettingsTelegram } from "./BridgeSettingsTelegram";
+import { BridgeSettingsDiscord } from "./BridgeSettingsDiscord";
+import { BridgeSettingsTelegramProperties } from "./BridgeSettingsTelegram";
+import { BridgeSettingsDiscordProperties } from "./BridgeSettingsDiscord";
 
-/**************************
- * Import important stuff *
- **************************/
 
-const BridgeSettingsTelegram = require("./BridgeSettingsTelegram");
-const BridgeSettingsDiscord = require("./BridgeSettingsDiscord");
+export interface BridgeProperties {
+	name: string;
+	telegram: BridgeSettingsTelegramProperties;
+	discord: BridgeSettingsDiscordProperties;
+	direction: "both" | "d2t" | "t2d";
+}
 
 /********************
  * The Bridge class *
@@ -14,7 +18,11 @@ const BridgeSettingsDiscord = require("./BridgeSettingsDiscord");
 /**
  * A bridge between Discord and Telegram
  */
-class Bridge {
+export class Bridge {
+	public name: string;
+	public direction: BridgeProperties["direction"];
+	public telegram: BridgeSettingsTelegramProperties;
+	public discord: BridgeSettingsDiscordProperties;
 	/**
 	 * Creates a new bridge
 	 *
@@ -25,7 +33,7 @@ class Bridge {
 	 *
 	 * @throws {Error}	If the settings object does not validate
 	 */
-	constructor(settings) {
+	constructor(settings: BridgeProperties) {
 		// Check that the settings object is valid
 		Bridge.validate(settings);
 
@@ -65,7 +73,7 @@ class Bridge {
 	 *
 	 * @throws {Error}	If the object is not suitable. The error message says what the problem is
 	 */
-	static validate(settings) {
+	static validate(settings: BridgeProperties) {
 		// Check that the settings are indeed in object form
 		if (!(settings instanceof Object)) {
 			throw new Error("`settings` must be an object");
@@ -115,9 +123,3 @@ class Bridge {
 		return "t2d";
 	}
 }
-
-/*************
- * Export it *
- *************/
-
-module.exports = Bridge;

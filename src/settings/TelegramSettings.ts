@@ -1,10 +1,10 @@
-"use strict";
-
-/**************************
- * Import important stuff *
- **************************/
-
-// Nothing
+interface SettingProperties {
+	token: string;
+	skipOldMessages: boolean;
+	colonAfterSenderName: boolean;
+	sendEmojiWithStickers: boolean;
+	useFirstNameInsteadOfUsername: boolean;
+}
 
 /******************************
  * The TelegramSettings class *
@@ -13,7 +13,13 @@
 /**
  * Settings for the Telegram bot
  */
-class TelegramSettings {
+export class TelegramSettings {
+	private _token: string;
+	useFirstNameInsteadOfUsername: boolean;
+	colonAfterSenderName: boolean;
+	skipOldMessages: boolean;
+	sendEmojiWithStickers: boolean;
+
 	/**
 	 * Creates a new TelegramSettings object
 	 *
@@ -26,7 +32,7 @@ class TelegramSettings {
 	 *
 	 * @throws {Error}	If the settings object does not validate
 	 */
-	constructor(settings) {
+	constructor(settings: SettingProperties) {
 		// Make sure the settings are valid
 		TelegramSettings.validate(settings);
 
@@ -75,11 +81,10 @@ class TelegramSettings {
 	 *
 	 * @readonly
 	 */
-	get token() {
+	get token(): string {
 		return this._token === TelegramSettings.GET_TOKEN_FROM_ENVIRONMENT
-			? process.env.TELEGRAM_BOT_TOKEN
-			: this._token
-		;
+			? process.env.TELEGRAM_BOT_TOKEN!
+			: this._token;
 	}
 
 	/**
@@ -89,7 +94,7 @@ class TelegramSettings {
 	 */
 	toJSON() {
 		// Make a clone of the object
-		const clone = Object.assign({}, this);
+		const clone = Object.assign({}, this) as Record<string, any>;
 
 		// Change name of the `_token` property to `token`
 		clone.token = clone._token;
@@ -106,7 +111,7 @@ class TelegramSettings {
 	 *
 	 * @throws {Error}	If the object is not suitable. The error message says what the problem is
 	 */
-	static validate(settings) {
+	static validate(settings: SettingProperties) {
 		// Check that the settings are indeed in object form
 		if (!(settings instanceof Object)) {
 			throw new Error("`settings` must be an object");
@@ -162,9 +167,3 @@ class TelegramSettings {
 		};
 	}
 }
-
-/*************
- * Export it *
- *************/
-
-module.exports = TelegramSettings;
