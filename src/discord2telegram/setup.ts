@@ -22,12 +22,12 @@ import { Settings } from "../settings/Settings";
 /**
  * Creates a function to give to 'guildMemberAdd' or 'guildMemberRemove' on a Discord bot
  *
- * @param {Logger} logger	The Logger instance to log messages to
- * @param {String} verb	Either "joined" or "left"
- * @param {BridgeMap} bridgeMap	Map of existing bridges
- * @param {Telegraf} tgBot	The Telegram bot to send the messages to
+ * @param logger	The Logger instance to log messages to
+ * @param verb	Either "joined" or "left"
+ * @param bridgeMap	Map of existing bridges
+ * @param tgBot	The Telegram bot to send the messages to
  *
- * @returns {Function}	Function which can be given to the 'guildMemberAdd' or 'guildMemberRemove' events of a Discord bot
+ * @returns Function which can be given to the 'guildMemberAdd' or 'guildMemberRemove' events of a Discord bot
  *
  * @private
  */
@@ -102,14 +102,14 @@ export function setup(logger: Logger, dcBot: Client, tgBot: Telegraf, messageMap
 	dcBot.on("guildMemberRemove", makeJoinLeaveFunc(logger, "left", bridgeMap, tgBot));
 
 	// Listen for Discord messages
-	dcBot.on("message", async message => {
+	dcBot.on("messageCreate", async message => {
 		// Ignore the bot's own messages
 		if (message.author.id === dcBot.user?.id) {
 			return;
 		}
 
 		// Check if this is a request for server info
-		if (message.channel.type === "text" && message.cleanContent === "/chatinfo") {
+		if (message.cleanContent === "/chatinfo") {
 			// It is. Give it
 			message.reply("\nchannelId: '" + message.channel.id + "'")
 				.then(sleepOneMinute)

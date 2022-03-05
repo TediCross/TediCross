@@ -18,7 +18,7 @@ import { Telegraf } from "telegraf";
 import { setup as telegramSetup, TediTelegraf } from "./src/telegram2discord/setup";
 
 // Discord stuff
-import Discord from "discord.js";
+import { Client as DiscordClient, Intents } from "discord.js";
 import { setup as discordSetup } from "./src/discord2telegram/setup";
 
 if (!semver.gte(process.version, "14.9.0")) {
@@ -54,7 +54,6 @@ migrateSettingsToYAML(settingsPathJSON, settingsPathYAML);
 
 // Get the settings
 const rawSettingsObj = jsYaml.load(fs.readFileSync(settingsPathYAML, "utf-8"));
-
 const settings = Settings.fromObj(rawSettingsObj);
 
 
@@ -99,7 +98,7 @@ if (R.not(R.equals(rawSettingsObj, newRawSettingsObj))) {
 const tgBot = new Telegraf(settings.telegram.token, { channelMode: true });
 
 // Create a Discord bot
-const dcBot = new Discord.Client();
+const dcBot = new DiscordClient({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 
 // Create a message ID map
 const messageMap = new MessageMap();

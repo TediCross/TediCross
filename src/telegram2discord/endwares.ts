@@ -55,13 +55,11 @@ const createMessageHandler = R.curry((func, ctx) => {
 /**
  * Replies to a message with info about the chat
  *
- * @param {Object} ctx	The Telegraf context
- * @param {Object} ctx.tediCross	The TediCross object on the context
- * @param {Object} ctx.tediCross.message	The message to reply to
- * @param {Object} ctx.tediCross.message.chat	The object of the chat the message is from
- * @param {Integer} ctx.tediCross.message.chat.id	ID of the chat the message is from
- *
- * @returns {undefined}
+ * @param ctx	The Telegraf context
+ * @param ctx.tediCross	The TediCross object on the context
+ * @param ctx.tediCross.message	The message to reply to
+ * @param ctx.tediCross.message.chat	The object of the chat the message is from
+ * @param ctx.tediCross.message.chat.id	ID of the chat the message is from
  */
 export const chatinfo = (ctx: TediCrossContext, next: () => void) => {
 	if (ctx.tediCross.message.text === "/chatinfo") {
@@ -150,11 +148,9 @@ export const leftChatMember = createMessageHandler((ctx: TediCrossContext, bridg
 /**
  * Relays a message from Telegram to Discord
  *
- * @param {Object} ctx	The Telegraf context
- * @param {Object} ctx.tediCross	The TediCross context of the message
- * @param {Object} ctx.TediCross	The global TediCross context of the message
- *
- * @returns {undefined}
+ * @param ctx The Telegraf context
+ * @param ctx.tediCross	The TediCross context of the message
+ * @param ctx.TediCross	The global TediCross context of the message
  */
 export const relayMessage = (ctx: TediCrossContext) =>
 	R.forEach(async (prepared: any) => {
@@ -173,7 +169,10 @@ export const relayMessage = (ctx: TediCrossContext) =>
 			// Send the attachment first, if there is one
 			if (!R.isNil(prepared.file)) {
 				try {
-					dcMessage = await channel.send(R.head(chunks), prepared.file);
+					dcMessage = await channel.send({
+						content: R.head(chunks),
+						files: [prepared.file]
+					});
 					chunks = R.tail(chunks);
 				} catch (err: any) {
 					if (err.message === "Request entity too large") {
@@ -266,7 +265,7 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 				const messageText = R.slice(0, 2000, prepared.header + "\n" + prepared.text);
 
 				// Send them in serial, with the attachment first, if there is one
-				await dcMessage.edit(messageText, { attachment: prepared.attachment } as MessageEditOptions);
+				await dcMessage.edit({ content: messageText, attachment: prepared.attachment } as MessageEditOptions);
 			})(ctx.tediCross.prepared);
 		} catch (err: any) {
 			// Log it

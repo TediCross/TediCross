@@ -13,12 +13,12 @@ import { LatestDiscordMessageIds } from "./LatestDiscordMessageIds";
 /**
  * Relays messages which have been sent in Discord since the bot was last shut down
  *
- * @param {Logger} logger	The Logger instance to log messages to
- * @param {discord.Client} dcBot	The discord bot to relay from
- * @param {LatestDiscordMessageIds} latestDiscordMessageIds	Map between the bridges and the last relayed message ID on them
- * @param {BridgeMap} bridgeMap	Map of the bridges to use
+ * @param logger	The Logger instance to log messages to
+ * @param dcBot	The discord bot to relay from
+ * @param latestDiscordMessageIds	Map between the bridges and the last relayed message ID on them
+ * @param bridgeMap	Map of the bridges to use
  *
- * @returns {Promise}	Promise which resolves when all messages have been relayed
+ * @returns	Promise which resolves when all messages have been relayed
  */
 export async function relayOldMessages(logger: Logger, dcBot: Client, latestDiscordMessageIds: LatestDiscordMessageIds, bridgeMap: BridgeMap) {
 	// Wait for the bot to connect to the API
@@ -55,7 +55,7 @@ export async function relayOldMessages(logger: Logger, dcBot: Client, latestDisc
 										after: message.id
 									})
 								)
-								.then(messages => sortAndRelay(messages.array()))
+								.then(messages => sortAndRelay([...messages.values()]))
 						)
 						.catch(err => {
 							logger.error(
