@@ -8,6 +8,8 @@
     "url": "git+https://github.com/TediCross/TediCross.git"
   },
   "scripts": {
+	"build": "tsc",
+	"postinstall": "npm run build",
     "start": "node main.js",
     "start:dev": "nodemon --inspect main.js -i data/",
     "start:dev:ts": "nodemon --watch './**/*.ts' --exec 'ts-node' main.ts -i data/",
