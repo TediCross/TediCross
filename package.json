@@ -13,7 +13,7 @@
     "start": "node dist/main.js",
     "start:dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/main.ts -i data/",
     "lint": "eslint src/**/*.ts",
-	"clean": "rimraf dist/"
+    "clean": "rimraf dist/"
   },
   "dependencies": {
     "discord.js": "^13.3.1",
@@ -30,6 +30,7 @@
   "devDependencies": {
     "@types/js-yaml": "^4.0.5",
     "@types/mime": "^2.0.3",
+    "@types/node": "^17.0.21",
     "@types/ramda": "^0.27.64",
     "@types/semver": "^7.3.9",
     "@types/yargs": "^17.0.8",
