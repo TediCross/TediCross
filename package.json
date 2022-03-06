@@ -11,10 +11,10 @@
     "build": "tsc",
 	"preinstall": "npm run clean",
     "postinstall": "npm run build",
-    "start": "node main.js",
-    "start:dev": "nodemon --watch './**/*.ts' --exec 'ts-node' main.ts -i data/",
-    "lint": "eslint ./**/*.ts main.ts",
-	"clean": "rimraf src/**/*.js main.js"
+    "start": "node dist/main.js",
+    "start:dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/main.ts -i data/",
+    "lint": "eslint src/**/*.ts",
+	"clean": "rimraf dist/"
   },
   "dependencies": {
     "discord.js": "^13.3.1",

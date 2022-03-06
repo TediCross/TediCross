@@ -45,5 +45,5 @@ settings.yaml
 # Everything in the data directory
 data/
 
-# JS files. This is now a TS project
-*.js
+# Built files
+dist/

@@ -2,11 +2,11 @@
 import semver from "semver";
 import yargs from "yargs";
 import path from "path";
-import { Logger } from "./src/Logger";
-import { MessageMap } from "./src/MessageMap";
-import { Bridge, BridgeProperties } from "./src/bridgestuff/Bridge";
-import { BridgeMap } from "./src/bridgestuff/BridgeMap";
-import { Settings } from "./src/settings/Settings";
+import { Logger } from "./Logger";
+import { MessageMap } from "./MessageMap";
+import { Bridge, BridgeProperties } from "./bridgestuff/Bridge";
+import { BridgeMap } from "./bridgestuff/BridgeMap";
+import { Settings } from "./settings/Settings";
 import jsYaml from "js-yaml";
 import fs from "fs";
 import R from "ramda";
@@ -14,11 +14,11 @@ import os from "os";
 
 // Telegram stuff
 import { Telegraf } from "telegraf";
-import { setup as telegramSetup, TediTelegraf } from "./src/telegram2discord/setup";
+import { setup as telegramSetup, TediTelegraf } from "./telegram2discord/setup";
 
 // Discord stuff
 import { Client as DiscordClient, Intents } from "discord.js";
-import { setup as discordSetup } from "./src/discord2telegram/setup";
+import { setup as discordSetup } from "./discord2telegram/setup";
 
 if (!semver.gte(process.version, "14.9.0")) {
 	console.log(`TediCross requires at least nodejs 14.9. Your version is ${process.version}`);
@@ -35,13 +35,13 @@ const args = yargs
 	.alias("h", "help")
 	.option("config", {
 		alias: "c",
-		default: path.join(__dirname, "settings.yaml"),
+		default: path.join(__dirname, "..", "settings.yaml"),
 		describe: "Specify path to settings file",
 		type: "string"
 	})
 	.option("data-dir", {
 		alias: "d",
-		default: path.join(__dirname, "data"),
+		default: path.join(__dirname, "..", "data"),
 		describe: "Specify the path to the directory to store data in",
 		type: "string"
 	}).argv as { config: string, dataDir: string };
