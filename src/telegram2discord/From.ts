@@ -1,5 +1,5 @@
 import R from "ramda";
-import { Message, User } from "telegraf/typings/core/types/typegram";
+import { Message, User, Chat } from "telegraf/typings/core/types/typegram";
 
 /**********************
  * The From functions *
@@ -38,11 +38,12 @@ export function createFromObj(firstName: string, lastName: string | undefined, u
  * @returns The from object
  */
 export function createFromObjFromMessage(message: Message) {
-	return R.ifElse<any, any, any>(
+	/* eslint-disable */
+	return R.ifElse<Message[], From, From>(
 		// Check if the `from` object exists
-		R.compose(R.isNil, R.prop("from")),
+		(msg) => !!R.compose<Record<string, unknown>[], unknown, unknown>(R.isNil, R.prop("from"))(msg as unknown as Record<string, unknown>),
 		// This message is from a channel
-		message => createFromObj(message.chat.title, "", ""),
+		message => createFromObj((message.chat as Exclude<Chat, Chat.PrivateChat>).title, "", ""),
 		// This message is from a user
 		R.compose(createFromObjFromUser, R.prop("from") as any)
 	)(message);
