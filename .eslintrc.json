@@ -8,13 +8,20 @@
 	"parser": "@typescript-eslint/parser",
 	"extends": [
 		"eslint:recommended",
+		"plugin:@typescript-eslint/recommended",
+		"plugin:@typescript-eslint/recommended-requiring-type-checking",
+		"prettier",
 		"plugin:prettier/recommended"
 	],
 	"parserOptions": {
 		"ecmaVersion": 2020,
-		"sourceType": "script"
+		"sourceType": "script",
+		"project": [
+			"./tsconfig.json"
+		]
 	},
 	"plugins": [
+		"@typescript-eslint",
 		"prettier"
 	],
 	"rules": {
