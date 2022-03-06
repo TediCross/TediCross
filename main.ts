@@ -7,7 +7,6 @@ import { MessageMap } from "./src/MessageMap";
 import { Bridge, BridgeProperties } from "./src/bridgestuff/Bridge";
 import { BridgeMap } from "./src/bridgestuff/BridgeMap";
 import { Settings } from "./src/settings/Settings";
-import { migrateSettingsToYAML } from "./src/migrateSettingsToYAML";
 import jsYaml from "js-yaml";
 import fs from "fs";
 import R from "ramda";
@@ -45,15 +44,12 @@ const args = yargs
 		default: path.join(__dirname, "data"),
 		describe: "Specify the path to the directory to store data in",
 		type: "string"
-	}).argv as Record<string, string | number>;
+	}).argv as { config: string, dataDir: string };
 
-// Migrate the settings from JSON to YAML
-const settingsPathJSON = path.join(__dirname, "settings.json");
-const settingsPathYAML = args.config;
-migrateSettingsToYAML(settingsPathJSON, settingsPathYAML);
 
 // Get the settings
-const rawSettingsObj = jsYaml.load(fs.readFileSync(settingsPathYAML, "utf-8"));
+const settingsPath = args.config;
+const rawSettingsObj = jsYaml.load(fs.readFileSync(settingsPath, "utf-8"));
 const settings = Settings.fromObj(rawSettingsObj);
 
 
@@ -68,7 +64,7 @@ if (R.not(R.equals(rawSettingsObj, newRawSettingsObj))) {
 	const yaml = jsYaml.dump(newRawSettingsObj).replace(/\n/g, "\r\n");
 
 	try {
-		fs.writeFileSync(settingsPathYAML, yaml);
+		fs.writeFileSync(settingsPath, yaml);
 	} catch (err: any) {
 		if (err.code === "EACCES") {
 			// The settings file is not writable. Give a warning
@@ -94,8 +90,7 @@ if (R.not(R.equals(rawSettingsObj, newRawSettingsObj))) {
 }
 
 // Create a Telegram bot
-//@ts-ignore
-const tgBot = new Telegraf(settings.telegram.token, { channelMode: true });
+const tgBot = new Telegraf(settings.telegram.token);
 
 // Create a Discord bot
 const dcBot = new DiscordClient({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
@@ -110,5 +105,5 @@ const bridgeMap = new BridgeMap(settings.bridges.map((bridgeSettings: BridgeProp
  * Set up the bridge *
  *********************/
 
-discordSetup(logger, dcBot, tgBot, messageMap, bridgeMap, settings as any, args.dataDir as string);
+discordSetup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, args.dataDir);
 telegramSetup(logger, tgBot as TediTelegraf, dcBot, messageMap, bridgeMap, settings);
