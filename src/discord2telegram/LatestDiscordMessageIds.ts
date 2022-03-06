@@ -19,33 +19,17 @@ export class LatestDiscordMessageIds {
 	/**
 	 * Creates a new instance which keeps track of messages and bridges
 	 *
-	 * @param {Logger} logger	The Logger instance to log messages to
-	 * @param {String} filepath	Path to the file to persistently store the map in
+	 * @param logger	The Logger instance to log messages to
+	 * @param filepath	Path to the file to persistently store the map in
 	 */
 	constructor(logger: Logger, filepath: string) {
-		/**
-		 * The Logger instance to log messages to
-		 *
-		 * @type {Logger}
-		 */
+		/** The Logger instance to log messages to */
 		this._logger = logger;
 
-		/**
-		 * The path of the file this map is connected to
-		 *
-		 * @type {String}
-		 *
-		 * @private
-		 */
+		/** The path of the file this map is connected to */
 		this._filepath = filepath;
 
-		/**
-		 * The actual map
-		 *
-		 * @type {Object}
-		 *
-		 * @private
-		 */
+		/** The actual map */
 		this._map = {};
 
 		try {
@@ -76,13 +60,7 @@ export class LatestDiscordMessageIds {
 			this._map = {};
 		}
 
-		/**
-		 * Promise which resolves when writing has finished. Meant to be chained with every write operation
-		 *
-		 * @type {Promise}
-		 *
-		 * @private
-		 */
+		/** Promise which resolves when writing has finished. Meant to be chained with every write operation */
 		this._finishedWriting = Promise.resolve();
 
 		// Bind methods to avoid problems with `this`
@@ -93,8 +71,8 @@ export class LatestDiscordMessageIds {
 	/**
 	 * Tells the map the latest message for a bridge
 	 *
-	 * @param {String} message	The latest message from Discord on the bridge
-	 * @param {Object} bridge	The bridge
+	 * @param message The latest message from Discord on the bridge
+	 * @param bridge The bridge
 	 */
 	setLatest(messageId: string, bridge: Bridge) {
 		// Update the bridge map
@@ -109,9 +87,9 @@ export class LatestDiscordMessageIds {
 	/**
 	 * Gets the latest message ID for a bridge, or `null` if none was found
 	 *
-	 * @param {Object} bridge	The bridge to get the message ID from
+	 * @param bridge The bridge to get the message ID from
 	 *
-	 * @returns {String}	ID of the latest Discord message that passed over the bridge
+	 * @returns ID of the latest Discord message that passed over the bridge
 	 */
 	getLatest(bridge: Bridge) {
 		return this._map[bridge.name] === undefined ? null : this._map[bridge.name];

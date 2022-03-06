@@ -10,9 +10,7 @@ interface SettingProperties {
  * The TelegramSettings class *
  ******************************/
 
-/**
- * Settings for the Telegram bot
- */
+/** Settings for the Telegram bot */
 export class TelegramSettings {
 	private _token: string;
 	useFirstNameInsteadOfUsername: boolean;
@@ -23,75 +21,43 @@ export class TelegramSettings {
 	/**
 	 * Creates a new TelegramSettings object
 	 *
-	 * @param {Object} settings	The raw settings object to use
-	 * @param {String} settings.token	The bot token to use. Set to {@link TelegramSettings#GET_TOKEN_FROM_ENVIRONMENT} to read the token from the TELEGRAM_BOT_TOKEN environment variable
-	 * @param {Boolean} settings.useFirstNameInsteadOfUsername	Whether or not to use a Telegram user's first name instead of the username when displaying the name in the Discord messages
-	 * @param {Boolean} settings.colonAfterSenderName	Whether or not to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name`
-	 * @param {Boolean} settings.skipOldMessages	Whether or not to skip through all previous messages cached from the telegram-side and start processing new messages ONLY
-	 * @param {Boolean} settings.sendEmojiWithStickers	Whether or not to send the corresponding emoji when relaying stickers to Discord
+	 * @param settings The raw settings object to use
+	 * @param settings.token The bot token to use. Set to {@link TelegramSettings#GET_TOKEN_FROM_ENVIRONMENT} to read the token from the TELEGRAM_BOT_TOKEN environment variable
+	 * @param settings.useFirstNameInsteadOfUsername Whether or not to use a Telegram user's first name instead of the username when displaying the name in the Discord messages
+	 * @param settings.colonAfterSenderName Whether or not to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name`
+	 * @param settings.skipOldMessages Whether or not to skip through all previous messages cached from the telegram-side and start processing new messages ONLY
+	 * @param settings.sendEmojiWithStickers Whether or not to send the corresponding emoji when relaying stickers to Discord
 	 *
-	 * @throws {Error}	If the settings object does not validate
+	 * @throws If the settings object does not validate
 	 */
 	constructor(settings: SettingProperties) {
 		// Make sure the settings are valid
 		TelegramSettings.validate(settings);
 
-		/**
-		 * The bot token to use, or `env` to indicate the token should be collected from the environment
-		 *
-		 * @type {String}
-		 *
-		 * @private
-		 */
+		/** The bot token to use, or `env` to indicate the token should be collected from the environment */
 		this._token = settings.token;
 
-		/**
-		 * Whether or not to use a Telegram user's first name instead of the username when displaying the name in the Discord messages
-		 *
-		 * @type {Boolean}
-		 */
+		/** Whether or not to use a Telegram user's first name instead of the username when displaying the name in the Discord messages */
 		this.useFirstNameInsteadOfUsername = settings.useFirstNameInsteadOfUsername;
 
-		/**
-		 * Whether or not to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name`
-		 *
-		 * @type {Boolean}
-		 */
+		/** Whether or not to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name` */
 		this.colonAfterSenderName = settings.colonAfterSenderName;
 
-		/**
-		 * Whether or not to skip through all previous messages cached from the telegram-side and start processing new messages ONLY
-		 *
-		 * @type {Boolean}
-		 */
+		/** Whether or not to skip through all previous messages cached from the telegram-side and start processing new messages ONLY */
 		this.skipOldMessages = settings.skipOldMessages;
 
-		/**
-		 * Whether or not to send the corresponding emoji when relaying stickers to Discord
-		 *
-		 * @type {Boolean}
-		 */
+		/** Whether or not to send the corresponding emoji when relaying stickers to Discord */
 		this.sendEmojiWithStickers = settings.sendEmojiWithStickers;
 	}
 
-	/**
-	 * The bot token to use
-	 *
-	 * @type {String}
-	 *
-	 * @readonly
-	 */
+	/** The bot token to use */
 	get token(): string {
 		return this._token === TelegramSettings.GET_TOKEN_FROM_ENVIRONMENT
 			? process.env.TELEGRAM_BOT_TOKEN!
 			: this._token;
 	}
 
-	/**
-	 * Makes a JSONifiable object of the settings. Called automatically by JSON.stringify
-	 *
-	 * @returns {Object}
-	 */
+	/** Makes a JSONifiable object of the settings. Called automatically by JSON.stringify */
 	toJSON() {
 		// Make a clone of the object
 		const clone = Object.assign({}, this) as Record<string, any>;
@@ -107,9 +73,9 @@ export class TelegramSettings {
 	/**
 	 * Validates a raw settings object, checking if it is usable for creating a TelegramSettings object
 	 *
-	 * @param {Object} settings	The object to validate
+	 * @param settings The object to validate
 	 *
-	 * @throws {Error}	If the object is not suitable. The error message says what the problem is
+	 * @throws If the object is not suitable. The error message says what the problem is
 	 */
 	static validate(settings: SettingProperties) {
 		// Check that the settings are indeed in object form
@@ -143,20 +109,12 @@ export class TelegramSettings {
 		}
 	}
 
-	/**
-	 * Constant telling the Telegram token should be gotten from the environment
-	 *
-	 * @type {String}
-	 */
-	static get GET_TOKEN_FROM_ENVIRONMENT() {
+	/** Constant telling the Telegram token should be gotten from the environment */
+	static get GET_TOKEN_FROM_ENVIRONMENT(): "env" {
 		return "env";
 	}
 
-	/**
-	 * Default Telegram settings
-	 *
-	 * @type {Object}
-	 */
+	/** Default Telegram settings */
 	static get DEFAULTS() {
 		return {
 			token: TelegramSettings.GET_TOKEN_FROM_ENVIRONMENT,

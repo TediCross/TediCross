@@ -15,9 +15,7 @@ export interface BridgeProperties {
  * The Bridge class *
  ********************/
 
-/**
- * A bridge between Discord and Telegram
- */
+/** A bridge between Discord and Telegram */
 export class Bridge {
 	public name: string;
 	public direction: BridgeProperties["direction"];
@@ -26,52 +24,36 @@ export class Bridge {
 	/**
 	 * Creates a new bridge
 	 *
-	 * @param {Object} settings	Settings for the bridge
-	 * @param {String} settings.name	Name of the bridge
-	 * @param {Object} settings.telegram	Settings for the Telegram side of the bridge. See the constructor for {@link BridgeSettingsTelegram}
-	 * @param {Object} settings.discord	Settings for the Discord side of the bridge. See the constructor for {@link BridgeSettingsDiscord}
+	 * @param settings Settings for the bridge
+	 * @param settings.name Name of the bridge
+	 * @param settings.telegram Settings for the Telegram side of the bridge. See the constructor for {@link BridgeSettingsTelegram}
+	 * @param settings.discord Settings for the Discord side of the bridge. See the constructor for {@link BridgeSettingsDiscord}
 	 *
-	 * @throws {Error}	If the settings object does not validate
+	 * @throws If the settings object does not validate
 	 */
 	constructor(settings: BridgeProperties) {
 		// Check that the settings object is valid
 		Bridge.validate(settings);
 
-		/**
-		 * Name of the bridge
-		 *
-		 * @type {String}
-		 */
+		/** Name of the bridge */
 		this.name = settings.name;
 
-		/**
-		 * Direction of the bridge
-		 *
-		 * @type {String}
-		 */
+		/** Direction of the bridge */
 		this.direction = settings.direction;
 
-		/**
-		 * Settings for the Telegram side of the bridge
-		 *
-		 * @type {BridgeSettingsTelegram}
-		 */
+		/** Settings for the Telegram side of the bridge */
 		this.telegram = new BridgeSettingsTelegram(settings.telegram);
 
-		/**
-		 * Settings for the Discord side of the bridge
-		 *
-		 * @type {Object}
-		 */
+		/** Settings for the Discord side of the bridge */
 		this.discord = new BridgeSettingsDiscord(settings.discord);
 	}
 
 	/**
 	 * Validates a raw settings object, checking if it is usable for creating a Bridge object
 	 *
-	 * @param {Object} settings	The object to validate
+	 * @param settings The object to validate
 	 *
-	 * @throws {Error}	If the object is not suitable. The error message says what the problem is
+	 * @throws If the object is not suitable. The error message says what the problem is
 	 */
 	static validate(settings: BridgeProperties) {
 		// Check that the settings are indeed in object form
@@ -96,30 +78,18 @@ export class Bridge {
 		BridgeSettingsDiscord.validate(settings.discord);
 	}
 
-	/**
-	 * Constant for a bidirectional bridge
-	 *
-	 * @type {String}
-	 */
-	static get DIRECTION_BOTH() {
+	/** Constant for a bidirectional bridge */
+	static get DIRECTION_BOTH(): "both" {
 		return "both";
 	}
 
-	/**
-	 * Constant for a bridge going from Discord to Telegram
-	 *
-	 * @type {String}
-	 */
-	static get DIRECTION_DISCORD_TO_TELEGRAM() {
+	/** Constant for a bridge going from Discord to Telegram */
+	static get DIRECTION_DISCORD_TO_TELEGRAM(): "d2t" {
 		return "d2t";
 	}
 
-	/**
-	 * Constant for a bridge going from Telegram to Discord
-	 *
-	 * @type {String}
-	 */
-	static get DIRECTION_TELEGRAM_TO_DISCORD() {
+	/** Constant for a bridge going from Telegram to Discord */
+	static get DIRECTION_TELEGRAM_TO_DISCORD(): "t2d" {
 		return "t2d";
 	}
 }

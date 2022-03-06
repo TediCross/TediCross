@@ -1,9 +1,3 @@
-
-/************************************
- * The BridgeSettingsTelegram class *
- ************************************/
-
-
 export interface BridgeSettingsTelegramProperties {
 	chatId: number;
 	sendUsernames: boolean;
@@ -14,9 +8,7 @@ export interface BridgeSettingsTelegramProperties {
 	ignoreCommands?: boolean;
 }
 
-/**
- * Holds settings for the Telegram part of a bridge
- */
+/** Holds settings for the Telegram part of a bridge */
 export class BridgeSettingsTelegram {
 	public chatId: number;
 	public sendUsernames: boolean;
@@ -28,64 +20,40 @@ export class BridgeSettingsTelegram {
 	/**
 	 * Creates a new BridgeSettingsTelegram object
 	 *
-	 * @param {Object} settings	Settings for the Telegram side of the bridge
-	 * @param {Integer} settings.chatId	ID of the Telegram chat to bridge
-	 * @param {Boolean} settings.relayJoinMessages	Whether or not to relay join messages from Telegram to Discord
-	 * @param {Boolean} settings.relayLeaveMessages	Whether or not to relay leave messages from Telegram to Discord
+	 * @param settings Settings for the Telegram side of the bridge
+	 * @param settings.chatId ID of the Telegram chat to bridge
+	 * @param settings.relayJoinMessages Whether or not to relay join messages from Telegram to Discord
+	 * @param settings.relayLeaveMessages Whether or not to relay leave messages from Telegram to Discord
 	 */
 	constructor(settings: BridgeSettingsTelegramProperties) {
 		// Check that the settings object is valid
 		BridgeSettingsTelegram.validate(settings);
 
-		/**
-		 * ID of the Telegram chat to bridge
-		 *
-		 * @type {Integer}
-		 */
+		/** ID of the Telegram chat to bridge */
 		this.chatId = Number.parseInt(settings.chatId.toString());
 
-		/**
-		 * Whether or not to relay join messages from Telegram to Discord
-		 *
-		 * @type {Boolean}
-		 */
+		/** Whether or not to relay join messages from Telegram to Discord */
 		this.relayJoinMessages = settings.relayJoinMessages;
 
-		/**
-		 * Whether or not to relay join messages from Telegram to Discord
-		 *
-		 * @type {Boolean}
-		 */
+		/** Whether or not to relay join messages from Telegram to Discord */
 		this.relayLeaveMessages = settings.relayLeaveMessages;
 
-		/**
-		 * Whether or not to send the user's name as part of the messages to Discord
-		 *
-		 * @type {Boolean}
-		 */
+		/** Whether or not to send the user's name as part of the messages to Discord */
 		this.sendUsernames = settings.sendUsernames;
 
-		/**
-		 * Whether or not to relay messages starting with "/" (commands)
-		 *
-		 * @type {Boolean}
-		 */
+		/** Whether or not to relay messages starting with "/" (commands) */
 		this.relayCommands = settings.relayCommands;
 
-		/**
-		 * Whether or not to delete messages when they are edited to be a single dot
-		 *
-		 * @type {Boolean}
-		 */
+		/** Whether or not to delete messages when they are edited to be a single dot */
 		this.crossDeleteOnDiscord = settings.crossDeleteOnDiscord;
 	}
 
 	/**
 	 * Validates a raw settings object, checking if it is usable for creating a BridgeSettingsTelegram object
 	 *
-	 * @param {Object} settings	The object to validate
+	 * @param settings The object to validate
 	 *
-	 * @throws {Error}	If the object is not suitable. The error message says what the problem is
+	 * @throws If the object is not suitable. The error message says what the problem is
 	 */
 	static validate(settings: BridgeSettingsTelegramProperties) {
 		// Check that the settings are indeed in object form

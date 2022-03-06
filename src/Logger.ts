@@ -1,25 +1,16 @@
-/**************************
- * Import important stuff *
- **************************/
-
 import R from "ramda";
 import moment from "moment";
 
 const dummy = R.always(undefined);
 
-/********************
- * Define the class *
- ********************/
-
-/**
- * Logger utility which works just like the ordinary 'console' but prefixes any message with a timestamp and type of message
- */
+/** Logger utility which works just like the ordinary 'console' but prefixes any message with a timestamp and type of message */
 // eslint-disable-next-line no-console
 export class Logger extends console.Console {
 	private _debugEnabled: boolean;
 	/**
 	 * Creates a new logger
-	 * @param {Boolean} debug
+	 *
+	 * @param debug Whether to print debug messages
 	 */
 	constructor(debug: boolean) {
 		super(process.stdout, process.stderr);
@@ -39,12 +30,10 @@ export class Logger extends console.Console {
 	/**
 	 * Wraps the console print methods so they print a bit more info
 	 *
-	 * @param {Function} method	The console method to wrap
-	 * @param {String} tag	Tag to prefix all calls to this method with
+	 * @param method	The console method to wrap
+	 * @param tag	Tag to prefix all calls to this method with
 	 *
-	 * @returns {Function}	A function which works just like the given method, but also prints extra data
-	 *
-	 * @private
+	 * @returns A function which works just like the given method, but also prints extra data
 	 */
 	_wrapper(method: (...args: any[]) => void, tag: string) {
 		return (...args: any[]) => {
@@ -55,11 +44,7 @@ export class Logger extends console.Console {
 		};
 	}
 
-	/**
-	 * The current timestamp
-	 *
-	 * @type {String}
-	 */
+	/** The current timestamp on string format */
 	static get timestamp() {
 		return moment().format("YYYY-MM-DD HH:mm:ss");
 	}

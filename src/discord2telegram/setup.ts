@@ -22,16 +22,16 @@ import { Settings } from "../settings/Settings";
 /**
  * Creates a function to give to 'guildMemberAdd' or 'guildMemberRemove' on a Discord bot
  *
- * @param logger	The Logger instance to log messages to
- * @param verb	Either "joined" or "left"
- * @param bridgeMap	Map of existing bridges
- * @param tgBot	The Telegram bot to send the messages to
+ * @param logger The Logger instance to log messages to
+ * @param verb Either "joined" or "left"
+ * @param bridgeMap Map of existing bridges
+ * @param tgBot The Telegram bot to send the messages to
  *
  * @returns Function which can be given to the 'guildMemberAdd' or 'guildMemberRemove' events of a Discord bot
  *
  * @private
  */
-function makeJoinLeaveFunc(logger: Logger, verb: string, bridgeMap: BridgeMap, tgBot: Telegraf) {
+function makeJoinLeaveFunc(logger: Logger, verb: "joined" | "left", bridgeMap: BridgeMap, tgBot: Telegraf) {
 	// Find out which setting property to check the bridges for
 	const relaySetting = verb === "joined" ? "relayJoinMessages" : "relayLeaveMessages";
 	return function (member: any) {
@@ -73,13 +73,13 @@ function makeJoinLeaveFunc(logger: Logger, verb: string, bridgeMap: BridgeMap, t
 /**
  * Sets up the receiving of Discord messages, and relaying them to Telegram
  *
- * @param {Logger} logger	The Logger instance to log messages to
- * @param {Discord.Client} dcBot	The Discord bot
- * @param {Telegraf} tgBot	The Telegram bot
- * @param {MessageMap} messageMap	Map between IDs of messages
- * @param {BridgeMap} bridgeMap	Map of the bridges to use
- * @param {Settings} settings	Settings to use
- * @param {String} datadirPath	Path to the directory to put data files in
+ * @param logger The Logger instance to log messages to
+ * @param dcBot The Discord bot
+ * @param tgBot The Telegram bot
+ * @param messageMap Map between IDs of messages
+ * @param bridgeMap Map of the bridges to use
+ * @param settings Settings to use
+ * @param datadirPath Path to the directory to put data files in
  */
 export function setup(logger: Logger, dcBot: Client, tgBot: Telegraf, messageMap: MessageMap, bridgeMap: BridgeMap, settings: Settings, datadirPath: string) {
 	// Create the map of latest message IDs and bridges

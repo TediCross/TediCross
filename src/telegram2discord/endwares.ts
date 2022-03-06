@@ -36,12 +36,8 @@ export interface TediCrossContext extends Context {
 /**
  * Makes an endware function be handled by all bridges it applies to. Curried
  *
- * @param {Function} func	The message handler to wrap
- * @param {Context} ctx	The Telegraf context
- *
- * @returns {undefined}
- *
- * @private
+ * @param func	The message handler to wrap
+ * @param ctx	The Telegraf context
  */
 const createMessageHandler = R.curry((func, ctx) => {
 	// Wait for the Discord bot to become ready
@@ -85,13 +81,10 @@ export const chatinfo = (ctx: TediCrossContext, next: () => void) => {
 /**
  * Handles users joining chats
  *
- * @param {Object} ctx	The Telegraf context
- * @param {Object} ctx.tediCross.message	The Telegram message received
- * @param {Object} ctx.tediCross.message	The Telegram message received
- * @param {Object} ctx.tediCross.message.new_chat_members	List of the users who joined the chat
- * @param {Object} ctx.TediCross	The global TediCross context of the message
- *
- * @returns {undefined}
+ * @param ctx The Telegraf context
+ * @param ctx.tediCross.message The Telegram message received
+ * @param ctx.tediCross.message.new_chat_members List of the users who joined the chat
+ * @param ctx.TediCross The global TediCross context of the message
  */
 export const newChatMembers = createMessageHandler((ctx: TediCrossContext, bridge: any) =>
 	// Notify Discord about each user
@@ -119,13 +112,11 @@ export const newChatMembers = createMessageHandler((ctx: TediCrossContext, bridg
 /**
  * Handles users leaving chats
  *
- * @param {Object} ctx	The Telegraf context
- * @param {Object} ctx.tediCross	The TediCross context of the message
- * @param {Object} ctx.tediCross.message	The Telegram message received
- * @param {Object} ctx.tediCross.message.left_chat_member	The user object of the user who left
- * @param {Object} ctx.TediCross	The global TediCross context of the message
- *
- * @returns {undefined}
+ * @param ctx The Telegraf context
+ * @param ctx.tediCross The TediCross context of the message
+ * @param ctx.tediCross.message The Telegram message received
+ * @param ctx.tediCross.message.left_chat_member The user object of the user who left
+ * @param ctx.TediCross The global TediCross context of the message
  */
 export const leftChatMember = createMessageHandler((ctx: TediCrossContext, bridge: any) => {
 	// Make the text to send
@@ -208,9 +199,7 @@ export const relayMessage = (ctx: TediCrossContext) =>
 /**
  * Handles message edits
  *
- * @param {Object} ctx	The Telegraf context
- *
- * @returns {undefined}
+ * @param ctx	The Telegraf context
  */
 export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, bridge: any) => {
 	// Function to "delete" a message on Discord

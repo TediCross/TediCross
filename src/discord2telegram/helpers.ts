@@ -1,4 +1,3 @@
-
 import R from "ramda";
 
 /********************
@@ -8,11 +7,9 @@ import R from "ramda";
 /**
  * Ignores errors arising from trying to delete an already deleted message. Rethrows other errors
  *
- * @param {Error} err   The error to check
+ * @param err The error to check
  *
- * @returns {undefined}
- *
- * @throws {Error}      The error, if it is another type
+ * @throws The error, if it is another type
  */
 export const ignoreAlreadyDeletedError = R.ifElse(
 	R.propEq("message", "Unknown Message"),
@@ -23,9 +20,9 @@ export const ignoreAlreadyDeletedError = R.ifElse(
 /**
  * Converts characters '&', '<' and '>' in strings into HTML safe strings
  *
- * @param {String} text	The text to escape the characters in
+ * @param text The text to escape the characters in
  *
- * @returns {String}	The escaped string
+ * @returns The escaped string
  */
 export const escapeHTMLSpecialChars = R.compose(
 	R.replace(/>/g, "&gt;"),

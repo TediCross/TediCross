@@ -1,4 +1,3 @@
-
 import { MessageEmbed } from "discord.js";
 import { md2html } from "./md2html";
 
@@ -9,10 +8,10 @@ import { md2html } from "./md2html";
 /**
  * Takes an embed and converts it to text which Telegram likes
  *
- * @param {discord.MessageEmbed} embed	The embed to process
- * @param {String} senderName	Name of the sender of the embed
+ * @param embed The embed to process
+ * @param senderName Name of the sender of the embed
  *
- * @returns {String}	A string ready to send to Telegram
+ * @returns A string ready to send to Telegram
  */
 export function handleEmbed(embed: MessageEmbed, senderName: string) {
 	// Construct the text to send

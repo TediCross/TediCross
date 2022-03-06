@@ -5,19 +5,19 @@ import moment from "moment";
 /**
  * Makes a promise which resolves after a set number of milliseconds
  *
- * @param {Integer} ms	Number of milliseconds to slieep
- * @param {Any} [arg]	Optional argument to resolve the promise to
+ * @param ms	Number of milliseconds to slieep
+ * @param [arg]	Optional argument to resolve the promise to
  *
- * @returns {Promise}	Promise resolving after the given number of ms
+ * @returns Promise resolving after the given number of ms
  */
 export const sleep = util.promisify(setTimeout);
 
 /**
  * Makes a promise which resolves after one minute
  *
- * @param {Any} [arg]	Optional argument to resolve the promise to
+ * @param [arg]	Optional argument to resolve the promise to
  *
- * @returns {Promise}	Promise resolving after one minute
+ * @returns Promise resolving after one minute
  */
 export const sleepOneMinute = R.partial(sleep, [moment.duration(1, "minute").asMilliseconds()]);
 

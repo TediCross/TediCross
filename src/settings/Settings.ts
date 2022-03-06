@@ -29,52 +29,36 @@ export class Settings {
 	/**
 	 * Creates a new settings object
 	 *
-	 * @param {Object} settings	The raw settings object to use
-	 * @param {Object} settings.telegram	Settings for the Telegram bot. See the constructor of {@link TelegramSettings}
-	 * @param {Object} settings.discord	Settings for the Discord bot. See the constructor of {@link DiscordSettings}
-	 * @param {Object[]} settings.bridges	Settings for the bridges. See the constructor of {@link Bridge}
-	 * @param {Boolean} settings.debug	Whether or not to print debug messages
+	 * @param settings The raw settings object to use
+	 * @param settings.telegram Settings for the Telegram bot. See the constructor of {@link TelegramSettings}
+	 * @param settings.discord Settings for the Discord bot. See the constructor of {@link DiscordSettings}
+	 * @param settings.bridges Settings for the bridges. See the constructor of {@link Bridge}
+	 * @param settings.debug Whether or not to print debug messages
 	 *
-	 * @throws {Error}	If the raw settings object does not validate
+	 * @throws If the raw settings object does not validate
 	 */
 	constructor(settings: SettingProperties) {
 
 		// Make sure the settings are valid
 		Settings.validate(settings);
 
-		/**
-		 * The settings for the Telegram bot
-		 *
-		 * @type {TelegramSettings}
-		 */
+		/** The settings for the Telegram bot */
 		this.telegram = new TelegramSettings(settings.telegram);
 
-		/**
-		 * The settings for the Discord bot
-		 *
-		 * @type {DiscordSettings}
-		 */
+		/** The settings for the Discord bot */
 		this.discord = new DiscordSettings(settings.discord);
 
-		/**
-		 * Whether or not to print debug messages
-		 *
-		 * @type {Boolean}
-		 */
+		/** Whether or not to print debug messages */
 		this.debug = settings.debug;
 
-		/**
-		 * The config for the bridges
-		 *
-		 * @type {Object[]}
-		 */
+		/** The config for the bridges */
 		this.bridges = settings.bridges;
 	}
 
 	/**
 	 * Saves the settings to file
 	 *
-	 * @param {String} filepath	Filepath to save to. Absolute path is recommended
+	 * @param filepath Filepath to save to. Absolute path is recommended
 	 */
 	toFile(filepath: string) {
 		// The raw object is not suitable for YAML-ification. A few `toJSON()` methods will not be triggered that way. Go via JSON
@@ -90,7 +74,7 @@ export class Settings {
 	/**
 	 * Makes a raw settings object from this object
 	 *
-	 * @returns {Object}	A plain object with the settings
+	 * @returns A plain object with the settings
 	 */
 	toObj(): object {
 		// Hacky way to turn this into a plain object...
@@ -100,9 +84,9 @@ export class Settings {
 	/**
 	 * Validates a raw settings object, checking if it is usable for creating a Settings object
 	 *
-	 * @param {Object} settings	The object to validate
+	 * @param settings The object to validate
 	 *
-	 * @throws {Error}	If the object is not suitable. The error message says what the problem is
+	 * @throws If the object is not suitable. The error message says what the problem is
 	 */
 	static validate(settings: SettingProperties) {
 		// Check that the settings are indeed in object form
@@ -127,9 +111,9 @@ export class Settings {
 	/**
 	 * Merges a raw settings object with default values
 	 *
-	 * @param {Object} rawSettings	The raw settings object to merge
+	 * @param rawSettings The raw settings object to merge
 	 *
-	 * @returns {Object}	A clone of the provided object, with default values on it
+	 * @returns A clone of the provided object, with default values on it
 	 */
 	static applyDefaults(rawSettings: SettingProperties) {
 		return R.mergeDeepLeft(rawSettings, Settings.DEFAULTS);
@@ -138,9 +122,9 @@ export class Settings {
 	/**
 	 * Migrates settings to the newest format
 	 *
-	 * @param {Object} rawSettings	The raw settings object to migrate
+	 * @param rawSettings The raw settings object to migrate
 	 *
-	 * @returns {Object}	A new object on the newest format
+	 * @returns A new object on the newest format
 	 */
 	static migrate(rawSettings: SettingProperties): object {
 		// Make a clone, to not operate directly on the provided object
@@ -179,11 +163,11 @@ export class Settings {
 	/**
 	 * Creates a new settings object from a plain object
 	 *
-	 * @param {Object} obj	The object to create a settings object from
+	 * @param obj The object to create a settings object from
 	 *
-	 * @returns {Settings}	The settings object
+	 * @returns The settings object
 	 */
-	static fromObj(obj:any): Settings {
+	static fromObj(obj: any): Settings {
 		return R.compose<any, any>(
 			R.construct(Settings),
 			//@ts-ignore
@@ -192,11 +176,7 @@ export class Settings {
 		)(obj) as any as Settings;
 	}
 
-	/**
-	 * Default settings
-	 *
-	 * @type {Object}
-	 */
+	/** Default settings */
 	static get DEFAULTS() {
 		return {
 			telegram: TelegramSettings.DEFAULTS,

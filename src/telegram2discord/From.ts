@@ -5,33 +5,24 @@ import { Message, User } from "telegraf/typings/core/types/typegram";
  * The From functions *
  **********************/
 
-/**
- * Information about the sender of a Telegram message
- *
- * @typedef {Object} From
- * @prop {String} firstName	First name of the sender
- * @prop {String} lastName	Last name of the sender
- * @param {String} username	Username of the sender
- */
-
 interface From {
 	firstName: string;
-	lastName: string;
-	username: string;
+	lastName?: string;
+	username?: string;
 }
 
 /**
  * Creates a new From object
  *
- * @param {String} firstName	First name of the sender
- * @param {String} [lastName]	Last name of the sender
- * @param {String} [username]	Username of the sender
+ * @param firstName First name of the sender
+ * @param [lastName] Last name of the sender
+ * @param [username] Username of the sender
  *
  * @returns {From}	The From object
  *
  * @memberof From
  */
-export function createFromObj(firstName: string, lastName: string, username: string): From {
+export function createFromObj(firstName: string, lastName: string | undefined, username: string | undefined): From {
 	return {
 		firstName,
 		lastName,
@@ -42,9 +33,9 @@ export function createFromObj(firstName: string, lastName: string, username: str
 /**
  * Creates a new From object from a Telegram message
  *
- * @param {Object} message	The Telegram message to create the from object from
+ * @param message The Telegram message to create the from object from
  *
- * @returns {From}	The from object
+ * @returns The from object
  */
 export function createFromObjFromMessage(message: Message) {
 	return R.ifElse<any, any, any>(
@@ -63,9 +54,9 @@ export function createFromObjFromMessage(message: Message) {
 /**
  * Creates a new From object from a Telegram User object
  *
- * @param {Object} user	The Telegram user object to create the from object from
+ * @param user The Telegram user object to create the from object from
  *
- * @returns {From}	The From object created from the user
+ * @returns The From object created from the user
  */
 export function createFromObjFromUser(user: User) {
 	return createFromObj(user.first_name, user.last_name || "", user.username || "");
@@ -74,9 +65,9 @@ export function createFromObjFromUser(user: User) {
 /**
  * Creates a From object from a Telegram chat object
  *
- * @param {Object} chat	The Telegram chat object to create the from object from
+ * @param chat The Telegram chat object to create the from object from
  *
- * @returns {From}	The From object created from the chat
+ * @returns The From object created from the chat
  */
 export function createFromObjFromChat(chat: Record<string, any>) {
 	return createFromObj(chat.title, "", "");
@@ -85,12 +76,10 @@ export function createFromObjFromChat(chat: Record<string, any>) {
 /**
  * Makes a display name out of a from object
  *
- * @param {Boolean} useFirstNameInsteadOfUsername	Whether or not to always use the first name instead of the username
- * @param {From} from	The from object
+ * @param useFirstNameInsteadOfUsername Whether or not to always use the first name instead of the username
+ * @param from The from object
  *
- * @returns {String}	The display name
- *
- * @memberof From
+ * @returns The display name
  */
 export function makeDisplayName(useFirstNameInsteadOfUsername: boolean, from: From) {
 	return R.ifElse(

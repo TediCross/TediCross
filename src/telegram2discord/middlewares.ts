@@ -5,7 +5,6 @@ import { handleEntities } from "./handleEntities";
 import Discord, { Client } from "discord.js";
 import { sleepOneMinute } from "../sleep";
 import { fetchDiscordChannel } from "../fetchDiscordChannel";
-import { Context } from "telegraf";
 import { Message } from "telegraf/typings/core/types/typegram";
 import { TediCrossContext } from "./endwares";
 import { createFromObjFromChat, createFromObjFromMessage, createFromObjFromUser, makeDisplayName } from "./From";
@@ -18,9 +17,9 @@ import { deleteMessage, ignoreAlreadyDeletedError } from "./helpers";
 /**
  * Creates a text object from a Telegram message
  *
- * @param {Object} message	The message object
+ * @param message The message object
  *
- * @returns {Object}	The text object, or undefined if no text was found
+ * @returns The text object, or undefined if no text was found
  */
 function createTextObjFromMessage(ctx: TediCrossContext, message: Message) {
 	return R.cond<any, any>([
@@ -68,11 +67,11 @@ function createTextObjFromMessage(ctx: TediCrossContext, message: Message) {
 /**
  * Makes the reply text to show on Discord
  *
- * @param {Object} replyTo	The replyTo object from the tediCross context
- * @param {Integer} replyLength	How many characters to take from the original
- * @param {Integer} maxReplyLines	How many lines to cut the reply text after
+ * @param replyTo The replyTo object from the tediCross context
+ * @param replyLength How many characters to take from the original
+ * @param maxReplyLines How many lines to cut the reply text after
  *
- * @returns {String}	The reply text to display
+ * @returns The reply text to display
  */
 const makeReplyText = (replyTo: any, replyLength: number, maxReplyLines: number) => {
 	const countDoublePipes = R.tryCatch(str => str.match(/\|\|/g).length, R.always(0));
@@ -108,11 +107,11 @@ const makeReplyText = (replyTo: any, replyLength: number, maxReplyLines: number)
 /**
  * Makes a discord mention out of a username
  *
- * @param {String} username	The username to make the mention from
- * @param {Discord.Client} dcBot	The Discord bot to look up the user's ID with
- * @param {Bridge} bridge	The bridge to use
+ * @param username The username to make the mention from
+ * @param dcBot The Discord bot to look up the user's ID with
+ * @param bridge The bridge to use
  *
- * @returns {String}	A Discord mention of the user
+ * @returns A Discord mention of the user
  */
 async function makeDiscordMention(username: string, dcBot: Client, bridge: Bridge) {
 	try {
@@ -134,10 +133,8 @@ async function makeDiscordMention(username: string, dcBot: Client, bridge: Bridg
 /**
  * Adds a `tediCross` property to the context
  *
- * @param {Object} ctx	The context to add the property to
- * @param {Function} next	Function to pass control to next middleware
- *
- * @returns {undefined}
+ * @param ctx The context to add the property to
+ * @param next Function to pass control to next middleware
  */
 function addTediCrossObj(ctx: TediCrossContext, next: () => void) {
 	ctx.tediCross = {} as any;
@@ -147,15 +144,13 @@ function addTediCrossObj(ctx: TediCrossContext, next: () => void) {
 /**
  * Adds a message object to the tediCross context. One of the four optional arguments must be present. Requires the tediCross context to work
  *
- * @param {Object} ctx	The Telegraf context
- * @param {Object} ctx.tediCross	The TediCross object on the context
- * @param {Object} [ctx.channelPost]
- * @param {Object} [ctx.editedChannelPost]
- * @param {Object} [ctx.message]
- * @param {Object} [ctx.editedChannelPost]
- * @param {Function} next	Function to pass control to next middleware
- *
- * @returns {undefined}
+ * @param ctx The Telegraf context
+ * @param ctx.tediCross The TediCross object on the context
+ * @param [ctx.channelPost]
+ * @param [ctx.editedChannelPost]
+ * @param [ctx.message]
+ * @param [ctx.editedChannelPost]
+ * @param next Function to pass control to next middleware
  */
 function addMessageObj(ctx: TediCrossContext, next: () => void) {
 	// Put it on the context
@@ -173,12 +168,10 @@ function addMessageObj(ctx: TediCrossContext, next: () => void) {
 /**
  * Adds the message ID as a prop to the tedicross context
  *
- * @param {Object} ctx	The Telegraf context
- * @param {Object} ctx.tediCross	The Tedicross object on the context
- * @param {Object} ctx.tediCross.message	The message object being handled
- * @param {Function} next	Function to pass control to next middleware
- *
- * @returns {undefined}
+ * @param ctx The Telegraf context
+ * @param ctx.tediCross The Tedicross object on the context
+ * @param ctx.tediCross.message The message object being handled
+ * @param next Function to pass control to next middleware
  */
 function addMessageId(ctx: TediCrossContext, next: () => void) {
 	ctx.tediCross.messageId = ctx.tediCross.message.message_id;
@@ -189,13 +182,11 @@ function addMessageId(ctx: TediCrossContext, next: () => void) {
 /**
  * Adds the bridges to the tediCross object on the context. Requires the tediCross context to work
  *
- * @param {Object} ctx	The context to add the property to
- * @param {Object} ctx.tediCross	The TediCross object on the context
- * @param {Object} ctx.TediCross	The global TediCross context
- * @param {Object} ctx.TediCross.bridgeMap	The bridge map of the application
- * @param {Function} next	Function to pass control to next middleware
- *
- * @returns {undefined}
+ * @param ctx The context to add the property to
+ * @param ctx.tediCross The TediCross object on the context
+ * @param ctx.TediCross The global TediCross context
+ * @param ctx.TediCross.bridgeMap The bridge map of the application
+ * @param next Function to pass control to next middleware
  */
 function addBridgesToContext(ctx: TediCrossContext, next: () => void) {
 	ctx.tediCross.bridges = ctx.TediCross.bridgeMap.fromTelegramChatId(ctx.tediCross.message.chat.id);
@@ -205,12 +196,10 @@ function addBridgesToContext(ctx: TediCrossContext, next: () => void) {
 /**
  * Removes d2t bridges from the bridge list
  *
- * @param {Object} ctx	The Telegraf context to use
- * @param {Object} ctx.tediCross	The TediCross object on the context
- * @param {Bridge[]} ctx.tediCross.bridges	The bridges the message could use
- * @param {Function} next	Function to pass control to next middleware
- *
- * @returns {undefined}
+ * @param ctx The Telegraf context to use
+ * @param ctx.tediCross The TediCross object on the context
+ * @param ctx.tediCross.bridges The bridges the message could use
+ * @param next Function to pass control to next middleware
  */
 function removeD2TBridges(ctx: TediCrossContext, next: () => void) {
 	ctx.tediCross.bridges = R.reject(R.propEq("direction", Bridge.DIRECTION_DISCORD_TO_TELEGRAM))(
@@ -223,12 +212,10 @@ function removeD2TBridges(ctx: TediCrossContext, next: () => void) {
 /**
  * Removes bridges with the `relayCommands` flag set to false from the bridge list
  *
- * @param {Object} ctx	The Telegraf context to use
- * @param {Object} ctx.tediCross	The TediCross object on the context
- * @param {Bridge[]} ctx.tediCross.bridges	The bridges the message could use
- * @param {Function} next	Function to pass control to next middleware
- *
- * @returns {undefined}
+ * @param ctx The Telegraf context to use
+ * @param ctx.tediCross The TediCross object on the context
+ * @param ctx.tediCross.bridges The bridges the message could use
+ * @param next Function to pass control to next middleware
  */
 function removeBridgesIgnoringCommands(ctx: TediCrossContext, next: () => void) {
 	//@ts-ignore
@@ -239,12 +226,10 @@ function removeBridgesIgnoringCommands(ctx: TediCrossContext, next: () => void) 
 /**
  * Removes bridges with `telegram.relayJoinMessages === false`
  *
- * @param {Object} ctx	The Telegraf context to use
- * @param {Object} ctx.tediCross	The TediCross object on the context
- * @param {Bridge[]} ctx.tediCross.bridges	The bridges the message could use
- * @param {Function} next	Function to pass control to next middleware
- *
- * @returns {undefined}
+ * @param ctx The Telegraf context to use
+ * @param ctx.tediCross The TediCross object on the context
+ * @param ctx.tediCross.bridges The bridges the message could use
+ * @param next Function to pass control to next middleware
  */
 function removeBridgesIgnoringJoinMessages(ctx: TediCrossContext, next: () => void) {
 	//@ts-ignore
@@ -255,12 +240,10 @@ function removeBridgesIgnoringJoinMessages(ctx: TediCrossContext, next: () => vo
 /**
  * Removes bridges with `telegram.relayLeaveMessages === false`
  *
- * @param {Object} ctx	The Telegraf context to use
- * @param {Object} ctx.tediCross	The TediCross object on the context
- * @param {Bridge[]} ctx.tediCross.bridges	The bridges the message could use
- * @param {Function} next	Function to pass control to next middleware
- *
- * @returns {undefined}
+ * @param ctx The Telegraf context to use
+ * @param ctx.tediCross The TediCross object on the context
+ * @param ctx.tediCross.bridges The bridges the message could use
+ * @param next Function to pass control to next middleware
  */
 function removeBridgesIgnoringLeaveMessages(ctx: TediCrossContext, next: () => void) {
 	//@ts-ignore
@@ -271,11 +254,9 @@ function removeBridgesIgnoringLeaveMessages(ctx: TediCrossContext, next: () => v
 /**
  * Replies to the message telling the user this is a private bot if there are no bridges on the tediCross context
  *
- * @param {Object} ctx	The Telegraf context
- * @param {Function} ctx.reply	The context's reply function
- * @param {Function} next	Function to pass control to next middleware
- *
- * @returns {undefined}
+ * @param ctx The Telegraf context
+ * @param ctx.reply The context's reply function
+ * @param next Function to pass control to next middleware
  */
 function informThisIsPrivateBot(ctx: TediCrossContext, next: () => void) {
 	R.ifElse(
@@ -318,12 +299,10 @@ function informThisIsPrivateBot(ctx: TediCrossContext, next: () => void) {
 /**
  * Adds a `from` object to the tediCross context
  *
- * @param {Object} ctx	The context to add the property to
- * @param {Object} ctx.tediCross	The tediCross on the context
- * @param {Object} ctx.tediCross.message	The message object to create the `from` object from
- * @param {Function} next	Function to pass control to next middleware
- *
- * @returns {undefined}
+ * @param ctx The context to add the property to
+ * @param ctx.tediCross The tediCross on the context
+ * @param ctx.tediCross.message The message object to create the `from` object from
+ * @param next Function to pass control to next middleware
  */
 function addFromObj(ctx: TediCrossContext, next: () => void) {
 	ctx.tediCross.from = createFromObjFromMessage(ctx.tediCross.message);
@@ -333,12 +312,10 @@ function addFromObj(ctx: TediCrossContext, next: () => void) {
 /**
  * Adds a `reply` object to the tediCross context, if the message is a reply
  *
- * @param {Object} ctx	The context to add the property to
- * @param {Object} ctx.tediCross	The tediCross on the context
- * @param {Object} ctx.tediCross.message	The message object to create the `reply` object from
- * @param {Function} next	Function to pass control to next middleware
- *
- * @returns {undefined}
+ * @param ctx The context to add the property to
+ * @param ctx.tediCross The tediCross on the context
+ * @param ctx.tediCross.message The message object to create the `reply` object from
+ * @param next Function to pass control to next middleware
  */
 function addReplyObj(ctx: TediCrossContext, next: () => void) {
 	const repliedToMessage = ctx.tediCross.message.reply_to_message;
@@ -384,12 +361,10 @@ function addReplyObj(ctx: TediCrossContext, next: () => void) {
 /**
  * Adds a `forward` object to the tediCross context, if the message is a forward
  *
- * @param {Object} ctx	The context to add the property to
- * @param {Object} ctx.tediCross	The tediCross on the context
- * @param {Object} ctx.tediCross.message	The message object to create the `forward` object from
- * @param {Function} next	Function to pass control to next middleware
- *
- * @returns {undefined}
+ * @param ctx	The context to add the property to
+ * @param ctx.tediCross	The tediCross on the context
+ * @param ctx.tediCross.message	The message object to create the `forward` object from
+ * @param next	Function to pass control to next middleware
  */
 function addForwardFrom(ctx: TediCrossContext, next: () => void) {
 	const msg = ctx.tediCross.message;
@@ -413,12 +388,10 @@ function addForwardFrom(ctx: TediCrossContext, next: () => void) {
 /**
  * Adds a text object to the tediCross property on the context, if there is text in the message
  *
- * @param {Object} ctx	The context to add the property to
- * @param {Object} ctx.tediCross	The tediCross on the context
- * @param {Object} ctx.tediCross.message	The message object to get the text data from
- * @param {Function} next	Function to pass control to next middleware
- *
- * @returns {undefined}
+ * @param ctx	The context to add the property to
+ * @param ctx.tediCross	The tediCross on the context
+ * @param ctx.tediCross.message	The message object to get the text data from
+ * @param next	Function to pass control to next middleware
  */
 function addTextObj(ctx: TediCrossContext, next: () => void) {
 	const text = createTextObjFromMessage(ctx, ctx.tediCross.message as any);
@@ -433,12 +406,10 @@ function addTextObj(ctx: TediCrossContext, next: () => void) {
 /**
  * Adds a file object to the tediCross property on the context
  *
- * @param {Object} ctx	The context to add the property to
- * @param {Object} ctx.tediCross	The tediCross on the context
- * @param {Object} ctx.tediCross.message	The message object to get the file data from
- * @param {Function} next	Function to pass control to next middleware
- *
- * @returns {undefined}
+ * @param ctx The context to add the property to
+ * @param ctx.tediCross The tediCross on the context
+ * @param ctx.tediCross.message The message object to get the file data from
+ * @param next Function to pass control to next middleware
  */
 function addFileObj(ctx: TediCrossContext, next: () => void) {
 	const message = ctx.tediCross.message;
@@ -499,11 +470,11 @@ function addFileObj(ctx: TediCrossContext, next: () => void) {
 /**
  * Adds a file link to the file object on the tedicross context, if there is one
  *
- * @param {Object} ctx	The context to add the property to
- * @param {Object} ctx.tediCross	The tediCross on the context
- * @param {Function} next	Function to pass control to next middleware
+ * @param ctx The context to add the property to
+ * @param ctx.tediCross The tediCross on the context
+ * @param next Function to pass control to next middleware
  *
- * @returns {Promise}	Promise resolving to nothing when the operation is complete
+ * @returns Promise resolving to nothing when the operation is complete
  */
 function addFileLink(ctx: TediCrossContext, next: () => void) {
 	return Promise.resolve()

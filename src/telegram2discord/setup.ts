@@ -17,11 +17,11 @@ import { chatinfo, handleEdits, leftChatMember, newChatMembers, relayMessage, Te
 /**
  * Clears old messages on a tgBot, making sure there are no updates in the queue
  *
- * @param {Telegraf} tgBot	The Telegram bot to clear messages on
+ * @param tgBot	The Telegram bot to clear messages on
  *
- * @returns {Promise}	Promise resolving to nothing when the clearing is done
+ * @returns Promise resolving to nothing when the clearing is done
  */
-function clearOldMessages(tgBot: Telegraf, offset = -1): Promise<any> {
+function clearOldMessages(tgBot: Telegraf, offset = -1): Promise<void> {
 	const timeout = 0;
 	const limit = 100;
 	return tgBot.telegram.getUpdates(timeout, limit, offset, []).then(
@@ -36,7 +36,7 @@ function clearOldMessages(tgBot: Telegraf, offset = -1): Promise<any> {
 				R.last
 			)
 		)
-	);
+	).then(() => undefined);
 }
 
 /**********************
@@ -52,12 +52,12 @@ export interface TediTelegraf extends Telegraf {
 /**
  * Sets up the receiving of Telegram messages, and relaying them to Discord
  *
- * @param {Logger} logger	The Logger instance to log messages to
- * @param {Telegraf} tgBot	The Telegram bot
- * @param {Discord.Client} dcBot	The Discord bot
- * @param {MessageMap} messageMap	Map between IDs of messages
- * @param {BridgeMap} bridgeMap	Map of the bridges to use
- * @param {Settings} settings	The settings to use
+ * @param logger The Logger instance to log messages to
+ * @param tgBot The Telegram bot
+ * @param dcBot The Discord bot
+ * @param messageMap Map between IDs of messages
+ * @param bridgeMap Map of the bridges to use
+ * @param settings The settings to use
  */
 export function setup(logger: Logger, tgBot: TediTelegraf, dcBot: Client, messageMap: MessageMap, bridgeMap: BridgeMap, settings: Settings) {
 	//@ts-ignore

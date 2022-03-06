@@ -39,9 +39,9 @@ const newlineNode = { content: "\n", type: "text" };
 /**
  * Extracts pure texts from a node and its child nodes
  *
- * @param {Object} node	The syntax tree node to extract text from
+ * @param node	The syntax tree node to extract text from
  *
- * @return {String}	The concatenated text from all leaf nodes of this node
+ * @return The concatenated text from all leaf nodes of this node
  */
 function extractText(node: Record<string, any>) {
 	// Extract the text from the node
@@ -76,9 +76,9 @@ const mdParse = simpleMarkdown.defaultBlockParse;
 /**
  * Parse Discord's Markdown format to Telegram-accepted HTML
  *
- * @param {String} text	The markdown string to convert
+ * @param text The markdown string to convert
  *
- * @return {String}	Telegram-friendly HTML
+ * @return Telegram-friendly HTML
  */
 export function md2html(text: string) {
 	// XXX Some users get a space after @ in mentions bridged to Telegram. See #148

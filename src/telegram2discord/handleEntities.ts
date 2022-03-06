@@ -7,6 +7,7 @@ import { fetchDiscordChannel } from "../fetchDiscordChannel";
 /*********************
  * Make some helpers *
  *********************/
+
 //@ts-ignore
 const findFn = (prop: string, regexp: RegExp) => R.compose<any, any>(R.not, R.isEmpty, R.match(regexp), R.prop(prop)) as unknown as () => boolean;
 
@@ -17,12 +18,12 @@ const findFn = (prop: string, regexp: RegExp) => R.compose<any, any>(R.not, R.is
 /**
  * Converts entities (usernames, code, ...) in Telegram messages to Discord format
  *
- * @param {String} text	The text to handle
- * @param {MessageEntity[]} entities	Array of entities for the text
- * @param {Discord.Client} dcBot	The Discord bot
- * @param {Bridge} bridge	The bridge this message is crossing
+ * @param text The text to handle
+ * @param entities Array of entities for the text
+ * @param dcBot The Discord bot
+ * @param bridge The bridge this message is crossing
  *
- * @return {String} The fully converted string
+ * @return The fully converted string
  */
 export async function handleEntities(text: string, entities: MessageEntity[], dcBot: Client, bridge: Bridge) {
 	// Don't mess up the original
