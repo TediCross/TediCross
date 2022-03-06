@@ -9,7 +9,6 @@
   },
   "scripts": {
     "build": "tsc",
-	"preinstall": "npm run clean",
     "postinstall": "npm run build",
     "start": "node dist/main.js",
     "start:dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/main.ts -i data/",
