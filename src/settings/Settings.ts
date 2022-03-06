@@ -38,7 +38,6 @@ export class Settings {
 	 * @throws If the raw settings object does not validate
 	 */
 	constructor(settings: SettingProperties) {
-
 		// Make sure the settings are valid
 		Settings.validate(settings);
 
@@ -186,4 +185,3 @@ export class Settings {
 		} as any;
 	}
 }
-

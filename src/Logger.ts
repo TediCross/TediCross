@@ -18,13 +18,11 @@ export class Logger extends console.Console {
 		this._debugEnabled = debug;
 
 		// Wrap the output methods
-		this.log = this._wrapper(this.log, "LOG");
-		this.info = this._wrapper(this.info, "INFO");
-		this.error = this._wrapper(this.error, "ERR");
-		this.warn = this._wrapper(this.warn, "WARN");
-		this.debug = this._debugEnabled
-			? this._wrapper(this.debug, "DEBUG")
-			: dummy;
+		this.log = Logger._wrapper((...args: unknown[]) => super.log(...args), "LOG");
+		this.info = Logger._wrapper((...args: unknown[]) => super.info(...args), "INFO");
+		this.error = Logger._wrapper((...args: unknown[]) => super.error(...args), "ERR");
+		this.warn = Logger._wrapper((...args: unknown[]) => super.warn(...args), "WARN");
+		this.debug = this._debugEnabled ? Logger._wrapper((...args: unknown[]) => this.debug(...args), "DEBUG") : dummy;
 	}
 
 	/**
@@ -35,8 +33,8 @@ export class Logger extends console.Console {
 	 *
 	 * @returns A function which works just like the given method, but also prints extra data
 	 */
-	_wrapper(method: (...args: any[]) => void, tag: string) {
-		return (...args: any[]) => {
+	private static _wrapper(method: (...args: unknown[]) => void, tag: string) {
+		return (...args: unknown[]) => {
 			// Create the stamp
 			const stamp = `${Logger.timestamp} [${tag}]`;
 			// Put the stamp as the first argument, preserving the inspection of whatever the first argument is

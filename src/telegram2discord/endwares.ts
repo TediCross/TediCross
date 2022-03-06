@@ -1,16 +1,30 @@
-import R from "ramda";
+import R, { any } from "ramda";
 import { MessageMap } from "../MessageMap";
 import { sleepOneMinute } from "../sleep";
 import { fetchDiscordChannel } from "../fetchDiscordChannel";
 import { Context } from "telegraf";
 import { deleteMessage, ignoreAlreadyDeletedError } from "./helpers";
 import { createFromObjFromUser } from "./From";
-import { MessageEditOptions } from "discord.js";
-import { Message, User } from "telegraf/typings/core/types/typegram";
+import { Client, MessageEditOptions } from "discord.js";
+import { Message, User, UserFromGetMe } from "telegraf/typings/core/types/typegram";
+import { Deunionize } from "telegraf/typings/deunionize";
+import * as tg from "telegraf/typings/core/types/typegram";
+import { BridgeMap } from "../bridgestuff/BridgeMap";
+import { link } from "fs";
+import { string } from "yargs";
+import { Logger } from "../Logger";
+import { Settings } from "../settings/Settings";
 
-
-export interface TediCrossContext extends Context {
-	TediCross: any;
+export interface TediCrossContext<U extends Deunionize<tg.Update> = tg.Update> extends Context<U> {
+	TediCross: {
+		me: UserFromGetMe;
+		bridgeMap: BridgeMap;
+		dcBot: Client<boolean>;
+		settings: Settings;
+		messageMap: MessageMap;
+		logger: Logger;
+		antiInfoSpamSet: Set<unknown>;
+	};
 	tediCross: {
 		message: Message | any;
 		file: {
@@ -21,7 +35,7 @@ export interface TediCrossContext extends Context {
 		};
 		messageId: string;
 		prepared: any;
-		bridges: any;
+		bridges: any[];
 		replyTo: any;
 		text: any;
 		forwardFrom: any;
@@ -39,10 +53,14 @@ export interface TediCrossContext extends Context {
  * @param func	The message handler to wrap
  * @param ctx	The Telegraf context
  */
-const createMessageHandler = R.curry((func, ctx) => {
-	// Wait for the Discord bot to become ready
-	ctx.TediCross.dcBot.ready.then(() => R.forEach(bridge => func(ctx, bridge))(ctx.tediCross.bridges));
-});
+const createMessageHandler = R.curry(
+	(func: (ctx: TediCrossContext, bridge: unknown) => (bridges: unknown[]) => unknown, ctx: TediCrossContext) => {
+		// Wait for the Discord bot to become ready
+		ctx.TediCross.dcBot.on("ready", () => {
+			R.forEach(bridge => func(ctx, bridge))(ctx.tediCross.bridges);
+		});
+	}
+);
 
 /*************************
  * The endware functions *
@@ -98,13 +116,9 @@ export const newChatMembers = createMessageHandler((ctx: TediCrossContext, bridg
 
 		// Pass it on
 		ctx.TediCross.dcBot.ready
-			.then(() =>
-				fetchDiscordChannel(ctx.TediCross.dcBot, bridge).then(channel => channel.send(text))
-			)
+			.then(() => fetchDiscordChannel(ctx.TediCross.dcBot, bridge).then(channel => channel.send(text)))
 			.catch((err: any) =>
-				console.error(
-					`Could not tell Discord about a new chat member on bridge ${bridge.name}: ${err.message}`
-				)
+				console.error(`Could not tell Discord about a new chat member on bridge ${bridge.name}: ${err.message}`)
 			);
 	})(ctx.tediCross.message.new_chat_members)
 );
@@ -190,9 +204,7 @@ export const relayMessage = (ctx: TediCrossContext) =>
 				dcMessage?.id
 			);
 		} catch (err: any) {
-			console.error(
-				`Could not relay a message to Discord on bridge ${prepared.bridge.name}: ${err.message}`
-			);
+			console.error(`Could not relay a message to Discord on bridge ${prepared.bridge.name}: ${err.message}`);
 		}
 	})(ctx.tediCross.prepared);
 
@@ -275,4 +287,3 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 		await edit(ctx, bridge);
 	}
 });
-

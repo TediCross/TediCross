@@ -99,4 +99,3 @@ export class MessageMap {
 		return "t2d";
 	}
 }
-

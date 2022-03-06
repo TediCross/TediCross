@@ -1,4 +1,3 @@
-
 import { Client, Message } from "discord.js";
 import R from "ramda";
 import { BridgeMap } from "../bridgestuff/BridgeMap";
@@ -20,7 +19,12 @@ import { LatestDiscordMessageIds } from "./LatestDiscordMessageIds";
  *
  * @returns	Promise which resolves when all messages have been relayed
  */
-export async function relayOldMessages(logger: Logger, dcBot: Client, latestDiscordMessageIds: LatestDiscordMessageIds, bridgeMap: BridgeMap) {
+export async function relayOldMessages(
+	logger: Logger,
+	dcBot: Client,
+	latestDiscordMessageIds: LatestDiscordMessageIds,
+	bridgeMap: BridgeMap
+) {
 	// Wait for the bot to connect to the API
 	//@ts-ignore
 	await dcBot.ready;

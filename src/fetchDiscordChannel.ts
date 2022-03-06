@@ -1,12 +1,13 @@
 import { Client, TextChannel } from "discord.js";
 import R from "ramda";
+import { Bridge } from "./bridgestuff/Bridge";
 
 /**
  * Gets a Discord channel, and logs an error if it doesn't exist
  *
  * @returns	A Promise resolving to the channel, or rejecting if it could not be fetched for some reason
  */
-export const fetchDiscordChannel = R.curry((dcBot: Client, bridge) => {
+export const fetchDiscordChannel = R.curry((dcBot: Client, bridge: Bridge) => {
 	// Get the channel's ID
 	const channelId = bridge.discord.channelId;
 
@@ -16,4 +17,3 @@ export const fetchDiscordChannel = R.curry((dcBot: Client, bridge) => {
 		throw err;
 	}) as unknown as Promise<TextChannel>;
 });
-

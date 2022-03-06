@@ -23,7 +23,7 @@ export class BridgeMap {
 		this._telegramToBridge = new Map();
 
 		// Populate the maps and set
-		bridges.forEach((bridge) => {
+		bridges.forEach(bridge => {
 			const d = this._discordToBridge.get(Number(bridge.discord.channelId)) || [];
 			const t = this._telegramToBridge.get(bridge.telegram.chatId) || [];
 			this._discordToBridge.set(Number(bridge.discord.channelId), [...d, bridge]);
@@ -53,4 +53,3 @@ export class BridgeMap {
 		return R.defaultTo([], this._discordToBridge.get(discordChannelId));
 	}
 }
-

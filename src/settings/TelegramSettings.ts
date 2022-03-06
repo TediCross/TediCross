@@ -1,3 +1,5 @@
+import type { Mutable } from "type-fest";
+
 interface SettingProperties {
 	token: string;
 	skipOldMessages: boolean;
@@ -53,17 +55,19 @@ export class TelegramSettings {
 	/** The bot token to use */
 	get token(): string {
 		return this._token === TelegramSettings.GET_TOKEN_FROM_ENVIRONMENT
-			? process.env.TELEGRAM_BOT_TOKEN!
+			? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			  process.env.TELEGRAM_BOT_TOKEN!
 			: this._token;
 	}
 
 	/** Makes a JSONifiable object of the settings. Called automatically by JSON.stringify */
 	toJSON() {
 		// Make a clone of the object
-		const clone = Object.assign({}, this) as Record<string, any>;
+		const clone = Object.assign({}, this) as Mutable<typeof this> & { _token?: string };
 
 		// Change name of the `_token` property to `token`
-		clone.token = clone._token;
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		clone.token = clone._token!;
 		delete clone._token;
 
 		// It's now perfect

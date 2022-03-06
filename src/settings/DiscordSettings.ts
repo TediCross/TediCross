@@ -6,7 +6,6 @@ interface Settings {
 	skipOldMessages: boolean;
 }
 
-
 /*****************************
  * The DiscordSettings class *
  *****************************/
@@ -124,4 +123,3 @@ export class DiscordSettings {
 		};
 	}
 }
-

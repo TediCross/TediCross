@@ -34,7 +34,7 @@ function createTextObjFromMessage(ctx: TediCrossContext, message: Message) {
 		// Animation, audio, document, photo, video or voice
 		[
 			R.has<any>("caption"),
-			({ caption, caption_entities }: { caption: string, caption_entities: string; }) => ({
+			({ caption, caption_entities }: { caption: string; caption_entities: string }) => ({
 				raw: caption,
 				entities: R.defaultTo([], caption_entities)
 			})
@@ -275,8 +275,8 @@ function informThisIsPrivateBot(ctx: TediCrossContext, next: () => void) {
 				// Send the reply
 				ctx.reply(
 					"This is an instance of a [TediCross](https://github.com/TediCross/TediCross) bot, " +
-					"bridging a chat in Telegram with one in Discord. " +
-					"If you wish to use TediCross yourself, please download and create an instance.",
+						"bridging a chat in Telegram with one in Discord. " +
+						"If you wish to use TediCross yourself, please download and create an instance.",
 					{
 						parse_mode: "Markdown"
 					}
@@ -394,7 +394,7 @@ function addForwardFrom(ctx: TediCrossContext, next: () => void) {
  * @param next	Function to pass control to next middleware
  */
 function addTextObj(ctx: TediCrossContext, next: () => void) {
-	const text = createTextObjFromMessage(ctx, ctx.tediCross.message as any);
+	const text = createTextObjFromMessage(ctx, ctx.tediCross.message);
 
 	if (!R.isNil(text)) {
 		ctx.tediCross.text = text;
@@ -502,10 +502,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 	ctx.tediCross.prepared = await Promise.all(
 		R.map(async (bridge: Bridge) => {
 			// Get the name of the sender of this message
-			const senderName = makeDisplayName(
-				ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername,
-				tc.from
-			);
+			const senderName = makeDisplayName(ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername, tc.from);
 
 			// Make the header
 			// WARNING! Butt-ugly code! If you see a nice way to clean this up, please do it
@@ -513,33 +510,24 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				// Get the name of the original sender, if this is a forward
 				const originalSender = R.isNil(tc.forwardFrom)
 					? null
-					: makeDisplayName(
-						ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername,
-						tc.forwardFrom
-					);
+					: makeDisplayName(ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername, tc.forwardFrom);
 				// Get the name of the replied-to user, if this is a reply
 				const repliedToName = R.isNil(tc.replyTo)
 					? null
 					: await R.ifElse(
-						R.prop("isReplyToTediCross") as any,
-						R.compose(
-							(username: string) =>
-								makeDiscordMention(
-									username,
-									ctx.TediCross.dcBot,
-									bridge
-								),
-							R.prop("dcUsername") as any
-						),
-						R.compose(
-							R.partial(makeDisplayName, [
-								ctx.TediCross.settings.telegram
-									.useFirstNameInsteadOfUsername
-							]),
-							//@ts-ignore
-							R.prop("originalFrom")
-						)
-					)(tc.replyTo);
+							R.prop("isReplyToTediCross") as any,
+							R.compose(
+								(username: string) => makeDiscordMention(username, ctx.TediCross.dcBot, bridge),
+								R.prop("dcUsername") as any
+							),
+							R.compose(
+								R.partial(makeDisplayName, [
+									ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername
+								]),
+								//@ts-ignore
+								R.prop("originalFrom")
+							)
+					  )(tc.replyTo);
 				// Build the header
 				let header = "";
 				if (bridge.telegram.sendUsernames) {
@@ -592,12 +580,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 
 			// Make the text to send
 			const text = await (async () => {
-				let text = await handleEntities(
-					tc.text.raw,
-					tc.text.entities,
-					ctx.TediCross.dcBot,
-					bridge
-				);
+				let text = await handleEntities(tc.text.raw, tc.text.entities, ctx.TediCross.dcBot, bridge);
 
 				if (!R.isNil(replyQuote)) {
 					text = replyQuote + "\n" + text;

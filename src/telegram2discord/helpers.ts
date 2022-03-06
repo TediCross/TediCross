@@ -24,4 +24,3 @@ export const ignoreAlreadyDeletedError = R.ifElse(
  * @returns Promise resolving when the message is deleted
  */
 export const deleteMessage = R.curry((ctx, { chat, message_id }) => ctx.telegram.deleteMessage(chat.id, message_id));
-

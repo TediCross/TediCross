@@ -36,22 +36,15 @@ export function handleEmbed(embed: MessageEmbed, senderName: string) {
 	}
 
 	// Handle the fields
-	embed.fields.forEach((field) => {
-		text += (
-			`\n<b>${field.name}</b>\n` +
-			md2html(field.value) + "\n"
-		);
+	embed.fields.forEach(field => {
+		text += `\n<b>${field.name}</b>\n` + md2html(field.value) + "\n";
 	});
 
 	// Handle the author part
 	if (embed.author !== null) {
-		text += (
-			"\n<b>Author</b>\n" +
-			embed.author.name + "\n"
-		);
+		text += "\n<b>Author</b>\n" + embed.author.name + "\n";
 	}
 
 	// All done!
 	return text;
 }
-

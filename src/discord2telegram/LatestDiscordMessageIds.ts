@@ -81,7 +81,7 @@ export class LatestDiscordMessageIds {
 		// Write it to file when previous writes have completed
 		this._finishedWriting = this._finishedWriting
 			.then(() => promisify(fs.writeFile)(this._filepath, JSON.stringify(this._map, null, "\t")))
-			.catch((err) => this._logger.error("Writing last Discord message ID to file failed!", err));
+			.catch(err => this._logger.error("Writing last Discord message ID to file failed!", err));
 	}
 
 	/**
@@ -95,4 +95,3 @@ export class LatestDiscordMessageIds {
 		return this._map[bridge.name] === undefined ? null : this._map[bridge.name];
 	}
 }
-

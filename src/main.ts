@@ -44,14 +44,12 @@ const args = yargs
 		default: path.join(__dirname, "..", "data"),
 		describe: "Specify the path to the directory to store data in",
 		type: "string"
-	}).argv as { config: string, dataDir: string };
-
+	}).argv as { config: string; dataDir: string };
 
 // Get the settings
 const settingsPath = args.config;
 const rawSettingsObj = jsYaml.load(fs.readFileSync(settingsPath, "utf-8"));
 const settings = Settings.fromObj(rawSettingsObj);
-
 
 // Initialize logger
 const logger = new Logger(settings.debug);
