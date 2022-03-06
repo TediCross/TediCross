@@ -157,7 +157,7 @@ export const leftChatMember = createMessageHandler((ctx: TediCrossContext, bridg
  * @param ctx.tediCross	The TediCross context of the message
  * @param ctx.TediCross	The global TediCross context of the message
  */
-export const relayMessage = (ctx: TediCrossContext) =>
+export const relayMessage = (ctx: TediCrossContext, next: () => void) =>
 	R.forEach(async (prepared: any) => {
 		try {
 			// Discord doesn't handle messages longer than 2000 characters. Split it up into chunks that big

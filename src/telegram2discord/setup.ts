@@ -1,7 +1,7 @@
 import R from "ramda";
 import middlewares from "./middlewares";
 import { sleep } from "../sleep";
-import { Context, Middleware, MiddlewareFn, Telegraf } from "telegraf";
+import { Context, Middleware, Telegraf } from "telegraf";
 import { Logger } from "../Logger";
 import { Client } from "discord.js";
 import { MessageMap } from "../MessageMap";
@@ -61,6 +61,7 @@ export interface TediTelegraf extends Telegraf {
 		...fns: NonemptyReadonlyArray<Middleware<MatchedContext<TediCrossContext, T>>>
 	): this;
 	context: TediCrossContext;
+	ready?: Promise<void>;
 }
 
 /**
@@ -129,10 +130,10 @@ export function setup(
 
 			// Apply endwares
 			tgBot.on(["edited_message", "edited_channel_post"], handleEdits);
-			tgBot.use(relayMessage as any);
+			tgBot.use(relayMessage as (ctx: TediCrossContext<Update>, next: () => void) => void);
 
 			// Don't crash on errors
-			tgBot.catch((err: any) => {
+			tgBot.catch((err: unknown) => {
 				// The docs says timeout errors should always be rethrown
 				if (err instanceof TimeoutError) {
 					throw err;
