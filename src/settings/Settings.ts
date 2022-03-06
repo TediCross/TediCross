@@ -4,6 +4,7 @@ import { Bridge } from "../bridgestuff/Bridge";
 import { TelegramSettings } from "./TelegramSettings";
 import { DiscordSettings } from "./DiscordSettings";
 import jsYaml from "js-yaml";
+import { PartialDeep } from "type-fest";
 
 interface SettingProperties {
 	telegram: TelegramSettings;
@@ -61,7 +62,7 @@ export class Settings {
 	 */
 	toFile(filepath: string) {
 		// The raw object is not suitable for YAML-ification. A few `toJSON()` methods will not be triggered that way. Go via JSON
-		const objectToSave = JSON.parse(JSON.stringify(this));
+		const objectToSave: typeof this = JSON.parse(JSON.stringify(this)) as typeof this;
 
 		// Convert the object to quite human-readable YAML and write it to the file
 		//TODO replaced safeDump with dump. The old method is deprecated. Check if it still works
@@ -77,7 +78,7 @@ export class Settings {
 	 */
 	toObj(): object {
 		// Hacky way to turn this into a plain object...
-		return JSON.parse(JSON.stringify(this));
+		return JSON.parse(JSON.stringify(this)) as object;
 	}
 
 	/**
@@ -104,7 +105,7 @@ export class Settings {
 		}
 
 		// Check that the bridges are valid
-		settings.bridges.forEach(Bridge.validate);
+		settings.bridges.forEach(bridge => Bridge.validate(bridge));
 	}
 
 	/**
@@ -114,8 +115,8 @@ export class Settings {
 	 *
 	 * @returns A clone of the provided object, with default values on it
 	 */
-	static applyDefaults(rawSettings: SettingProperties) {
-		return R.mergeDeepLeft(rawSettings, Settings.DEFAULTS);
+	static applyDefaults(rawSettings: PartialDeep<SettingProperties>): SettingProperties {
+		return R.mergeDeepLeft(rawSettings, Settings.DEFAULTS) as SettingProperties;
 	}
 
 	/**
@@ -125,14 +126,14 @@ export class Settings {
 	 *
 	 * @returns A new object on the newest format
 	 */
-	static migrate(rawSettings: SettingProperties): object {
+	static migrate(rawSettings: SettingProperties): SettingProperties {
 		// Make a clone, to not operate directly on the provided object
 		const settings = R.clone(rawSettings);
 
 		// 2019-11-08: Turn `ignoreCommands` into `relayCommands`, as `ignoreCommands` accidently did the opposite of what it was supposed to do
 		for (const bridge of settings.bridges) {
 			if (R.isNil(bridge.telegram.relayCommands)) {
-				bridge.telegram.relayCommands = bridge.telegram.ignoreCommands!;
+				bridge.telegram.relayCommands = bridge.telegram.ignoreCommands || false;
 			}
 			delete bridge.telegram.ignoreCommands;
 		}
@@ -144,7 +145,6 @@ export class Settings {
 
 		// 2020-02-09: Removed the `displayTelegramReplies` option from Discord
 		if (!settings.discord.displayTelegramReplies) {
-			//@ts-ignore
 			delete settings.discord.displayTelegramReplies;
 		}
 
@@ -166,13 +166,18 @@ export class Settings {
 	 *
 	 * @returns The settings object
 	 */
-	static fromObj(obj: any): Settings {
-		return R.compose<any, any>(
+	static fromObj(obj: PartialDeep<SettingProperties>): Settings {
+		/* eslint-disable */
+		return R.compose<
+			PartialDeep<SettingProperties>[],
+			SettingProperties,
+			SettingProperties,
+			Settings
+		>(
 			R.construct(Settings),
-			//@ts-ignore
 			Settings.migrate,
 			Settings.applyDefaults
-		)(obj) as any as Settings;
+		)(obj);
 	}
 
 	/** Default settings */

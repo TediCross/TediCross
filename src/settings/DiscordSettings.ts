@@ -12,9 +12,10 @@ interface Settings {
 
 /** Settings for the Discord bot */
 export class DiscordSettings {
-	displayTelegramReplies(displayTelegramReplies: any) {
-		throw new Error("Method not implemented.");
-	}
+	// eslint-disable-next-line class-methods-use-this
+	displayTelegramReplies?: (displayTelegramReplies: unknown) => unknown = () => {
+		throw new Error("Method not implemented");
+	};
 	private _token: string;
 	useNickname: boolean;
 	replyLength: number;
