@@ -19,7 +19,8 @@ class TelegramSettings {
 	 *
 	 * @param {Object} settings	The raw settings object to use
 	 * @param {String} settings.token	The bot token to use. Set to {@link TelegramSettings#GET_TOKEN_FROM_ENVIRONMENT} to read the token from the TELEGRAM_BOT_TOKEN environment variable
-	 * @param {String} settings.whitelistedSender	The sender whose messages will be relayed. Leave empty to relay all messages
+	 * @param {String} settings.whitelistedSender	If populated, relays only the messages coming from the defined sender
+	 * @param {Array} blacklistedSenders	Do not relay the messages coming from the defined senders
 	 * @param {Boolean} settings.useFirstNameInsteadOfUsername	Whether or not to use a Telegram user's first name instead of the username when displaying the name in the Discord messages
 	 * @param {Boolean} settings.colonAfterSenderName	Whether or not to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name`
 	 * @param {Boolean} settings.skipOldMessages	Whether or not to skip through all previous messages cached from the telegram-side and start processing new messages ONLY
@@ -45,8 +46,14 @@ class TelegramSettings {
 		 *
 		 * @type {String}
 		 */
-		this.whitelistedSender = settings.whitelistedSender;
+		 this.whitelistedSender = settings.whitelistedSender;
 
+		/**
+		 * Do not relay the messages coming from the defined senders
+		 *
+		 * @type {Array}
+		 */
+		 this.blacklistedSenders = settings.blacklistedSenders;
 
 		/**
 		 * Whether or not to use a Telegram user's first name instead of the username when displaying the name in the Discord messages
@@ -126,10 +133,14 @@ class TelegramSettings {
 			throw new Error("`settings.token` must be a string");
 		}
 
-
 		// Check that the whitelistedSender is a string
 		if (typeof settings.whitelistedSender !== "string") {
 			throw new Error("`settings.whitelistedSender` must be a string");
+		}
+
+		// Check that the blacklistedSenders is an object
+		if (typeof settings.blacklistedSenders !== "object") {
+			throw new Error("`settings.blacklistedSenders` must be an object");
 		}
 
 		// Check that useFirstNameInsteadOfUsername is a boolean

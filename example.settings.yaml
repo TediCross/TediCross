@@ -1,13 +1,15 @@
 telegram:
   token: TELEGRAM_BOT_TOKEN_HERE      # Telegram bot tokens look like this: 113031530:AAH_4c5Gt9gsVu82OVNjUV7poU7PodYiNsA
-  whitelistedSender: '' # Relay only the messages coming from the defined sender. Leave empty to relay from all senders. Note: The values are affected by the useFirstNameInsteadOfUsername setting
+  whitelistedSender: '' # If populated, relays only the messages coming from the defined sender. Note: The values are affected by the useFirstNameInsteadOfUsername setting
+  blacklistedSenders: [ '' ] # Do not relay the messages coming from the defined senders. The values are affected by the useFirstNameInsteadOfUsername setting
   useFirstNameInsteadOfUsername: false
   colonAfterSenderName: false
   skipOldMessages: true
   sendEmojiWithStickers: true
 discord:
   token: DISCORD_BOT_TOKEN_HERE       # Discord bot tokens look like this: MjI3MDA1NzIvOBQ2MzAzMiMz.DRf-aw.N0MVYtDxXYPSQew4g2TPqvQve2c
-  whitelistedSender: '' # Relay only the messages coming from the defined sender ID. Leave empty to relay from all senders
+  whitelistedSender: '' # If populated, relays only the messages coming from the defined user ID
+  blacklistedSenders: [ '' ] # Do not relay the messages coming from the defined senders
   useNickname: false
   skipOldMessages: true
   replyLength: 100

@@ -150,6 +150,12 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 					return;
 				}
 
+				// Don't do anything with messages coming from blacklisted senders
+				if (settings.discord.blacklistedSenders &&
+					settings.discord.blacklistedSenders.includes(message.author.id)) {
+					return;
+				}
+
 				// This is now the latest message for this bridge
 				latestDiscordMessageIds.setLatest(message.id, bridge);
 
@@ -267,6 +273,12 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 			newMessage.author.id !== settings.discord.whitelistedSender) {
 			return;
 		}
+
+		// Don't do anything with messages coming from blacklisted senders
+		if (settings.discord.blacklistedSenders &&
+			settings.discord.blacklistedSenders.includes(message.author.id)) {
+			return;
+		}
 		
 		// Pass it on to the bridges
 		bridgeMap.fromDiscordChannelId(newMessage.channel.id).forEach(async bridge => {
@@ -312,11 +324,18 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 		// Check if it is a relayed message
 		const isFromTelegram = message.author.id === dcBot.user.id;
 
-		// Don't do anything with messages coming from senders that are not whitelisted, nor are they the bot's own messages
-		if (settings.discord.whitelistedSender &&
-			message.author.id !== settings.discord.whitelistedSender &&
-			!isFromTelegram) {
-			return;
+		if (!isFromTelegram) {
+			// Don't do anything with messages coming from senders that are not whitelisted, nor are they the bot's own messages
+			if (settings.discord.whitelistedSender &&
+				message.author.id !== settings.discord.whitelistedSender) {
+				return;
+			}
+
+			// Don't do anything with messages coming from blacklisted senders
+			if (settings.discord.blacklistedSenders &&
+				settings.discord.blacklistedSenders.includes(message.author.id)) {
+				return;
+			}
 		}
 
 		// Hand it on to the bridges

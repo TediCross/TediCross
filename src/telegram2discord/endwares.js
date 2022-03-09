@@ -141,8 +141,10 @@ const leftChatMember = createMessageHandler((ctx, bridge) => {
 const relayMessage = ctx =>
 	R.forEach(async prepared => {
 		try {
-			if (!ctx.TediCross.settings.telegram.whitelistedSender ||
-				prepared.senderName == ctx.TediCross.settings.telegram.whitelistedSender)
+			if ((!ctx.TediCross.settings.telegram.whitelistedSender ||
+				prepared.senderName == ctx.TediCross.settings.telegram.whitelistedSender) &&
+				(!ctx.TediCross.settings.telegram.blacklistedSenders ||
+				!ctx.TediCross.settings.telegram.blacklistedSenders.includes(prepared.senderName)))
 			{
 				// Discord doesn't handle messages longer than 2000 characters. Split it up into chunks that big
 				const messageText = prepared.header + "\n" + prepared.text;

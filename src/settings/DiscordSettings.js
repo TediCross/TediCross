@@ -19,7 +19,8 @@ class DiscordSettings {
 	 *
 	 * @param {Object} settings	The raw settings object to use
 	 * @param {String} token	The bot token to use. Set to {@link DiscordSettings#GET_TOKEN_FROM_ENVIRONMENT} to read the token from the DISCORD_BOT_TOKEN environment variable
-	 * @param {Boolean} whitelistedSender	Whether or not to skip through all previous messages sent on Discord since last bot shutdown and start processing new messages ONLY
+	 * @param {String} whitelistedSender	If populated, relays only the messages coming from the defined user ID
+	 * @param {Array} blacklistedSenders	Do not relay the messages coming from the defined senders
 	 * @param {Boolean} skipOldMessages	The sender whose messages will be relayed. Leave empty to relay all messages
 	 *
 	 * @throws {Error}	If the settings object does not validate
@@ -38,13 +39,18 @@ class DiscordSettings {
 		this._token = settings.token;
 
 		/**
-		 * The sender whose messages will be relayed. Leave empty to relay all messages
+		 * If populated, relays only the messages coming from the defined user ID
 		 *
 		 * @type {String}
-		 *
-		 * @private
 		 */
 		 this.whitelistedSender = settings.whitelistedSender;
+
+		 /**
+		  * Do not relay the messages coming from the defined senders
+		  *
+		  * @type {Array}
+		  */
+		  this.blacklistedSenders = settings.blacklistedSenders;
 
 		/**
 		 * Whether or not to skip through all previous messages sent on Discord since last bot shutdown and start processing new messages ONLY
@@ -129,6 +135,11 @@ class DiscordSettings {
 			throw new Error("`settings.whitelistedSender` must be a string");
 		}
 
+		// Check that the blacklistedSenders is an object
+		if (typeof settings.blacklistedSenders !== "object") {
+			throw new Error("`settings.blacklistedSenders` must be an object");
+		}
+
 		// Check that skipOldMessages is a boolean
 		if (Boolean(settings.skipOldMessages) !== settings.skipOldMessages) {
 			throw new Error("`settings.skipOldMessages` must be a boolean");
@@ -168,6 +179,7 @@ class DiscordSettings {
 		return {
 			token: DiscordSettings.GET_TOKEN_FROM_ENVIRONMENT,
 			whitelistedSender: '',
+			blacklistedSenders: [],
 			skipOldMessages: true,
 			useNickname: false
 		};
