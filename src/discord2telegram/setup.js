@@ -145,7 +145,7 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 				}
 
 				// Don't do anything with messages coming from senders that are not whitelisted
-				if (!settings.discord.whitelistedSender ||
+				if (settings.discord.whitelistedSender &&
 				    message.author.id !== settings.discord.whitelistedSender) {
 					return;
 				}
