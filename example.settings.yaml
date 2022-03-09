@@ -6,8 +6,9 @@ telegram:
   skipOldMessages: true
   sendEmojiWithStickers: true
 discord:
-  useNickname: false
   token: DISCORD_BOT_TOKEN_HERE       # Discord bot tokens look like this: MjI3MDA1NzIvOBQ2MzAzMiMz.DRf-aw.N0MVYtDxXYPSQew4g2TPqvQve2c
+  whitelistedSender: '' # Relay only the messages coming from the defined sender ID. Leave empty to relay from all senders
+  useNickname: false
   skipOldMessages: true
   replyLength: 100
   maxReplyLines: 2

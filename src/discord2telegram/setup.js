@@ -135,12 +135,18 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 			)
 		)(message);
 
-		// Check if the message is from the correct chat
+		// Check if the message is from the correct chat and sender
 		const bridges = bridgeMap.fromDiscordChannelId(message.channel.id);
 		if (!R.isEmpty(bridges)) {
 			bridges.forEach(async bridge => {
 				// Ignore it if this is a telegram-to-discord bridge
 				if (bridge.direction === Bridge.DIRECTION_TELEGRAM_TO_DISCORD) {
+					return;
+				}
+
+				// Don't do anything with messages coming from senders that are not whitelisted
+				if (!settings.discord.whitelistedSender ||
+				    message.author.id !== settings.discord.whitelistedSender) {
 					return;
 				}
 
@@ -256,6 +262,12 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 			return;
 		}
 
+		// Don't do anything with messages coming from senders that are not whitelisted
+		if (settings.discord.whitelistedSender &&
+			newMessage.author.id !== settings.discord.whitelistedSender) {
+			return;
+		}
+		
 		// Pass it on to the bridges
 		bridgeMap.fromDiscordChannelId(newMessage.channel.id).forEach(async bridge => {
 			try {
@@ -299,6 +311,13 @@ function setup(logger, dcBot, tgBot, messageMap, bridgeMap, settings, datadirPat
 	function onMessageDelete(message) {
 		// Check if it is a relayed message
 		const isFromTelegram = message.author.id === dcBot.user.id;
+
+		// Don't do anything with messages coming from senders that are not whitelisted, nor are they the bot's own messages
+		if (settings.discord.whitelistedSender &&
+			message.author.id !== settings.discord.whitelistedSender &&
+			!isFromTelegram) {
+			return;
+		}
 
 		// Hand it on to the bridges
 		bridgeMap.fromDiscordChannelId(message.channel.id).forEach(async bridge => {

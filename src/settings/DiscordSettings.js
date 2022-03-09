@@ -19,7 +19,8 @@ class DiscordSettings {
 	 *
 	 * @param {Object} settings	The raw settings object to use
 	 * @param {String} token	The bot token to use. Set to {@link DiscordSettings#GET_TOKEN_FROM_ENVIRONMENT} to read the token from the DISCORD_BOT_TOKEN environment variable
-	 * @param {Boolean} skipOldMessages	Whether or not to skip through all previous messages sent on Discord since last bot shutdown and start processing new messages ONLY
+	 * @param {Boolean} whitelistedSender	Whether or not to skip through all previous messages sent on Discord since last bot shutdown and start processing new messages ONLY
+	 * @param {Boolean} skipOldMessages	The sender whose messages will be relayed. Leave empty to relay all messages
 	 *
 	 * @throws {Error}	If the settings object does not validate
 	 */
@@ -35,6 +36,15 @@ class DiscordSettings {
 		 * @private
 		 */
 		this._token = settings.token;
+
+		/**
+		 * The sender whose messages will be relayed. Leave empty to relay all messages
+		 *
+		 * @type {String}
+		 *
+		 * @private
+		 */
+		 this.whitelistedSender = settings.whitelistedSender;
 
 		/**
 		 * Whether or not to skip through all previous messages sent on Discord since last bot shutdown and start processing new messages ONLY
@@ -114,6 +124,11 @@ class DiscordSettings {
 			throw new Error("`settings.token` must be a string");
 		}
 
+		// Check that the whitelistedSender is a string
+		if (typeof settings.whitelistedSender !== "string") {
+			throw new Error("`settings.whitelistedSender` must be a string");
+		}
+
 		// Check that skipOldMessages is a boolean
 		if (Boolean(settings.skipOldMessages) !== settings.skipOldMessages) {
 			throw new Error("`settings.skipOldMessages` must be a boolean");
@@ -152,6 +167,7 @@ class DiscordSettings {
 	static get DEFAULTS() {
 		return {
 			token: DiscordSettings.GET_TOKEN_FROM_ENVIRONMENT,
+			whitelistedSender: '',
 			skipOldMessages: true,
 			useNickname: false
 		};
