@@ -49,6 +49,9 @@ function makeJoinLeaveFunc(logger, verb, bridgeMap, tgBot) {
 			// Ignore the T2D bridges
 			.filter(bridge => bridge.direction !== Bridge.DIRECTION_TELEGRAM_TO_DISCORD)
 			.forEach(async bridge => {
+				// TODO: Relay only for whitelisted users (if set)
+				// TODO: Don't rely blacklisted users (if set)
+				
 				// Make the text to send
 				const text = `<b>${member.displayName} (@${member.user.username})</b> ${verb} the Discord side of the chat`;
 
