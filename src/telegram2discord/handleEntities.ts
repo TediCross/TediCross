@@ -9,8 +9,7 @@ import { fetchDiscordChannel } from "../fetchDiscordChannel";
  *********************/
 
 //@ts-ignore
-const findFn = (prop: string, regexp: RegExp) =>
-	R.compose<any, any>(R.not, R.isEmpty, R.match(regexp), R.prop(prop)) as unknown as () => boolean;
+const findFn = (prop: string, regexp: RegExp) => R.compose(R.not, R.isEmpty, R.match(regexp), R.prop(prop));
 
 /*****************************
  * Define the entity handler *
