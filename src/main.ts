@@ -20,8 +20,8 @@ import { setup as telegramSetup, TediTelegraf } from "./telegram2discord/setup";
 import { Client as DiscordClient, Intents } from "discord.js";
 import { setup as discordSetup } from "./discord2telegram/setup";
 
-if (!semver.gte(process.version, "14.9.0")) {
-	console.log(`TediCross requires at least nodejs 14.9. Your version is ${process.version}`);
+if (!semver.gte(process.version, "16.0.0")) {
+	console.log(`TediCross requires at least nodejs 16.0. Your version is ${process.version}`);
 	process.exit();
 }
 
