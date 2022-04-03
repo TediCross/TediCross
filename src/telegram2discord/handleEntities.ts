@@ -9,7 +9,8 @@ import { fetchDiscordChannel } from "../fetchDiscordChannel";
  *********************/
 
 //@ts-ignore
-const findFn = (prop: string, regexp: RegExp) => R.compose<any, any>(R.not, R.isEmpty, R.match(regexp), R.prop(prop)) as unknown as () => boolean;
+const findFn = (prop: string, regexp: RegExp) =>
+	R.compose<any, any>(R.not, R.isEmpty, R.match(regexp), R.prop(prop)) as unknown as () => boolean;
 
 /*****************************
  * Define the entity handler *
@@ -123,9 +124,7 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 					// Find out if this is a channel on the bridged Discord server
 					const channel = await fetchDiscordChannel(dcBot, bridge);
 					// XXX Could not find a way to actually search for channels. Looking in the cache will mostly work, but I don't think it is guaranteed
-					const mentionedChannel = channel.guild.channels.cache.find(
-						findFn("name", channelName)
-					);
+					const mentionedChannel = channel.guild.channels.cache.find(findFn("name", channelName));
 
 					// Make Discord recognize it as a channel mention
 					if (!R.isNil(mentionedChannel)) {
@@ -173,4 +172,3 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 	// Return the converted string
 	return substitutedText.join("");
 }
-

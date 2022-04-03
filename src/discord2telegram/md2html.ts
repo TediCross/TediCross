@@ -121,4 +121,3 @@ export function md2html(text: string) {
 
 	return html;
 }
-

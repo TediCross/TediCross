@@ -6,14 +6,14 @@ interface Settings {
 	skipOldMessages: boolean;
 }
 
-
 /*****************************
  * The DiscordSettings class *
  *****************************/
 
 /** Settings for the Discord bot */
 export class DiscordSettings {
-	displayTelegramReplies(displayTelegramReplies: any) {
+	// eslint-disable-next-line
+	displayTelegramReplies(_displayTelegramReplies: any) {
 		throw new Error("Method not implemented.");
 	}
 	private _token: string;
@@ -124,4 +124,3 @@ export class DiscordSettings {
 		};
 	}
 }
-

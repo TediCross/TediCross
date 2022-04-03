@@ -8,7 +8,6 @@ import { createFromObjFromUser } from "./From";
 import { MessageEditOptions } from "discord.js";
 import { Message, User } from "telegraf/typings/core/types/typegram";
 
-
 export interface TediCrossContext extends Context {
 	TediCross: any;
 	tediCross: {
@@ -98,13 +97,9 @@ export const newChatMembers = createMessageHandler((ctx: TediCrossContext, bridg
 
 		// Pass it on
 		ctx.TediCross.dcBot.ready
-			.then(() =>
-				fetchDiscordChannel(ctx.TediCross.dcBot, bridge).then(channel => channel.send(text))
-			)
+			.then(() => fetchDiscordChannel(ctx.TediCross.dcBot, bridge).then(channel => channel.send(text)))
 			.catch((err: any) =>
-				console.error(
-					`Could not tell Discord about a new chat member on bridge ${bridge.name}: ${err.message}`
-				)
+				console.error(`Could not tell Discord about a new chat member on bridge ${bridge.name}: ${err.message}`)
 			);
 	})(ctx.tediCross.message.new_chat_members)
 );
@@ -190,9 +185,7 @@ export const relayMessage = (ctx: TediCrossContext) =>
 				dcMessage?.id
 			);
 		} catch (err: any) {
-			console.error(
-				`Could not relay a message to Discord on bridge ${prepared.bridge.name}: ${err.message}`
-			);
+			console.error(`Could not relay a message to Discord on bridge ${prepared.bridge.name}: ${err.message}`);
 		}
 	})(ctx.tediCross.prepared);
 
@@ -275,4 +268,3 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 		await edit(ctx, bridge);
 	}
 });
-

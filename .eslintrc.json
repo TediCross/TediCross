@@ -5,6 +5,7 @@
 		"jest": true,
 		"node": true
 	},
+	"parser": "@typescript-eslint/parser",
 	"extends": [
 		"eslint:recommended",
 		"plugin:prettier/recommended"
