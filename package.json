@@ -1,6 +1,6 @@
 {
   "name": "tedicross",
-  "version": "0.10.8",
+  "version": "0.11.0",
   "description": "Bridging Telegram and Discord",
   "license": "MIT",
   "repository": {
@@ -13,7 +13,7 @@
     "start": "node dist/main.js",
     "start:dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/main.ts -i data/",
     "lint": "eslint src/**/*.ts",
-	"clean": "rimraf dist/"
+    "clean": "rimraf dist/"
   },
   "dependencies": {
     "discord.js": "^13.3.1",
