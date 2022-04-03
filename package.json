@@ -16,6 +16,13 @@
     "clean": "rimraf dist/"
   },
   "dependencies": {
+    "@types/js-yaml": "^4.0.5",
+    "@types/mime": "^2.0.3",
+    "@types/ramda": "^0.27.64",
+    "@types/semver": "^7.3.9",
+    "@types/yargs": "^17.0.8",
+    "@typescript-eslint/eslint-plugin": "^5.13.0",
+    "@typescript-eslint/parser": "^5.13.0",
     "discord.js": "^13.3.1",
     "js-yaml": "^4.1.0",
     "mime": "^3.0.0",
@@ -28,13 +35,6 @@
     "yargs": "^17.3.0"
   },
   "devDependencies": {
-    "@types/js-yaml": "^4.0.5",
-    "@types/mime": "^2.0.3",
-    "@types/ramda": "^0.27.64",
-    "@types/semver": "^7.3.9",
-    "@types/yargs": "^17.0.8",
-    "@typescript-eslint/eslint-plugin": "^5.13.0",
-    "@typescript-eslint/parser": "^5.13.0",
     "eslint": "^8.5.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
