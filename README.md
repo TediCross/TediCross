@@ -192,6 +192,9 @@ This has been tried, and it did indeed make the messages much prettier. The bot 
 
 No
 
+### Why is TediCross sending a link to this repository to my chat (Advertizing? Spam?)?
+
+TediCross will send a link to this documentation to every chat it is in which is not configured to bridge correctly. Please use this documentation to configure your bot for bridging and the behavior will stop.
 
 Other questions?
 ----------------
