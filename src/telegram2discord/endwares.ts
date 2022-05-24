@@ -247,7 +247,14 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 				const messageText = R.slice(0, 2000, prepared.header + "\n" + prepared.text);
 
 				// Send them in serial, with the attachment first, if there is one
-				await dcMessage.edit({ content: messageText, attachment: prepared.attachment } as MessageEditOptions);
+				if (typeof dcMessage.edit !== "function") {
+					console.error("dcMessage.edit is not a function");
+				} else {
+					await dcMessage.edit({
+						content: messageText,
+						attachment: prepared.attachment
+					} as MessageEditOptions);
+				}
 			})(ctx.tediCross.prepared);
 		} catch (err: any) {
 			// Log it
