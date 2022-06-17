@@ -36,7 +36,7 @@ export class Settings {
 	 * @param settings.discord Settings for the Discord bot. See the constructor of {@link DiscordSettings}
 	 * @param settings.bridges Settings for the bridges. See the constructor of {@link Bridge}
 	 * @param settings.debug Whether or not to print debug messages
-	 * @param settings.messageTimeout Amount of time in miliseconds expire message map messages
+	 * @param settings.messageTimeout Amount of time in miliseconds to expire messages in MessageMap
 	 *
 	 * @throws If the raw settings object does not validate
 	 */
@@ -53,7 +53,7 @@ export class Settings {
 		/** Whether or not to print debug messages */
 		this.debug = settings.debug;
 
-		/** Amount of time to expire message map messages */
+		/** Amount of time in miliseconds to expire messages in MessageMap */
 		this.messageTimeout = settings.messageTimeout;
 
 		/** The config for the bridges */
