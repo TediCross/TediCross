@@ -9,6 +9,7 @@ interface SettingProperties {
 	telegram: TelegramSettings;
 	discord: DiscordSettings;
 	debug: boolean;
+	messageTimeout: number;
 	bridges: Bridge[];
 	token: string;
 }
@@ -22,6 +23,7 @@ interface SettingProperties {
  */
 export class Settings {
 	debug: boolean;
+	messageTimeout: number;
 	discord: DiscordSettings;
 	telegram: TelegramSettings;
 	bridges: Bridge[];
@@ -34,6 +36,7 @@ export class Settings {
 	 * @param settings.discord Settings for the Discord bot. See the constructor of {@link DiscordSettings}
 	 * @param settings.bridges Settings for the bridges. See the constructor of {@link Bridge}
 	 * @param settings.debug Whether or not to print debug messages
+	 * @param settings.messageTimeout Amount of time in miliseconds expire message map messages
 	 *
 	 * @throws If the raw settings object does not validate
 	 */
@@ -49,6 +52,9 @@ export class Settings {
 
 		/** Whether or not to print debug messages */
 		this.debug = settings.debug;
+
+		/** Amount of time to expire message map messages */
+		this.messageTimeout = settings.messageTimeout;
 
 		/** The config for the bridges */
 		this.bridges = settings.bridges;
@@ -181,6 +187,7 @@ export class Settings {
 			telegram: TelegramSettings.DEFAULTS,
 			discord: DiscordSettings.DEFAULTS,
 			bridges: [],
+			messageTimeout: 86400000,
 			debug: false
 		} as any;
 	}
