@@ -109,6 +109,11 @@ export class Settings {
 			throw new Error("`settings.bridges` must be an array");
 		}
 
+		// Check that messageTimeout is a number
+		if(isNaN(settings.messageTimeout)) {
+			throw new Error("`settings.messageTimeout` must be a number");
+		}
+
 		// Check that the bridges are valid
 		settings.bridges.forEach(Bridge.validate);
 	}
