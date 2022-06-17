@@ -27,4 +27,4 @@ bridges:
       sendUsernames: true
       crossDeleteOnTelegram: true
 debug: false
-timeout: 86400000
+messageTimeout: 86400000
