@@ -96,7 +96,7 @@ const tgBot = new Telegraf(settings.telegram.token);
 const dcBot = new DiscordClient({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 
 // Create a message ID map
-const messageMap = new MessageMap(settings.messageTimeout);
+const messageMap = new MessageMap(settings.messageTimeoutAmount, settings.messageTimeoutUnit);
 
 // Create the bridge map
 const bridgeMap = new BridgeMap(settings.bridges.map((bridgeSettings: BridgeProperties) => new Bridge(bridgeSettings)));

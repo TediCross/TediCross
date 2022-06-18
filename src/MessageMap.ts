@@ -6,12 +6,14 @@ type Direction = "d2t" | "t2d";
 /** Handles mapping between message IDs in discord and telegram, for message editing purposes */
 export class MessageMap {
 	private _map: Map<Bridge, any>;
-	private _messageTimeout: number;
+	private _messageTimeoutAmount: number;
+	private _messageTimeoutUnit: moment.unitOfTime.DurationConstructor;
 
-	constructor(messageTimeout: number) {
+	constructor(messageTimeoutAmount: number, messageTimeoutUnit: string) {
 		/** The map itself */
 		this._map = new Map();
-		this._messageTimeout = messageTimeout;
+		this._messageTimeoutAmount = messageTimeoutAmount;
+		this._messageTimeoutUnit = messageTimeoutUnit as moment.unitOfTime.DurationConstructor;
 	}
 
 	/**
@@ -44,7 +46,7 @@ export class MessageMap {
 		// Start a timeout removing it again after 24 hours
 		setTimeout(() => {
 			keyToIdsMap.delete(key);
-		}, moment.duration(this._messageTimeout).asMilliseconds());
+		}, moment.duration(this._messageTimeoutAmount, this._messageTimeoutUnit).asMilliseconds());
 	}
 
 	/**

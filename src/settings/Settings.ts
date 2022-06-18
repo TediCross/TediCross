@@ -9,7 +9,8 @@ interface SettingProperties {
 	telegram: TelegramSettings;
 	discord: DiscordSettings;
 	debug: boolean;
-	messageTimeout: number;
+	messageTimeoutAmount: number;
+	messageTimeoutUnit: string;
 	bridges: Bridge[];
 	token: string;
 }
@@ -23,7 +24,8 @@ interface SettingProperties {
  */
 export class Settings {
 	debug: boolean;
-	messageTimeout: number;
+	messageTimeoutAmount: number;
+	messageTimeoutUnit: string;
 	discord: DiscordSettings;
 	telegram: TelegramSettings;
 	bridges: Bridge[];
@@ -36,7 +38,8 @@ export class Settings {
 	 * @param settings.discord Settings for the Discord bot. See the constructor of {@link DiscordSettings}
 	 * @param settings.bridges Settings for the bridges. See the constructor of {@link Bridge}
 	 * @param settings.debug Whether or not to print debug messages
-	 * @param settings.messageTimeout Amount of time in miliseconds to expire messages in MessageMap
+	 * @param settings.messageTimeoutAmount Amount of time in miliseconds expire message map messages
+	 * @param settings.messageTimeoutUnit Format of time as a string (ie: 'hours', 'days', 'weeks', etc)
 	 *
 	 * @throws If the raw settings object does not validate
 	 */
@@ -53,8 +56,11 @@ export class Settings {
 		/** Whether or not to print debug messages */
 		this.debug = settings.debug;
 
-		/** Amount of time in miliseconds to expire messages in MessageMap */
-		this.messageTimeout = settings.messageTimeout;
+		/** Amount of time to expire message map messages */
+		this.messageTimeoutAmount = settings.messageTimeoutAmount;
+
+		/** Format of time as a string (ie: 'hours', 'days', 'weeks', etc) */
+		this.messageTimeoutUnit = settings.messageTimeoutUnit;
 
 		/** The config for the bridges */
 		this.bridges = settings.bridges;
@@ -94,6 +100,12 @@ export class Settings {
 	 * @throws If the object is not suitable. The error message says what the problem is
 	 */
 	static validate(settings: SettingProperties) {
+
+		// An Array of valid units of time
+		const validUnitsOfTime = ["year", "years", "y", "month", "months", "M", "week", "weeks", "w", 
+		"day", "days", "d", "hour", "hours", "h", "minute", "minutes",  "m", "second", "seconds", "s", 
+		"millisecond", "milliseconds", "ms"];
+
 		// Check that the settings are indeed in object form
 		if (!(settings instanceof Object)) {
 			throw new Error("`settings` must be an object");
@@ -104,14 +116,24 @@ export class Settings {
 			throw new Error("`settings.debug` must be a boolean");
 		}
 
+		// Check that messageTimeoutAmount is a number
+		if (isNaN(settings.messageTimeoutAmount)) {
+			throw new Error("`settings.messageTimeoutAmount` must be a number");
+		}
+
+		// Check that messageTimeoutUnit is a string
+		if (!(typeof settings.messageTimeoutUnit === 'string')) {
+			throw new Error("`settings.messageTimeoutUnit` must be a string");
+		}
+
+		// Check that messageTimeoutUnit is also a valid unit of time
+		if ((validUnitsOfTime.find(u => (settings.messageTimeoutUnit === u))) === undefined) {
+			throw new Error("`settings.messageTimeoutUnit` is not a valid unit of time");
+		}
+
 		// Check that `bridges` is an array
 		if (!(settings.bridges instanceof Array)) {
 			throw new Error("`settings.bridges` must be an array");
-		}
-
-		// Check that messageTimeout is a number
-		if(isNaN(settings.messageTimeout)) {
-			throw new Error("`settings.messageTimeout` must be a number");
 		}
 
 		// Check that the bridges are valid
@@ -192,7 +214,8 @@ export class Settings {
 			telegram: TelegramSettings.DEFAULTS,
 			discord: DiscordSettings.DEFAULTS,
 			bridges: [],
-			messageTimeout: 86400000,
+			messageTimeoutAmount: 24,
+			messageTimeoutUnit: 'hours',
 			debug: false
 		} as any;
 	}
