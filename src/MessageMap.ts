@@ -3,6 +3,8 @@ import { Bridge } from "./bridgestuff/Bridge";
 
 type Direction = "d2t" | "t2d";
 
+const MAX_32_BIT = 0x7fffffff;
+
 /** Handles mapping between message IDs in discord and telegram, for message editing purposes */
 export class MessageMap {
 	private _map: Map<Bridge, any>;
@@ -44,9 +46,14 @@ export class MessageMap {
 		toIds.add(toId);
 
 		// Start a timeout removing it again after a configured amount of time. Default is 24 hours
-		setTimeout(() => {
+		safeTimeout(() => {
 			keyToIdsMap.delete(key);
 		}, moment.duration(this._messageTimeoutAmount, this._messageTimeoutUnit).asMilliseconds());
+
+		// Start a timeout removing it again after a configured amount of time. Default is 24 hours
+		// setTimeout(() => {
+		// 	keyToIdsMap.delete(key);
+		// }, moment.duration(this._messageTimeoutAmount, this._messageTimeoutUnit).asMilliseconds());
 	}
 
 	/**
@@ -104,3 +111,13 @@ export class MessageMap {
 	}
 }
 
+// Recursive Timeout to handle delays larger than the maximum value of 32-bit signed integers
+function safeTimeout(onTimeout: Function, delay: number) {
+	setTimeout(() => {
+		if (delay > MAX_32_BIT) {
+			return safeTimeout(onTimeout, delay - MAX_32_BIT);
+		} else {
+			onTimeout();
+		}
+	}, Math.min(MAX_32_BIT, delay));
+}
