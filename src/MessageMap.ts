@@ -9,11 +9,11 @@ export class MessageMap {
 	private _messageTimeoutAmount: number;
 	private _messageTimeoutUnit: moment.unitOfTime.DurationConstructor;
 
-	constructor(messageTimeoutAmount: number, messageTimeoutUnit: string) {
+	constructor(messageTimeoutAmount: number, messageTimeoutUnit: moment.unitOfTime.DurationConstructor) {
 		/** The map itself */
 		this._map = new Map();
 		this._messageTimeoutAmount = messageTimeoutAmount;
-		this._messageTimeoutUnit = messageTimeoutUnit as moment.unitOfTime.DurationConstructor;
+		this._messageTimeoutUnit = messageTimeoutUnit;
 	}
 
 	/**
@@ -43,7 +43,7 @@ export class MessageMap {
 		// Shove the new ID into it
 		toIds.add(toId);
 
-		// Start a timeout removing it again after 24 hours
+		// Start a timeout removing it again after a configured amount of time. Default is 24 hours
 		setTimeout(() => {
 			keyToIdsMap.delete(key);
 		}, moment.duration(this._messageTimeoutAmount, this._messageTimeoutUnit).asMilliseconds());

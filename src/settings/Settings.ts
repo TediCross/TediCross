@@ -4,13 +4,14 @@ import { Bridge } from "../bridgestuff/Bridge";
 import { TelegramSettings } from "./TelegramSettings";
 import { DiscordSettings } from "./DiscordSettings";
 import jsYaml from "js-yaml";
+import moment from "moment";
 
 interface SettingProperties {
 	telegram: TelegramSettings;
 	discord: DiscordSettings;
 	debug: boolean;
 	messageTimeoutAmount: number;
-	messageTimeoutUnit: string;
+	messageTimeoutUnit: moment.unitOfTime.DurationConstructor;
 	bridges: Bridge[];
 	token: string;
 }
@@ -25,7 +26,7 @@ interface SettingProperties {
 export class Settings {
 	debug: boolean;
 	messageTimeoutAmount: number;
-	messageTimeoutUnit: string;
+	messageTimeoutUnit: moment.unitOfTime.DurationConstructor;
 	discord: DiscordSettings;
 	telegram: TelegramSettings;
 	bridges: Bridge[];
@@ -38,7 +39,7 @@ export class Settings {
 	 * @param settings.discord Settings for the Discord bot. See the constructor of {@link DiscordSettings}
 	 * @param settings.bridges Settings for the bridges. See the constructor of {@link Bridge}
 	 * @param settings.debug Whether or not to print debug messages
-	 * @param settings.messageTimeoutAmount Amount of time in miliseconds expire message map messages
+	 * @param settings.messageTimeoutAmount Amount for your unit of time to expire messages in MessageMap
 	 * @param settings.messageTimeoutUnit Format of time as a string (ie: 'hours', 'days', 'weeks', etc)
 	 *
 	 * @throws If the raw settings object does not validate
@@ -56,7 +57,7 @@ export class Settings {
 		/** Whether or not to print debug messages */
 		this.debug = settings.debug;
 
-		/** Amount of time to expire message map messages */
+		/** Amount for your unit of time to expire messages in MessageMap */
 		this.messageTimeoutAmount = settings.messageTimeoutAmount;
 
 		/** Format of time as a string (ie: 'hours', 'days', 'weeks', etc) */
@@ -121,13 +122,8 @@ export class Settings {
 			throw new Error("`settings.messageTimeoutAmount` must be a number");
 		}
 
-		// Check that messageTimeoutUnit is a string
-		if (!(typeof settings.messageTimeoutUnit === 'string')) {
-			throw new Error("`settings.messageTimeoutUnit` must be a string");
-		}
-
 		// Check that messageTimeoutUnit is also a valid unit of time
-		if ((validUnitsOfTime.find(u => (settings.messageTimeoutUnit === u))) === undefined) {
+		if (!validUnitsOfTime.includes(settings.messageTimeoutUnit)) {
 			throw new Error("`settings.messageTimeoutUnit` is not a valid unit of time");
 		}
 
