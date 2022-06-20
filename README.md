@@ -65,6 +65,7 @@ As mentioned in the step by step installation guide, there is a settings file. H
 * `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
 * `messageTimeoutAmount`: Amount for your unit of time to expire messages in MessageMap. Defaults to `24`
 * `messageTimeoutUnit`: Format of time as a string (ie: 'hours', 'days', 'weeks', etc). Defaults to `'hours'`
+* `persistentMessageMap`: Allow MessageMap to persist between reboots by saving it to a file. Defaults to `false`
 * `bridges`: An array containing all your chats and channels. For each object in this array, you should have the following properties:
 	* `name`: A internal name of the chat. Appears in the log
 	* `direction`: Direction of the bridge. "both" for bidirectional, "d2t" for discord-to-telegram, "t2d" for telegram-to-discord

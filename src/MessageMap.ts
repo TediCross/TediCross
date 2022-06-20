@@ -1,5 +1,9 @@
 import moment from "moment";
 import { Bridge } from "./bridgestuff/Bridge";
+import { Settings } from "./settings/Settings";
+import { Logger } from "./Logger";
+import path from "path";
+import { PersistentMessageMap } from "./PersistentMessageMap";
 
 type Direction = "d2t" | "t2d";
 
@@ -7,15 +11,21 @@ const MAX_32_BIT = 0x7fffffff;
 
 /** Handles mapping between message IDs in discord and telegram, for message editing purposes */
 export class MessageMap {
-	private _map: Map<Bridge, any>;
+	private _map: Map<string, any>;
+	private _persistentMap: PersistentMessageMap;
 	private _messageTimeoutAmount: number;
 	private _messageTimeoutUnit: moment.unitOfTime.DurationConstructor;
 
-	constructor(messageTimeoutAmount: number, messageTimeoutUnit: moment.unitOfTime.DurationConstructor) {
+	constructor(settings: Settings, logger: Logger, dataDirPath: string) {
 		/** The map itself */
 		this._map = new Map();
-		this._messageTimeoutAmount = messageTimeoutAmount;
-		this._messageTimeoutUnit = messageTimeoutUnit;
+		this._persistentMap = <PersistentMessageMap>{};
+		this._messageTimeoutAmount = settings.messageTimeoutAmount;
+		this._messageTimeoutUnit = settings.messageTimeoutUnit;
+		if (settings.persistentMessageMap) {
+			this._persistentMap = new PersistentMessageMap(logger, path.join(dataDirPath, "persistentMessageMap.json"));
+			this._map = this._persistentMap.getMap();
+		}
 	}
 
 	/**
@@ -28,10 +38,10 @@ export class MessageMap {
 	 */
 	insert(direction: Direction, bridge: Bridge, fromId: string, toId: string) {
 		// Get/create the entry for the bridge
-		let keyToIdsMap = this._map.get(bridge);
+		let keyToIdsMap = this._map.get(bridge.name);
 		if (keyToIdsMap === undefined) {
 			keyToIdsMap = new Map();
-			this._map.set(bridge, keyToIdsMap);
+			this._map.set(bridge.name, keyToIdsMap);
 		}
 
 		// Generate the key and get the corresponding IDs
@@ -45,10 +55,16 @@ export class MessageMap {
 		// Shove the new ID into it
 		toIds.add(toId);
 
-		// Start a timeout removing it again after a configured amount of time. Default is 24 hours
-		safeTimeout(() => {
-			keyToIdsMap.delete(key);
-		}, moment.duration(this._messageTimeoutAmount, this._messageTimeoutUnit).asMilliseconds());
+		//Check if persistent MessageMap is enabled
+		if (Object.keys(this._persistentMap).length === 0) {
+			// Start a timeout removing it again after a configured amount of time. Default is 24 hours
+			safeTimeout(() => {
+				keyToIdsMap.delete(key);
+			}, moment.duration(this._messageTimeoutAmount, this._messageTimeoutUnit).asMilliseconds());
+		} else {
+			//Update the Persistent MessageMap with the current MessageMap
+			this._persistentMap.updateMap(this._map);
+		}
 
 		// Start a timeout removing it again after a configured amount of time. Default is 24 hours
 		// setTimeout(() => {
@@ -68,7 +84,7 @@ export class MessageMap {
 	getCorresponding(direction: Direction, bridge: Bridge, fromId: string) {
 		try {
 			// Get the key-to-IDs map
-			const keyToIdsMap = this._map.get(bridge);
+			const keyToIdsMap = this._map.get(bridge.name);
 
 			// Create the key
 			const key = `${direction} ${fromId}`;
@@ -89,7 +105,7 @@ export class MessageMap {
 		let fromId = [];
 
 		// Get the mappings for this bridge
-		const keyToIdsMap = this._map.get(bridge);
+		const keyToIdsMap = this._map.get(bridge.name);
 		if (keyToIdsMap !== undefined) {
 			// Find the ID
 			const [key] = [...keyToIdsMap].find(([, ids]) => ids.has(toId));

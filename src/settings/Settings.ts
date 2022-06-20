@@ -12,6 +12,7 @@ interface SettingProperties {
 	debug: boolean;
 	messageTimeoutAmount: number;
 	messageTimeoutUnit: moment.unitOfTime.DurationConstructor;
+	persistentMessageMap: boolean;
 	bridges: Bridge[];
 	token: string;
 }
@@ -27,6 +28,7 @@ export class Settings {
 	debug: boolean;
 	messageTimeoutAmount: number;
 	messageTimeoutUnit: moment.unitOfTime.DurationConstructor;
+	persistentMessageMap: boolean;
 	discord: DiscordSettings;
 	telegram: TelegramSettings;
 	bridges: Bridge[];
@@ -41,6 +43,7 @@ export class Settings {
 	 * @param settings.debug Whether or not to print debug messages
 	 * @param settings.messageTimeoutAmount Amount for your unit of time to expire messages in MessageMap
 	 * @param settings.messageTimeoutUnit Format of time as a string (ie: 'hours', 'days', 'weeks', etc)
+	 * @param settings.persistentMessageMap Allow MessageMap to persist between reboots by saving it to a file
 	 *
 	 * @throws If the raw settings object does not validate
 	 */
@@ -62,6 +65,9 @@ export class Settings {
 
 		/** Format of time as a string (ie: 'hours', 'days', 'weeks', etc) */
 		this.messageTimeoutUnit = settings.messageTimeoutUnit;
+
+		/** Allow MessageMap to persist between reboots by saving it to a file */
+		this.persistentMessageMap = settings.persistentMessageMap;
 
 		/** The config for the bridges */
 		this.bridges = settings.bridges;
@@ -103,9 +109,9 @@ export class Settings {
 	static validate(settings: SettingProperties) {
 
 		// An Array of valid units of time
-		const validUnitsOfTime = ["year", "years", "y", "month", "months", "M", "week", "weeks", "w", 
-		"day", "days", "d", "hour", "hours", "h", "minute", "minutes",  "m", "second", "seconds", "s", 
-		"millisecond", "milliseconds", "ms"];
+		const validUnitsOfTime = ["year", "years", "y", "month", "months", "M", "week", "weeks", "w",
+			"day", "days", "d", "hour", "hours", "h", "minute", "minutes", "m", "second", "seconds", "s",
+			"millisecond", "milliseconds", "ms"];
 
 		// Check that the settings are indeed in object form
 		if (!(settings instanceof Object)) {
@@ -127,6 +133,11 @@ export class Settings {
 			throw new Error("`settings.messageTimeoutUnit` is not a valid unit of time");
 		}
 
+		// Check that persistentMessageMap is a boolean
+		if (Boolean(settings.persistentMessageMap) !== settings.persistentMessageMap) {
+			throw new Error("`settings.persistentMessageMap` must be a boolean");
+		}
+
 		// Check that `bridges` is an array
 		if (!(settings.bridges instanceof Array)) {
 			throw new Error("`settings.bridges` must be an array");
@@ -134,6 +145,15 @@ export class Settings {
 
 		// Check that the bridges are valid
 		settings.bridges.forEach(Bridge.validate);
+
+		// Check that all the bridges have unique names
+		settings.bridges.forEach(function (value: Bridge, index: number, array: Bridge[]) {
+			for (let i = 0; i < array.length; i++) {
+				if ((value.name === array[i].name) && (i !== index)) {
+					throw new Error("`settings.bridges` must have unique names for each bridge");
+				}
+			}
+		});
 	}
 
 	/**
@@ -212,6 +232,7 @@ export class Settings {
 			bridges: [],
 			messageTimeoutAmount: 24,
 			messageTimeoutUnit: 'hours',
+			persistentMessageMap: false,
 			debug: false
 		} as any;
 	}
