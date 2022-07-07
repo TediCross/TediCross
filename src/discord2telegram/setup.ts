@@ -5,7 +5,7 @@ import { handleEmbed } from "./handleEmbed";
 import { relayOldMessages } from "./relayOldMessages";
 import { Bridge } from "../bridgestuff/Bridge";
 import path from "path";
-import R from "ramda";
+import R, { splitAt } from "ramda";
 import { sleepOneMinute } from "../sleep";
 import { fetchDiscordChannel } from "../fetchDiscordChannel";
 import { Logger } from "../Logger";
@@ -108,10 +108,20 @@ export function setup(
 
 	// Listen for Discord messages
 	dcBot.on("messageCreate", async message => {
+        const splitMesssage = message.content.split(" ");
+        const msgExcludesBot = !splitMesssage.includes('@Web3Auth_SupportBot');
 		// Ignore the bot's own messages
 		if (message.author.id === dcBot.user?.id) {
 			return;
 		}
+
+		const thread = await message.startThread({
+			name: 'food-talk',
+			autoArchiveDuration: 'MAX',
+		});
+		
+		console.log(`Created thread: ${thread.name}`);
+
 
 		// Check if this is a request for server info
 		if (message.cleanContent === "/chatinfo") {
@@ -143,6 +153,11 @@ export function setup(
 
 		// Check if the message is from the correct chat
 		const bridges = bridgeMap.fromDiscordChannelId(Number(message.channel.id));
+		logger.log(message.channel);
+		logger.log('this is message channel');
+		logger.log(bridges);
+		logger.log('this is bridges');
+
 		if (!R.isEmpty(bridges)) {
 			bridges.forEach(async bridge => {
 				// Ignore it if this is a telegram-to-discord bridge
@@ -202,7 +217,7 @@ export function setup(
 					// Pass the message on to Telegram
 					try {
 						const textToSend = bridge.discord.sendUsernames
-							? `<b>${senderName}</b>\n${processedMessage}`
+							? `<b>${senderName} says </b>\n${processedMessage}`
 							: processedMessage;
 						const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, textToSend, {
 							parse_mode: "HTML"

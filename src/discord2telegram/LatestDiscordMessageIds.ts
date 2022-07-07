@@ -77,7 +77,7 @@ export class LatestDiscordMessageIds {
 	setLatest(messageId: string, bridge: Bridge) {
 		// Update the bridge map
 		this._map[bridge.name] = messageId;
-
+		console.log(this._map);
 		// Write it to file when previous writes have completed
 		this._finishedWriting = this._finishedWriting
 			.then(() => promisify(fs.writeFile)(this._filepath, JSON.stringify(this._map, null, "\t")))

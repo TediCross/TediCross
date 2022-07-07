@@ -1,4 +1,4 @@
-import R from "ramda";
+import R, { max } from "ramda";
 import { MessageMap } from "../MessageMap";
 import { sleepOneMinute } from "../sleep";
 import { fetchDiscordChannel } from "../fetchDiscordChannel";
@@ -7,6 +7,8 @@ import { deleteMessage, ignoreAlreadyDeletedError } from "./helpers";
 import { createFromObjFromUser } from "./From";
 import { MessageEditOptions } from "discord.js";
 import { Message, User } from "telegraf/typings/core/types/typegram";
+import { sys } from "typescript";
+import { Logger } from "../Logger";
 
 export interface TediCrossContext extends Context {
 	TediCross: any;
@@ -57,6 +59,25 @@ const createMessageHandler = R.curry((func, ctx) => {
  * @param ctx.tediCross.message.chat.id	ID of the chat the message is from
  */
 export const chatinfo = (ctx: TediCrossContext, next: () => void) => {
+
+	console.log(ctx.tediCross.message.text);
+	const splitTeleMessage = ctx.tediCross.message.text.split(" ");
+	const teleMessageExcludesBot = !splitTeleMessage.includes('@Web3Auth_SupportBot');
+	// console.log(ctx.tediCross.message)
+	// console.log('the above is the message');
+	console.log(ctx.tediCross.message.chat.title)
+	console.log('the above is the group name');
+	console.log(ctx.tediCross.message.chat.id);
+	console.log('the above is the chat id');
+	console.log(splitTeleMessage);
+	console.log('the above is thes split message');
+	console.log(teleMessageExcludesBot);
+	console.log('the above is whether it does not contains the bot')
+
+	if (teleMessageExcludesBot){
+		return;
+	}
+
 	if (ctx.tediCross.message.text === "/chatinfo") {
 		// Reply with the info
 		ctx.reply(`chatID: ${ctx.tediCross.message.chat.id}`)
@@ -150,6 +171,24 @@ export const relayMessage = (ctx: TediCrossContext) =>
 
 			// Get the channel to send to
 			const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, prepared.bridge);
+			console.log(channel);
+			console.log('the above tries to find the channel');
+			console.log(prepared);
+			console.log('the above tries to find the prepared');
+			console.log(prepared.bridge);
+			console.log('the above tries to find the bridge');
+			let discordThreadName = prepared.bridge.discord.threadName
+			console.log(discordThreadName);
+			console.log('the above tries to find the threadName');
+
+			if (discordThreadName == ''){
+				const thread = await channel.threads.create({
+					name: ctx.tediCross.message.chat.title,
+					autoArchiveDuration: "MAX",
+				});
+				console.log(thread);
+
+			}
 
 			let dcMessage = null;
 			// Send the attachment first, if there is one
@@ -275,3 +314,7 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 		await edit(ctx, bridge);
 	}
 });
+function thread(thread: any) {
+	throw new Error("Function not implemented.");
+}
+
