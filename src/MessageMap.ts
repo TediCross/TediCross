@@ -101,19 +101,24 @@ export class MessageMap {
 	}
 
 	getCorrespondingReverse(_direction: string, bridge: Bridge, toId: string) {
-		// The ID to return
-		let fromId = [];
+		try {
+			// The ID to return
+			let fromId = [];
 
-		// Get the mappings for this bridge
-		const keyToIdsMap = this._map.get(bridge.name);
-		if (keyToIdsMap !== undefined) {
-			// Find the ID
-			const [key] = [...keyToIdsMap].find(([, ids]) => ids.has(toId));
-			fromId = key.split(" ");
-			fromId.shift();
+			// Get the mappings for this bridge
+			const keyToIdsMap = this._map.get(bridge.name);
+			if (keyToIdsMap !== undefined) {
+				// Find the ID
+				const [key] = [...keyToIdsMap].find(([, ids]) => ids.has(toId));
+				fromId = key.split(" ");
+				fromId.shift();
+			}
+
+			return fromId;
+		} catch (err) {
+			// Unknown message ID. Don't do anything
+			return [];
 		}
-
-		return fromId;
 	}
 
 	/** Constant indicating direction discord to telegram */
