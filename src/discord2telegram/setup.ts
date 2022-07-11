@@ -161,6 +161,9 @@ export function setup(
 					const referenceId = messageReference?.messageId;
 					if (typeof referenceId !== "undefined") {
 						[replyId] = messageMap.getCorrespondingReverse(MessageMap.TELEGRAM_TO_DISCORD, bridge, referenceId as string);
+						if (isNaN(replyId)) {
+							[replyId] = messageMap.getCorresponding(MessageMap.DISCORD_TO_TELEGRAM, bridge, referenceId as string);
+						}
 					}
 				}
 
