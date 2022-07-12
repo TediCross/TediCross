@@ -160,9 +160,14 @@ export function setup(
 				if (typeof messageReference !== "undefined") {
 					const referenceId = messageReference?.messageId;
 					if (typeof referenceId !== "undefined") {
+						console.log("==== discord2telegram/setup.ts reply ====");
+						console.log("referenceId: " + referenceId);
+						console.log("bridge.name: "+ bridge.name);
 						[replyId] = messageMap.getCorrespondingReverse(MessageMap.TELEGRAM_TO_DISCORD, bridge, referenceId as string);
+						console.log("t2d replyId: " + replyId);
 						if (isNaN(replyId)) {
 							[replyId] = messageMap.getCorresponding(MessageMap.DISCORD_TO_TELEGRAM, bridge, referenceId as string);
+							console.log("d2t replyId: " + replyId);
 						}
 					}
 				}
@@ -173,7 +178,7 @@ export function setup(
 						const textToSend = bridge.discord.sendUsernames
 							? `<b>${senderName}</b>\n<a href="${url}">${url}</a>`
 							: `<a href="${url}">${url}</a>`;
-						if (replyId === 0) {
+						if (replyId === 0 || replyId === undefined) {
 							const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, textToSend, {
 								parse_mode: "HTML"
 							});
@@ -212,7 +217,7 @@ export function setup(
 
 					try {
 						// Send it
-						if (replyId === 0) {
+						if (replyId === 0 || replyId === undefined) {
 							tgBot.telegram.sendMessage(bridge.telegram.chatId, text, {
 								parse_mode: "HTML",
 								disable_web_page_preview: true
@@ -239,7 +244,7 @@ export function setup(
 						const textToSend = bridge.discord.sendUsernames
 							? `<b>${senderName}</b>\n${processedMessage}`
 							: processedMessage;
-						if (replyId === 0) {
+						if (replyId === 0 || replyId === undefined) {
 							const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, textToSend, {
 								parse_mode: "HTML"
 							});
