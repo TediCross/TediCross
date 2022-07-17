@@ -61,16 +61,16 @@ const createMessageHandler = R.curry((func, ctx) => {
  */
 
 export const chatinfo = async (ctx: TediCrossContext, next: () => void) => {
-	// try {
-	// 	ctx.tediCross.message.caption.includes('@Web3Auth_SupportBot')
-	// }
-	// catch {
-	// 	try {ctx.tediCross.message.text.includes('@Web3Auth_SupportBot')
-	// 	}
-	// 	catch {
-	// 		return;
-	// 	}
-	// }
+	try {
+		ctx.tediCross.message.caption.includes('@Web3Auth_SupportBot')
+	}
+	catch {
+		try {ctx.tediCross.message.text.includes('@Web3Auth_SupportBot')
+		}
+		catch {
+			return;
+		}
+	}
 
 	// var allBridges = ctx.TediCross.bridgeMap.bridges;
 	// var newChatId = ctx.tediCross.message.chat.id;
@@ -105,81 +105,8 @@ export const chatinfo = async (ctx: TediCrossContext, next: () => void) => {
 
 	console.log(ctx.tediCross.message);
 	console.log('this is ctx message');		
-
-	// var messageText = ctx.tediCross.message.from.first_name + " says" + "\n" + ctx.tediCross.message.text;
-	// var discordThread = channel.threads.cache.find(dcThread => dcThread.id === discordThreadId.toString());
-	// var dcMessage = null;
-	// var nonText = false;
-
-	// try {
-	// 	if (ctx.tediCross.message.reply_to_message.text){
-	// 		messageText = ctx.tediCross.message.reply_to_message.text;
-	// 	}
-	// 	else if (ctx.tediCross.message.reply_to_message.document) {
-	// 		messageText = ctx.tediCross.message.reply_to_message.document;
-	// 		nonText = true;
-	// 	}
-	// 	else if (ctx.tediCross.message.reply_to_message.photo){
-	// 		messageText = ctx.tediCross.message.reply_to_message.photo;
-	// 		nonText = true;
-	// 	}
-	// 	else if (ctx.tediCross.message.reply_to_message.sticker){
-	// 		messageText = ctx.tediCross.message.reply_to_message.sticker;
-	// 		nonText = true;
-	// 	}
-	// 	else if (ctx.tediCross.message.caption.includes('@Web3Auth_SupportBot')){
-	// 		messageText = ctx.tediCross.message;
-	// 		nonText = true;
-	// 	}
-
-	// 	if (nonText){
-	// 		var chunks = R.splitEvery(2000, messageText);
-	// 		dcMessage = await discordThread?.send({
-	// 			content: R.head(chunks),
-	// 			files: [messageText]
-	// 		});
-	// 		chunks = R.tail(chunks);
-	// 	}
-	// 		dcMessage = await R.reduce(
-	// 			(p, chunk) => p.then(() => discordThread?.send(chunk)),
-	// 			Promise.resolve(dcMessage),
-	// 			chunks
-	// 		);
-	// 	}
-	// catch {
-	// 	return;
-	// }
-	// console.log(messageText);
-	// messageText = ctx.tediCross.message.from.first_name + " says" + "\n" + messageText;
-	// console.log(messageText);
-
-	// // Make the mapping so future edits can work XXX Only the last chunk is considered
-	// ctx.TediCross.messageMap.insert(
-	// 	MessageMap.TELEGRAM_TO_DISCORD,
-	// 	prepared.bridge,
-	// 	ctx.tediCross.messageId,
-	// 	dcMessage?.id
-	// );
-
-	// if (ctx.tediCross.message.text === "/chatinfo") {
-	// 	// Reply with the info
-	// 	ctx.reply(`chatID: ${ctx.tediCross.message.chat.id}`)
-	// 		// Wait some time
-	// 		.then(sleepOneMinute)
-	// 		// Delete the info and the command
-	// 		.then(message =>
-	// 			Promise.all([
-	// 				// Delete the info
-	// 				deleteMessage(ctx, message),
-	// 				// Delete the command
-	// 				ctx.deleteMessage()
-	// 			])
-	// 		)
-	// 		.catch(ignoreAlreadyDeletedError);
-	// } else {
-	// 	next();
-	// }
-	};
+	// };
+};
 
 /**
  * Handles users joining chats
@@ -251,15 +178,24 @@ export const relayMessage = (ctx: TediCrossContext) =>
 			console.log('-');
 
 			try {
-				messageText = prepared.header + "\n" + ctx.tediCross.message.reply_to_message.text;
+				if (ctx.tediCross.message.reply_to_message.text){
+					messageText = ctx.tediCross.message.reply_to_message.text;
+				}
+				else if (ctx.tediCross.message.reply_to_message.document) {
+					messageText = ctx.tediCross.message.reply_to_message.document;
+				}
+				else if (ctx.tediCross.message.reply_to_message.photo){
+					messageText = ctx.tediCross.message.reply_to_message.photo;
+				}
+				else if (ctx.tediCross.message.reply_to_message.sticker){
+					messageText = ctx.tediCross.message.reply_to_message.sticker;
+				}
+				else if (ctx.tediCross.message.caption.includes('@Web3Auth_SupportBot')){
+					messageText = ctx.tediCross.message;
+				}
 			}
 			catch {
-				// messageText = prepared.header + "\n" + prepared.text;
-				console.log(messageText);
-
-				if (ctx.tediCross.message.caption.includes('@Web3Auth_SupportBot')){
-					messageText = ctx.tediCross.message
-				}
+				return;
 			}
 
 			let chunks = R.splitEvery(2000, messageText);
@@ -271,13 +207,13 @@ export const relayMessage = (ctx: TediCrossContext) =>
 			const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, prepared.bridge);
 			var discordThreadId = prepared.bridge.discord.threadId;
 
-			// if (discordThreadId == ''){
-			// 	let thread = await channel.threads.create({
-			// 		name: ctx.tediCross.message.chat.title,
-			// 		autoArchiveDuration: "MAX",
-			// 	});
-			// 	discordThreadId = thread.id.toString();
-			// }
+			if (discordThreadId == ''){
+				let thread = await channel.threads.create({
+					name: ctx.tediCross.message.chat.title,
+					autoArchiveDuration: "MAX",
+				});
+				discordThreadId = thread.id.toString();
+			}
 
             let discordThread = channel.threads.cache.find(dcThread => dcThread.id === discordThreadId);
 			let dcMessage = null;
@@ -417,4 +353,3 @@ function bridge(bridge: any) {
 function newBridge(newBridge: any) {
 	throw new Error("Function not implemented.");
 }
-
