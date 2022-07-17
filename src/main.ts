@@ -11,6 +11,7 @@ import jsYaml from "js-yaml";
 import fs from "fs";
 import R from "ramda";
 import os from "os";
+import { TediCrossContext } from "./telegram2discord/endwares";
 
 // Telegram stuff
 import { Telegraf } from "telegraf";
@@ -46,12 +47,10 @@ const args = yargs
 		type: "string"
 	}).argv as { config: string, dataDir: string };
 
-
 // Get the settings
 const settingsPath = args.config;
 const rawSettingsObj = jsYaml.load(fs.readFileSync(settingsPath, "utf-8"));
 const settings = Settings.fromObj(rawSettingsObj);
-
 
 // Initialize logger
 const logger = new Logger(settings.debug);

@@ -8,6 +8,7 @@ export interface BridgeProperties {
 	telegram: BridgeSettingsTelegramProperties;
 	discord: BridgeSettingsDiscordProperties;
 	direction: "both" | "d2t" | "t2d";
+	// direction: "both" | "d2t" | "t2d";
 }
 
 /********************

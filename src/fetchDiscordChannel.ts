@@ -9,11 +9,24 @@ import R from "ramda";
 export const fetchDiscordChannel = R.curry((dcBot: Client, bridge) => {
 	// Get the channel's ID
 	const channelId = bridge.discord.channelId;
-
 	// Try to get the channel
 	return dcBot.channels.fetch(channelId).catch((err: Error) => {
 		console.error(`Could not find Discord channel ${channelId} in bridge ${bridge.name}: ${err.message}`);
 		throw err;
 	}) as unknown as Promise<TextChannel>;
 });
+
+// export const fetchDiscordChannel = R.curry((dcBot: Client, channel) => {
+// 	// Get the channel's ID
+// 	const channelId = channel;
+// 	// Try to get the channel
+// 	return dcBot.channels.fetch(channelId).catch((err: Error) => {
+// 		console.error(`Could not find Discord channel ${channelId} in bridge: ${err.message}`);
+// 		throw err;
+// 	}) as unknown as Promise<TextChannel>;
+// });
+
+
+
+
 

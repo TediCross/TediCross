@@ -7,8 +7,9 @@ import { deleteMessage, ignoreAlreadyDeletedError } from "./helpers";
 import { createFromObjFromUser } from "./From";
 import { MessageEditOptions } from "discord.js";
 import { Message, User } from "telegraf/typings/core/types/typegram";
-import { sys } from "typescript";
-import { Logger } from "../Logger";
+import { BridgeMap } from "../bridgestuff/BridgeMap";
+import { Bridge, BridgeProperties } from "../bridgestuff/Bridge";
+
 
 export interface TediCrossContext extends Context {
 	TediCross: any;
@@ -19,7 +20,7 @@ export interface TediCrossContext extends Context {
 			id: string;
 			name: string;
 			link?: string;
-		};
+			};
 		messageId: string;
 		prepared: any;
 		bridges: any;
@@ -27,8 +28,8 @@ export interface TediCrossContext extends Context {
 		text: any;
 		forwardFrom: any;
 		from: any;
-	};
-}
+		};
+	}
 
 /***********
  * Helpers *
@@ -58,45 +59,127 @@ const createMessageHandler = R.curry((func, ctx) => {
  * @param ctx.tediCross.message.chat	The object of the chat the message is from
  * @param ctx.tediCross.message.chat.id	ID of the chat the message is from
  */
-export const chatinfo = (ctx: TediCrossContext, next: () => void) => {
 
-	console.log(ctx.tediCross.message.text);
-	const splitTeleMessage = ctx.tediCross.message.text.split(" ");
-	const teleMessageExcludesBot = !splitTeleMessage.includes('@Web3Auth_SupportBot');
-	// console.log(ctx.tediCross.message)
-	// console.log('the above is the message');
-	console.log(ctx.tediCross.message.chat.title)
-	console.log('the above is the group name');
-	console.log(ctx.tediCross.message.chat.id);
-	console.log('the above is the chat id');
-	console.log(splitTeleMessage);
-	console.log('the above is thes split message');
-	console.log(teleMessageExcludesBot);
-	console.log('the above is whether it does not contains the bot')
+export const chatinfo = async (ctx: TediCrossContext, next: () => void) => {
+	// try {
+	// 	ctx.tediCross.message.caption.includes('@Web3Auth_SupportBot')
+	// }
+	// catch {
+	// 	try {ctx.tediCross.message.text.includes('@Web3Auth_SupportBot')
+	// 	}
+	// 	catch {
+	// 		return;
+	// 	}
+	// }
 
-	if (teleMessageExcludesBot){
-		return;
-	}
+	// var allBridges = ctx.TediCross.bridgeMap.bridges;
+	// var newChatId = ctx.tediCross.message.chat.id;
+	// var newChatIdBoolean = true;
+	// const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, ctx.TediCross.bridgeMap.bridges[0]);
+	// await ctx.TediCross.dcBot.ready;
 
-	if (ctx.tediCross.message.text === "/chatinfo") {
-		// Reply with the info
-		ctx.reply(`chatID: ${ctx.tediCross.message.chat.id}`)
-			// Wait some time
-			.then(sleepOneMinute)
-			// Delete the info and the command
-			.then(message =>
-				Promise.all([
-					// Delete the info
-					deleteMessage(ctx, message),
-					// Delete the command
-					ctx.deleteMessage()
-				])
-			)
-			.catch(ignoreAlreadyDeletedError);
-	} else {
-		next();
-	}
-};
+	// for (const bridge in allBridges) {
+	// 	if (newChatId == allBridges[bridge].telegram.chatId){
+	// 		newChatIdBoolean = false;
+	// 	}
+	// }
+
+	// if (newChatIdBoolean){
+	// 	var newChatThread = await channel.threads.create({
+	// 		name: ctx.tediCross.message.chat.title,
+	// 		autoArchiveDuration: "MAX",
+	// 	});
+	// 	var newTelegramBridgeSettings = {chatId: newChatId, sendUsernames: true, relayCommands: true, relayJoinMessages: false, relayLeaveMessages: false, crossDeleteOnDiscord: true}
+	// 	var newDiscordBridgeSettings = {channelId: '993373151717228604', threadId: newChatThread.id.toString(), threadName: ctx.tediCross.message.chat.title,  sendUsernames: true, relayJoinMessages: false, relayLeaveMessages: false, crossDeleteOnTelegram: true}
+	// 	var newBridgeSettings = {name: 'Third Bridge', telegram:  newTelegramBridgeSettings, discord: newDiscordBridgeSettings, direction: "both" as const}
+	// 	var newBridge = new Bridge(newBridgeSettings);
+	// 	var discordThreadId = parseInt(newBridge.discord.threadId);
+	// 	allBridges.push(newBridge);
+
+	// 	ctx.TediCross.bridgeMap._discordToBridge.set(discordThreadId, [newBridge]);
+	// 	ctx.TediCross.bridgeMap._telegramToBridge.set(newChatId, [newBridge]);
+	// }
+
+	console.log(ctx);
+	console.log('this is ctx');
+
+	console.log(ctx.tediCross.message);
+	console.log('this is ctx message');		
+
+	// var messageText = ctx.tediCross.message.from.first_name + " says" + "\n" + ctx.tediCross.message.text;
+	// var discordThread = channel.threads.cache.find(dcThread => dcThread.id === discordThreadId.toString());
+	// var dcMessage = null;
+	// var nonText = false;
+
+	// try {
+	// 	if (ctx.tediCross.message.reply_to_message.text){
+	// 		messageText = ctx.tediCross.message.reply_to_message.text;
+	// 	}
+	// 	else if (ctx.tediCross.message.reply_to_message.document) {
+	// 		messageText = ctx.tediCross.message.reply_to_message.document;
+	// 		nonText = true;
+	// 	}
+	// 	else if (ctx.tediCross.message.reply_to_message.photo){
+	// 		messageText = ctx.tediCross.message.reply_to_message.photo;
+	// 		nonText = true;
+	// 	}
+	// 	else if (ctx.tediCross.message.reply_to_message.sticker){
+	// 		messageText = ctx.tediCross.message.reply_to_message.sticker;
+	// 		nonText = true;
+	// 	}
+	// 	else if (ctx.tediCross.message.caption.includes('@Web3Auth_SupportBot')){
+	// 		messageText = ctx.tediCross.message;
+	// 		nonText = true;
+	// 	}
+
+	// 	if (nonText){
+	// 		var chunks = R.splitEvery(2000, messageText);
+	// 		dcMessage = await discordThread?.send({
+	// 			content: R.head(chunks),
+	// 			files: [messageText]
+	// 		});
+	// 		chunks = R.tail(chunks);
+	// 	}
+	// 		dcMessage = await R.reduce(
+	// 			(p, chunk) => p.then(() => discordThread?.send(chunk)),
+	// 			Promise.resolve(dcMessage),
+	// 			chunks
+	// 		);
+	// 	}
+	// catch {
+	// 	return;
+	// }
+	// console.log(messageText);
+	// messageText = ctx.tediCross.message.from.first_name + " says" + "\n" + messageText;
+	// console.log(messageText);
+
+	// // Make the mapping so future edits can work XXX Only the last chunk is considered
+	// ctx.TediCross.messageMap.insert(
+	// 	MessageMap.TELEGRAM_TO_DISCORD,
+	// 	prepared.bridge,
+	// 	ctx.tediCross.messageId,
+	// 	dcMessage?.id
+	// );
+
+	// if (ctx.tediCross.message.text === "/chatinfo") {
+	// 	// Reply with the info
+	// 	ctx.reply(`chatID: ${ctx.tediCross.message.chat.id}`)
+	// 		// Wait some time
+	// 		.then(sleepOneMinute)
+	// 		// Delete the info and the command
+	// 		.then(message =>
+	// 			Promise.all([
+	// 				// Delete the info
+	// 				deleteMessage(ctx, message),
+	// 				// Delete the command
+	// 				ctx.deleteMessage()
+	// 			])
+	// 		)
+	// 		.catch(ignoreAlreadyDeletedError);
+	// } else {
+	// 	next();
+	// }
+	};
 
 /**
  * Handles users joining chats
@@ -159,11 +242,26 @@ export const leftChatMember = createMessageHandler((ctx: TediCrossContext, bridg
  * @param ctx.tediCross	The TediCross context of the message
  * @param ctx.TediCross	The global TediCross context of the message
  */
+
 export const relayMessage = (ctx: TediCrossContext) =>
 	R.forEach(async (prepared: any) => {
 		try {
 			// Discord doesn't handle messages longer than 2000 characters. Split it up into chunks that big
-			const messageText = prepared.header + "\n" + prepared.text;
+			var messageText = prepared.header + "\n" + prepared.text;
+			console.log('-');
+
+			try {
+				messageText = prepared.header + "\n" + ctx.tediCross.message.reply_to_message.text;
+			}
+			catch {
+				// messageText = prepared.header + "\n" + prepared.text;
+				console.log(messageText);
+
+				if (ctx.tediCross.message.caption.includes('@Web3Auth_SupportBot')){
+					messageText = ctx.tediCross.message
+				}
+			}
+
 			let chunks = R.splitEvery(2000, messageText);
 
 			// Wait for the Discord bot to become ready
@@ -171,37 +269,30 @@ export const relayMessage = (ctx: TediCrossContext) =>
 
 			// Get the channel to send to
 			const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, prepared.bridge);
-			console.log(channel);
-			console.log('the above tries to find the channel');
-			console.log(prepared);
-			console.log('the above tries to find the prepared');
-			console.log(prepared.bridge);
-			console.log('the above tries to find the bridge');
-			let discordThreadName = prepared.bridge.discord.threadName
-			console.log(discordThreadName);
-			console.log('the above tries to find the threadName');
+			var discordThreadId = prepared.bridge.discord.threadId;
 
-			if (discordThreadName == ''){
-				const thread = await channel.threads.create({
-					name: ctx.tediCross.message.chat.title,
-					autoArchiveDuration: "MAX",
-				});
-				console.log(thread);
+			// if (discordThreadId == ''){
+			// 	let thread = await channel.threads.create({
+			// 		name: ctx.tediCross.message.chat.title,
+			// 		autoArchiveDuration: "MAX",
+			// 	});
+			// 	discordThreadId = thread.id.toString();
+			// }
 
-			}
-
+            let discordThread = channel.threads.cache.find(dcThread => dcThread.id === discordThreadId);
 			let dcMessage = null;
 			// Send the attachment first, if there is one
 			if (!R.isNil(prepared.file)) {
 				try {
-					dcMessage = await channel.send({
+					dcMessage = await discordThread?.send({
 						content: R.head(chunks),
 						files: [prepared.file]
 					});
+					console.log(dcMessage);
 					chunks = R.tail(chunks);
 				} catch (err: any) {
 					if (err.message === "Request entity too large") {
-						dcMessage = await channel.send(
+						dcMessage = await discordThread?.send(
 							`***${prepared.senderName}** on Telegram sent a file, but it was too large for Discord. If you want it, ask them to send it some other way*`
 						);
 					} else {
@@ -209,9 +300,10 @@ export const relayMessage = (ctx: TediCrossContext) =>
 					}
 				}
 			}
+
 			// Send the rest in serial
 			dcMessage = await R.reduce(
-				(p, chunk) => p.then(() => channel.send(chunk)),
+				(p, chunk) => p.then(() => discordThread?.send(chunk)),
 				Promise.resolve(dcMessage),
 				chunks
 			);
@@ -315,6 +407,14 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 	}
 });
 function thread(thread: any) {
+	throw new Error("Function not implemented.");
+}
+
+function bridge(bridge: any) {
+	throw new Error("Function not implemented.");
+}
+
+function newBridge(newBridge: any) {
 	throw new Error("Function not implemented.");
 }
 

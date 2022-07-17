@@ -38,7 +38,7 @@ function makeJoinLeaveFunc(logger: Logger, verb: "joined" | "left", bridgeMap: B
 		// Get the bridges in the guild the member joined/left
 		member.guild.channels.cache
 			// Get the bridges corresponding to the channels in this guild
-			.map(({ id }: { id: number }) => bridgeMap.fromDiscordChannelId(id))
+			.map(({ id }: { id: number }) => bridgeMap.fromDiscordThreadId(id))
 			// Remove the ones which are not bridged
 			.filter((bridges: any) => bridges !== undefined)
 			// Flatten the bridge arrays
@@ -108,20 +108,12 @@ export function setup(
 
 	// Listen for Discord messages
 	dcBot.on("messageCreate", async message => {
-        const splitMesssage = message.content.split(" ");
-        const msgExcludesBot = !splitMesssage.includes('@Web3Auth_SupportBot');
+        // const splitMesssage = message.content.split(" ");
+        // const msgExcludesBot = !splitMesssage.includes('@Web3Auth_SupportBot');
 		// Ignore the bot's own messages
 		if (message.author.id === dcBot.user?.id) {
 			return;
 		}
-
-		const thread = await message.startThread({
-			name: 'food-talk',
-			autoArchiveDuration: 'MAX',
-		});
-		
-		console.log(`Created thread: ${thread.name}`);
-
 
 		// Check if this is a request for server info
 		if (message.cleanContent === "/chatinfo") {
@@ -152,7 +144,7 @@ export function setup(
 		)(message) as string;
 
 		// Check if the message is from the correct chat
-		const bridges = bridgeMap.fromDiscordChannelId(Number(message.channel.id));
+		const bridges = bridgeMap.fromDiscordThreadId(Number(message.channel.id));
 		logger.log(message.channel);
 		logger.log('this is message channel');
 		logger.log(bridges);
@@ -172,7 +164,7 @@ export function setup(
 				message.attachments.forEach(async ({ url }) => {
 					try {
 						const textToSend = bridge.discord.sendUsernames
-							? `<b>${senderName}</b>\n<a href="${url}">${url}</a>`
+							? `<b>${senderName} says</b>\n<a href="${url}">${url}</a>`
 							: `<a href="${url}">${url}</a>`;
 						const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, textToSend, {
 							parse_mode: "HTML"
@@ -268,7 +260,7 @@ export function setup(
 		}
 
 		// Pass it on to the bridges
-		bridgeMap.fromDiscordChannelId(Number(newMessage.channel.id)).forEach(async bridge => {
+		bridgeMap.fromDiscordThreadId(Number(newMessage.channel.id)).forEach(async bridge => {
 			try {
 				// Get the corresponding Telegram message ID
 				const [tgMessageId] = messageMap.getCorresponding(
@@ -304,7 +296,7 @@ export function setup(
 		const isFromTelegram = message.author.id === dcBot.user?.id;
 
 		// Hand it on to the bridges
-		bridgeMap.fromDiscordChannelId(Number(message.channel.id)).forEach(async bridge => {
+		bridgeMap.fromDiscordThreadId(Number(message.channel.id)).forEach(async bridge => {
 			// Ignore it if cross deletion is disabled
 			if (!bridge.discord.crossDeleteOnTelegram) {
 				return;

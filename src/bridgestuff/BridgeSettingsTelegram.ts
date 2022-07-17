@@ -9,7 +9,7 @@ export interface BridgeSettingsTelegramProperties {
 }
 
 /** Holds settings for the Telegram part of a bridge */
-export class BridgeSettingsTelegram {
+export class BridgeSettingsTelegram{
 	public chatId: number;
 	public sendUsernames: boolean;
 	public relayJoinMessages: boolean;
@@ -33,19 +33,19 @@ export class BridgeSettingsTelegram {
 		this.chatId = Number.parseInt(settings.chatId.toString());
 
 		/** Whether or not to relay join messages from Telegram to Discord */
-		this.relayJoinMessages = settings.relayJoinMessages;
+		this.relayJoinMessages = false;
 
 		/** Whether or not to relay join messages from Telegram to Discord */
-		this.relayLeaveMessages = settings.relayLeaveMessages;
+		this.relayLeaveMessages = false;
 
 		/** Whether or not to send the user's name as part of the messages to Discord */
-		this.sendUsernames = settings.sendUsernames;
+		this.sendUsernames = true;
 
 		/** Whether or not to relay messages starting with "/" (commands) */
-		this.relayCommands = settings.relayCommands;
+		this.relayCommands = true;
 
 		/** Whether or not to delete messages when they are edited to be a single dot */
-		this.crossDeleteOnDiscord = settings.crossDeleteOnDiscord;
+		this.crossDeleteOnDiscord = true;
 	}
 
 	/**
@@ -55,6 +55,7 @@ export class BridgeSettingsTelegram {
 	 *
 	 * @throws If the object is not suitable. The error message says what the problem is
 	 */
+
 	static validate(settings: BridgeSettingsTelegramProperties) {
 		// Check that the settings are indeed in object form
 		if (!(settings instanceof Object)) {

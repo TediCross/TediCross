@@ -1,5 +1,8 @@
+import { StringLiteralLike } from "typescript";
+
 export interface BridgeSettingsDiscordProperties {
 	channelId: string;
+	threadId: string;
 	threadName: string;
 	sendUsernames: boolean;
 	relayJoinMessages: boolean;
@@ -11,6 +14,7 @@ export interface BridgeSettingsDiscordProperties {
 /** Holds settings for the Discord part of a bridge */
 export class BridgeSettingsDiscord {
 	public channelId: string;
+	public threadId: string;
 	public threadName: string;
 	public sendUsernames: boolean;
 	public relayJoinMessages: boolean;
@@ -33,6 +37,8 @@ export class BridgeSettingsDiscord {
 		/** ID of the Discord channel this bridge is part of */
 		this.channelId = settings.channelId;
 
+		this.threadId = settings.threadId;
+
 		this.threadName = settings.threadName;
 
 		/** Whether or not to relay join messages from Discord to Telegram */
@@ -47,6 +53,7 @@ export class BridgeSettingsDiscord {
 		/** Whether or not to delete messages on Telegram when a message is deleted on Discord */
 		this.crossDeleteOnTelegram = settings.crossDeleteOnTelegram;
 	}
+
 
 	/**
 	 * Validates a raw settings object, checking if it is usable for creating a BridgeSettingsDiscord object
