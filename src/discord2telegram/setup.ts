@@ -182,7 +182,21 @@ export function setup(
 
 					// Convert it to something Telegram likes
 					const text = handleEmbed(embed, senderName);
-
+					
+					// Handle embed with image, send it as photo with caption
+					if (embed.image != null) {
+						try {
+							// Send photo with caption
+							tgBot.telegram.sendPhoto(bridge.telegram.chatId, embed.image.url, {
+								caption: text,
+								parse_mode: "HTML"
+							});
+						} catch (err) {
+							logger.error(`[${bridge.name}] Telegram did not accept an embed:`, err);
+						}
+						return;
+					}
+					
 					try {
 						// Send it
 						tgBot.telegram.sendMessage(bridge.telegram.chatId, text, {
