@@ -11,7 +11,7 @@ const MAX_32_BIT = 0x7fffffff;
 
 /** Handles mapping between message IDs in discord and telegram, for message editing purposes */
 export class MessageMap {
-	private _map: Map<string, any>;
+	private _map: Map<string, Map<string, Set<string>>>;
 	private _persistentMap: PersistentMessageMap;
 	private _messageTimeoutAmount: number;
 	private _messageTimeoutUnit: moment.unitOfTime.DurationConstructor;
@@ -59,7 +59,9 @@ export class MessageMap {
 		if (Object.keys(this._persistentMap).length === 0) {
 			// Start a timeout removing it again after a configured amount of time. Default is 24 hours
 			safeTimeout(() => {
-				keyToIdsMap.delete(key);
+				if (keyToIdsMap) {
+					keyToIdsMap.delete(key);
+				}
 			}, moment.duration(this._messageTimeoutAmount, this._messageTimeoutUnit).asMilliseconds());
 		} else {
 			//Update the Persistent MessageMap with the current MessageMap
@@ -90,10 +92,10 @@ export class MessageMap {
 			const key = `${direction} ${fromId}`;
 
 			// Extract the IDs
-			const toIds = keyToIdsMap.get(key);
+			const toIds = keyToIdsMap?.get(key);
 
 			// Return the ID
-			return [...toIds];
+			return [...toIds ?? []];
 		} catch (err) {
 			// Unknown message ID. Don't do anything
 			return [];
@@ -103,16 +105,18 @@ export class MessageMap {
 	getCorrespondingReverse(_direction: string, bridge: Bridge, toId: string) {
 		try {
 			// The ID to return
-			let fromId = [];
+			let fromId: string[] = [];
 
 			// Get the mappings for this bridge
 			const keyToIdsMap = this._map.get(bridge.name);
 			if (keyToIdsMap !== undefined) {
 				// Find the ID
-				const [key] = [...keyToIdsMap].find(([, ids]) => ids.has(toId));
+				const [key] = [...keyToIdsMap].find(([, ids]) => ids.has(toId)) ?? "0";
 				console.log("getCorrespondingReverse() key found: " + key);
-				fromId = key.split(" ");
-				fromId.shift();
+				if (key !== "0" && typeof key === "string") {
+					fromId = key.split(" ");
+					fromId.shift();
+				}
 			}
 
 			return fromId;

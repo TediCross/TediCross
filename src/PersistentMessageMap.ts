@@ -12,7 +12,7 @@ const promisify = require("util").promisify;
 export class PersistentMessageMap {
 	private _logger: Logger;
 	private _filepath: string;
-	private _map: Map<string, any>;
+	private _map: Map<string, Map<string, Set<string>>>;
 	private _finishedWriting: Promise<void>;
 
 	/**

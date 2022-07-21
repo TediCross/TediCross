@@ -155,7 +155,7 @@ export const relayMessage = (ctx: TediCrossContext) =>
 			let dcMessage = null;
 
 			// Check if the message is a reply and get the id of that message on Discord
-			let replyId = 0;
+			let replyId = "0";
 			const messageReference = ctx.tediCross.message?.reply_to_message;
 
 
@@ -167,7 +167,7 @@ export const relayMessage = (ctx: TediCrossContext) =>
 					console.log("prepared.bridge.name: " + prepared.bridge.name);
 					[replyId] = ctx.TediCross.messageMap.getCorrespondingReverse(MessageMap.DISCORD_TO_TELEGRAM, prepared.bridge, referenceId as string);
 					console.log("d2t replyId: " + replyId);
-					if (isNaN(replyId)) {
+					if (replyId === undefined ) {
 						[replyId] = ctx.TediCross.messageMap.getCorresponding(MessageMap.TELEGRAM_TO_DISCORD, prepared.bridge, referenceId as string);
 						console.log("t2d replyId: " + replyId);
 					}
@@ -176,8 +176,8 @@ export const relayMessage = (ctx: TediCrossContext) =>
 
 			let messageToReply: any;
 
-			if (replyId !== 0) {
-				messageToReply = await channel.messages.fetch((replyId as unknown as string)).catch((err: Error) => {
+			if (replyId !== "0" || replyId === undefined) {
+				messageToReply = await channel.messages.fetch((replyId)).catch((err: Error) => {
 					console.error(`Could not find Message ${replyId} in Discord Channel ${channel.id} on bridge ${prepared.bridge.name}: ${err.message}`);
 					throw err;
 				}) as unknown as Promise<Message>;
@@ -187,7 +187,7 @@ export const relayMessage = (ctx: TediCrossContext) =>
 			// Send the attachment first, if there is one
 			if (!R.isNil(prepared.file)) {
 				try {
-					if (replyId === 0 || replyId === undefined || messageToReply === undefined) {
+					if (replyId === "0" || replyId === undefined || messageToReply === undefined) {
 						dcMessage = await channel.send({
 							content: R.head(chunks),
 							files: [prepared.file]
@@ -209,7 +209,7 @@ export const relayMessage = (ctx: TediCrossContext) =>
 					}
 				}
 			}
-			if (replyId === 0 || replyId === undefined || messageToReply === undefined) {
+			if (replyId === "0" || replyId === undefined || messageToReply === undefined) {
 				dcMessage = await R.reduce(
 					(p, chunk) => p.then(() => channel.send(chunk)),
 					Promise.resolve(dcMessage),
