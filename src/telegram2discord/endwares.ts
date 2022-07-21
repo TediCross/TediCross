@@ -164,7 +164,7 @@ export const relayMessage = (ctx: TediCrossContext) =>
 				if (typeof referenceId !== "undefined") {
 					console.log("==== telegram2discord/endware.ts reply ====");
 					console.log("referenceId: " + referenceId);
-					console.log("prepared.bridge.name: "+ prepared.bridge.name);
+					console.log("prepared.bridge.name: " + prepared.bridge.name);
 					[replyId] = ctx.TediCross.messageMap.getCorrespondingReverse(MessageMap.DISCORD_TO_TELEGRAM, prepared.bridge, referenceId as string);
 					console.log("d2t replyId: " + replyId);
 					if (isNaN(replyId)) {
@@ -187,21 +187,17 @@ export const relayMessage = (ctx: TediCrossContext) =>
 			// Send the attachment first, if there is one
 			if (!R.isNil(prepared.file)) {
 				try {
-					dcMessage = await channel.send({
-						content: R.head(chunks),
-						files: [prepared.file]
-					});
-					// if (replyId === 0 || replyId === undefined || messageToReply === undefined) {
-					// 	dcMessage = await channel.send({
-					// 		content: R.head(chunks),
-					// 		files: [prepared.file]
-					// 	});
-					// } else {
-					// 	dcMessage = await messageToReply.reply({
-					// 		content: R.head(chunks),
-					// 		files: [prepared.file]
-					// 	});
-					// }
+					if (replyId === 0 || replyId === undefined || messageToReply === undefined) {
+						dcMessage = await channel.send({
+							content: R.head(chunks),
+							files: [prepared.file]
+						});
+					} else {
+						dcMessage = await messageToReply.reply({
+							content: R.head(chunks),
+							files: [prepared.file]
+						});
+					}
 					chunks = R.tail(chunks);
 				} catch (err: any) {
 					if (err.message === "Request entity too large") {
@@ -213,25 +209,19 @@ export const relayMessage = (ctx: TediCrossContext) =>
 					}
 				}
 			}
-			// Send the rest in serial
-			dcMessage = await R.reduce(
-				(p, chunk) => p.then(() => channel.send(chunk)),
-				Promise.resolve(dcMessage),
-				chunks
-			);
-			// if (replyId === 0 || replyId === undefined || messageToReply === undefined) {
-			// 	dcMessage = await R.reduce(
-			// 		(p, chunk) => p.then(() => channel.send(chunk)),
-			// 		Promise.resolve(dcMessage),
-			// 		chunks
-			// 	);
-			// } else {
-			// 	dcMessage = await R.reduce(
-			// 		(p, chunk) => p.then(() => messageToReply.reply(chunk)),
-			// 		Promise.resolve(dcMessage),
-			// 		chunks
-			// 	);
-			// }
+			if (replyId === 0 || replyId === undefined || messageToReply === undefined) {
+				dcMessage = await R.reduce(
+					(p, chunk) => p.then(() => channel.send(chunk)),
+					Promise.resolve(dcMessage),
+					chunks
+				);
+			} else {
+				dcMessage = await R.reduce(
+					(p, chunk) => p.then(() => messageToReply.reply(chunk)),
+					Promise.resolve(dcMessage),
+					chunks
+				);
+			}
 
 			// Make the mapping so future edits can work XXX Only the last chunk is considered
 			ctx.TediCross.messageMap.insert(

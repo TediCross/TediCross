@@ -21,12 +21,12 @@ bridges:
       relayCommands: true
       crossDeleteOnDiscord: true
     discord:
-      channelId: "DISCORD_CHANNEL_ID" # This ID must be wrapped in single quotes. Example: '244791815503347712'
+      channelId: 'DISCORD_CHANNEL_ID' # This ID must be wrapped in single quotes. Example: '244791815503347712'
       relayJoinMessages: true
       relayLeaveMessages: true
       sendUsernames: true
       crossDeleteOnTelegram: true
 debug: false
 messageTimeoutAmount: 24
-messageTimeoutUnit: 'hours'
+messageTimeoutUnit: 'hours' # This string must be a valid Moment time format. Example: seconds, minutes, hours, days, weeks, months, years
 persistentMessageMap: false
