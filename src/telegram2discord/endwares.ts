@@ -162,14 +162,14 @@ export const relayMessage = (ctx: TediCrossContext) =>
 			if (typeof messageReference !== "undefined") {
 				const referenceId = messageReference?.message_id;
 				if (typeof referenceId !== "undefined") {
-					console.log("==== telegram2discord/endware.ts reply ====");
-					console.log("referenceId: " + referenceId);
-					console.log("prepared.bridge.name: " + prepared.bridge.name);
+					//console.log("==== telegram2discord/endware.ts reply ====");
+					//console.log("referenceId: " + referenceId);
+					//console.log("prepared.bridge.name: " + prepared.bridge.name);
 					[replyId] = ctx.TediCross.messageMap.getCorrespondingReverse(MessageMap.DISCORD_TO_TELEGRAM, prepared.bridge, referenceId as string);
-					console.log("d2t replyId: " + replyId);
+					//console.log("d2t replyId: " + replyId);
 					if (replyId === undefined ) {
 						[replyId] = ctx.TediCross.messageMap.getCorresponding(MessageMap.TELEGRAM_TO_DISCORD, prepared.bridge, referenceId as string);
-						console.log("t2d replyId: " + replyId);
+						//console.log("t2d replyId: " + replyId);
 					}
 				}
 			}
@@ -181,7 +181,7 @@ export const relayMessage = (ctx: TediCrossContext) =>
 					console.error(`Could not find Message ${replyId} in Discord Channel ${channel.id} on bridge ${prepared.bridge.name}: ${err.message}`);
 					throw err;
 				}) as unknown as Promise<Message>;
-				console.log("messageToReply.id: " + messageToReply.id);
+				//console.log("messageToReply.id: " + messageToReply.id);
 			}
 
 			// Send the attachment first, if there is one

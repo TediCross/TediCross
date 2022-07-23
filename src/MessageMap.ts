@@ -112,7 +112,7 @@ export class MessageMap {
 			if (keyToIdsMap !== undefined) {
 				// Find the ID
 				const [key] = [...keyToIdsMap].find(([, ids]) => ids.has(toId)) ?? "0";
-				console.log("getCorrespondingReverse() key found: " + key);
+				//console.log("getCorrespondingReverse() key found: " + key);
 				if (key !== "0" && typeof key === "string") {
 					fromId = key.split(" ");
 					fromId.shift();
@@ -121,7 +121,7 @@ export class MessageMap {
 
 			return fromId;
 		} catch (err) {
-			console.log("getCorrespondingReverse() Error: " + err);
+			//console.log("getCorrespondingReverse() Error: " + err);
 			// Unknown message ID. Don't do anything
 			return [];
 		}

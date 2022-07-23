@@ -160,14 +160,14 @@ export function setup(
 				if (typeof messageReference !== "undefined") {
 					const referenceId = messageReference?.messageId;
 					if (typeof referenceId !== "undefined") {
-						console.log("==== discord2telegram/setup.ts reply ====");
-						console.log("referenceId: " + referenceId);
-						console.log("bridge.name: " + bridge.name);
+						//console.log("==== discord2telegram/setup.ts reply ====");
+						//console.log("referenceId: " + referenceId);
+						//console.log("bridge.name: " + bridge.name);
 						[replyId] = messageMap.getCorrespondingReverse(MessageMap.TELEGRAM_TO_DISCORD, bridge, referenceId as string);
-						console.log("t2d replyId: " + replyId);
+						//console.log("t2d replyId: " + replyId);
 						if (replyId === undefined) {
 							[replyId] = messageMap.getCorresponding(MessageMap.DISCORD_TO_TELEGRAM, bridge, referenceId as string);
-							console.log("d2t replyId: " + replyId);
+							//console.log("d2t replyId: " + replyId);
 						}
 					}
 				}
