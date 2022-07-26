@@ -109,7 +109,7 @@ export function md2html(text: string) {
 			} else if (node.type === "hr") {
 				return html + "---";
 			} else if (node.type === "link") {
-				return `<a href="${node.target}">${extractText(node)}</a>`;
+				return html + `<a href="${node.target}">${extractText(node)}</a>`;
 			}
 
 			// Turn the nodes into HTML
