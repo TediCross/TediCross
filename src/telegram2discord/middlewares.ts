@@ -575,7 +575,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 			const file = R.ifElse(
 				R.compose(R.isNil, R.prop("file")),
 				R.always(undefined),
-				(tc: TediCrossContext["TediCross"]["tc"]) => new Discord.MessageAttachment(tc.file.link, tc.file.name)
+				(tc: TediCrossContext["TediCross"]["tc"]) => new Discord.AttachmentBuilder(tc.file.link, tc.file.name)
 			)(tc);
 
 			// Make the text to send

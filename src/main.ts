@@ -17,7 +17,7 @@ import { Telegraf } from "telegraf";
 import { setup as telegramSetup, TediTelegraf } from "./telegram2discord/setup";
 
 // Discord stuff
-import { Client as DiscordClient, Intents } from "discord.js";
+import { Client as DiscordClient, GatewayIntentBits } from "discord.js";
 import { setup as discordSetup } from "./discord2telegram/setup";
 
 if (!semver.gte(process.version, "16.0.0")) {
@@ -44,14 +44,12 @@ const args = yargs
 		default: path.join(__dirname, "..", "data"),
 		describe: "Specify the path to the directory to store data in",
 		type: "string"
-	}).argv as { config: string, dataDir: string };
-
+	}).argv as { config: string; dataDir: string };
 
 // Get the settings
 const settingsPath = args.config;
 const rawSettingsObj = jsYaml.load(fs.readFileSync(settingsPath, "utf-8"));
 const settings = Settings.fromObj(rawSettingsObj);
-
 
 // Initialize logger
 const logger = new Logger(settings.debug);
@@ -93,7 +91,9 @@ if (R.not(R.equals(rawSettingsObj, newRawSettingsObj))) {
 const tgBot = new Telegraf(settings.telegram.token);
 
 // Create a Discord bot
-const dcBot = new DiscordClient({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.MESSAGE_CONTENT] });
+const dcBot = new DiscordClient({
+	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
+});
 
 // Create a message ID map
 const messageMap = new MessageMap();

@@ -176,7 +176,7 @@ export function setup(
 				// Check the message for embeds
 				message.embeds.forEach(embed => {
 					// Ignore it if it is not a "rich" embed (image, link, video, ...)
-					if (embed.type !== "rich") {
+					if (embed.data.type !== "rich") {
 						return;
 					}
 
