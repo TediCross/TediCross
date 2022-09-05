@@ -93,7 +93,7 @@ if (R.not(R.equals(rawSettingsObj, newRawSettingsObj))) {
 const tgBot = new Telegraf(settings.telegram.token);
 
 // Create a Discord bot
-const dcBot = new DiscordClient({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+const dcBot = new DiscordClient({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.MESSAGE_CONTENT] });
 
 // Create a message ID map
 const messageMap = new MessageMap();
