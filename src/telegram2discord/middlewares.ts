@@ -9,6 +9,7 @@ import { Message } from "telegraf/typings/core/types/typegram";
 import { TediCrossContext } from "./endwares";
 import { createFromObjFromChat, createFromObjFromMessage, createFromObjFromUser, makeDisplayName } from "./From";
 import { deleteMessage, ignoreAlreadyDeletedError } from "./helpers";
+import { MessageMap } from "../MessageMap";
 
 /***********
  * Helpers *
@@ -501,6 +502,45 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 
 	ctx.tediCross.prepared = await Promise.all(
 		R.map(async (bridge: Bridge) => {
+			// Wait for the Discord bot to become ready
+			await ctx.TediCross.dcBot.ready;
+
+			// Get the channel to send to
+			const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, bridge);
+
+			// Check if the message is a reply and get the id of that message on Discord
+			let replyId = "0";
+			const messageReference = ctx.tediCross.message?.reply_to_message;
+			if (typeof messageReference !== "undefined") {
+				const referenceId = messageReference?.message_id;
+				if (typeof referenceId !== "undefined") {
+					[replyId] = ctx.TediCross.messageMap.getCorrespondingReverse(
+						MessageMap.DISCORD_TO_TELEGRAM,
+						bridge,
+						referenceId as string
+					);
+					if (replyId === undefined) {
+						[replyId] = ctx.TediCross.messageMap.getCorresponding(
+							MessageMap.TELEGRAM_TO_DISCORD,
+							bridge,
+							referenceId as string
+						);
+					}
+				}
+			}
+
+			let messageToReply: any;
+
+			if (replyId !== "0" && replyId !== undefined) {
+				messageToReply = await channel.messages.fetch(replyId).catch((err: Error) => {
+					`Could not find Message ${replyId} in Discord Channel ${channel.id} on bridge ${bridge.name}: ${err.message}`;
+				});
+			}
+
+			if (messageToReply !== undefined) {
+				ctx.tediCross.hasActualReference = true;
+			}
+
 			// Get the name of the sender of this message
 			const senderName = makeDisplayName(ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername, tc.from);
 
@@ -534,6 +574,8 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 					if (!R.isNil(tc.forwardFrom)) {
 						// Forward
 						header = `**${originalSender}** (forwarded by **${senderName}**)`;
+					} else if (tc.hasActualReference) {
+						header = `**${senderName}**`;
 					} else if (!R.isNil(tc.replyTo)) {
 						// Reply
 						header = `**${senderName}** (in reply to **${repliedToName}**)`;
@@ -545,6 +587,8 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 					if (!R.isNil(tc.forwardFrom)) {
 						// Forward
 						header = `(forward from **${originalSender}**)`;
+					} else if (tc.hasActualReference) {
+						header = ``;
 					} else if (!R.isNil(tc.replyTo)) {
 						// Reply
 						header = `(in reply to **${repliedToName}**)`;
@@ -582,7 +626,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 			const text = await (async () => {
 				let text = await handleEntities(tc.text.raw, tc.text.entities, ctx.TediCross.dcBot, bridge);
 
-				if (!R.isNil(replyQuote)) {
+				if (!R.isNil(replyQuote) && !tc.hasActualReference) {
 					text = replyQuote + "\n" + text;
 				}
 
@@ -594,7 +638,9 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				header,
 				senderName,
 				file,
-				text
+				text,
+				messageToReply,
+				replyId
 			};
 		})(tc.bridges)
 	);

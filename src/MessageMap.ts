@@ -92,10 +92,10 @@ export class MessageMap {
 			const key = `${direction} ${fromId}`;
 
 			// Extract the IDs
-			const toIds = keyToIdsMap?.get(key);
+			const toIds = keyToIdsMap?.get(key.toString());
 
 			// Return the ID
-			return [...toIds ?? []];
+			return [...(toIds ?? [])];
 		} catch (err) {
 			// Unknown message ID. Don't do anything
 			return [];
@@ -111,8 +111,7 @@ export class MessageMap {
 			const keyToIdsMap = this._map.get(bridge.name);
 			if (keyToIdsMap !== undefined) {
 				// Find the ID
-				const [key] = [...keyToIdsMap].find(([, ids]) => ids.has(toId)) ?? "0";
-				//console.log("getCorrespondingReverse() key found: " + key);
+				const [key] = [...keyToIdsMap].find(([, ids]) => ids.has(toId.toString())) ?? "0";
 				if (key !== "0" && typeof key === "string") {
 					fromId = key.split(" ");
 					fromId.shift();
@@ -121,7 +120,6 @@ export class MessageMap {
 
 			return fromId;
 		} catch (err) {
-			//console.log("getCorrespondingReverse() Error: " + err);
 			// Unknown message ID. Don't do anything
 			return [];
 		}

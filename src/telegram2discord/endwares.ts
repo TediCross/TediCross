@@ -7,7 +7,6 @@ import { deleteMessage, ignoreAlreadyDeletedError } from "./helpers";
 import { createFromObjFromUser } from "./From";
 import { MessageEditOptions } from "discord.js";
 import { Message, User } from "telegraf/typings/core/types/typegram";
-import { Logger } from "../Logger";
 
 export interface TediCrossContext extends Context {
 	TediCross: any;
@@ -26,6 +25,7 @@ export interface TediCrossContext extends Context {
 		text: any;
 		forwardFrom: any;
 		from: any;
+		hasActualReference: boolean;
 	};
 }
 
@@ -142,10 +142,6 @@ export const leftChatMember = createMessageHandler((ctx: TediCrossContext, bridg
 export const relayMessage = (ctx: TediCrossContext) =>
 	R.forEach(async (prepared: any) => {
 		try {
-			// Discord doesn't handle messages longer than 2000 characters. Split it up into chunks that big
-			const messageText = prepared.header + "\n" + prepared.text;
-			let chunks = R.splitEvery(2000, messageText);
-
 			// Wait for the Discord bot to become ready
 			await ctx.TediCross.dcBot.ready;
 
@@ -153,36 +149,12 @@ export const relayMessage = (ctx: TediCrossContext) =>
 			const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, prepared.bridge);
 
 			let dcMessage = null;
+			const messageToReply = prepared.messageToReply;
+			const replyId = prepared.replyId;
 
-			// Check if the message is a reply and get the id of that message on Discord
-			let replyId = "0";
-			const messageReference = ctx.tediCross.message?.reply_to_message;
-
-
-			if (typeof messageReference !== "undefined") {
-				const referenceId = messageReference?.message_id;
-				if (typeof referenceId !== "undefined") {
-					//console.log("==== telegram2discord/endware.ts reply ====");
-					//console.log("referenceId: " + referenceId);
-					//console.log("prepared.bridge.name: " + prepared.bridge.name);
-					[replyId] = ctx.TediCross.messageMap.getCorrespondingReverse(MessageMap.DISCORD_TO_TELEGRAM, prepared.bridge, referenceId as string);
-					//console.log("d2t replyId: " + replyId);
-					if (replyId === undefined ) {
-						[replyId] = ctx.TediCross.messageMap.getCorresponding(MessageMap.TELEGRAM_TO_DISCORD, prepared.bridge, referenceId as string);
-						//console.log("t2d replyId: " + replyId);
-					}
-				}
-			}
-
-			let messageToReply: any;
-
-			if (replyId !== "0" || replyId === undefined) {
-				messageToReply = await channel.messages.fetch((replyId)).catch((err: Error) => {
-					console.error(`Could not find Message ${replyId} in Discord Channel ${channel.id} on bridge ${prepared.bridge.name}: ${err.message}`);
-					throw err;
-				}) as unknown as Promise<Message>;
-				//console.log("messageToReply.id: " + messageToReply.id);
-			}
+			// Discord doesn't handle messages longer than 2000 characters. Split it up into chunks that big
+			const messageText = prepared.header + "\n" + prepared.text;
+			let chunks = R.splitEvery(2000, messageText);
 
 			// Send the attachment first, if there is one
 			if (!R.isNil(prepared.file)) {
