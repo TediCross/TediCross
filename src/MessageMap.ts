@@ -1,15 +1,31 @@
 import moment from "moment";
 import { Bridge } from "./bridgestuff/Bridge";
+import { Settings } from "./settings/Settings";
+import { Logger } from "./Logger";
+import path from "path";
+import { PersistentMessageMap } from "./PersistentMessageMap";
 
 type Direction = "d2t" | "t2d";
 
+const MAX_32_BIT = 0x7fffffff;
+
 /** Handles mapping between message IDs in discord and telegram, for message editing purposes */
 export class MessageMap {
-	private _map: Map<Bridge, any>;
+	private _map: Map<string, Map<string, Set<string>>>;
+	private _persistentMap: PersistentMessageMap;
+	private _messageTimeoutAmount: number;
+	private _messageTimeoutUnit: moment.unitOfTime.DurationConstructor;
 
-	constructor() {
+	constructor(settings: Settings, logger: Logger, dataDirPath: string) {
 		/** The map itself */
 		this._map = new Map();
+		this._persistentMap = <PersistentMessageMap>{};
+		this._messageTimeoutAmount = settings.messageTimeoutAmount;
+		this._messageTimeoutUnit = settings.messageTimeoutUnit;
+		if (settings.persistentMessageMap) {
+			this._persistentMap = new PersistentMessageMap(logger, path.join(dataDirPath, "persistentMessageMap.json"));
+			this._map = this._persistentMap.getMap();
+		}
 	}
 
 	/**
@@ -22,10 +38,10 @@ export class MessageMap {
 	 */
 	insert(direction: Direction, bridge: Bridge, fromId: string, toId: string) {
 		// Get/create the entry for the bridge
-		let keyToIdsMap = this._map.get(bridge);
+		let keyToIdsMap = this._map.get(bridge.name);
 		if (keyToIdsMap === undefined) {
 			keyToIdsMap = new Map();
-			this._map.set(bridge, keyToIdsMap);
+			this._map.set(bridge.name, keyToIdsMap);
 		}
 
 		// Generate the key and get the corresponding IDs
@@ -39,10 +55,23 @@ export class MessageMap {
 		// Shove the new ID into it
 		toIds.add(toId);
 
-		// Start a timeout removing it again after 24 hours
-		setTimeout(() => {
-			keyToIdsMap.delete(key);
-		}, moment.duration(24, "hours").asMilliseconds());
+		//Check if persistent MessageMap is enabled
+		if (Object.keys(this._persistentMap).length === 0) {
+			// Start a timeout removing it again after a configured amount of time. Default is 24 hours
+			safeTimeout(() => {
+				if (keyToIdsMap) {
+					keyToIdsMap.delete(key);
+				}
+			}, moment.duration(this._messageTimeoutAmount, this._messageTimeoutUnit).asMilliseconds());
+		} else {
+			//Update the Persistent MessageMap with the current MessageMap
+			this._persistentMap.updateMap(this._map);
+		}
+
+		// Start a timeout removing it again after a configured amount of time. Default is 24 hours
+		// setTimeout(() => {
+		// 	keyToIdsMap.delete(key);
+		// }, moment.duration(this._messageTimeoutAmount, this._messageTimeoutUnit).asMilliseconds());
 	}
 
 	/**
@@ -57,16 +86,16 @@ export class MessageMap {
 	getCorresponding(direction: Direction, bridge: Bridge, fromId: string) {
 		try {
 			// Get the key-to-IDs map
-			const keyToIdsMap = this._map.get(bridge);
+			const keyToIdsMap = this._map.get(bridge.name);
 
 			// Create the key
 			const key = `${direction} ${fromId}`;
 
 			// Extract the IDs
-			const toIds = keyToIdsMap.get(key);
+			const toIds = keyToIdsMap?.get(key);
 
 			// Return the ID
-			return [...toIds];
+			return [...toIds ?? []];
 		} catch (err) {
 			// Unknown message ID. Don't do anything
 			return [];
@@ -74,19 +103,28 @@ export class MessageMap {
 	}
 
 	getCorrespondingReverse(_direction: string, bridge: Bridge, toId: string) {
-		// The ID to return
-		let fromId = [];
+		try {
+			// The ID to return
+			let fromId: string[] = [];
 
-		// Get the mappings for this bridge
-		const keyToIdsMap = this._map.get(bridge);
-		if (keyToIdsMap !== undefined) {
-			// Find the ID
-			const [key] = [...keyToIdsMap].find(([, ids]) => ids.has(toId));
-			fromId = key.split(" ");
-			fromId.shift();
+			// Get the mappings for this bridge
+			const keyToIdsMap = this._map.get(bridge.name);
+			if (keyToIdsMap !== undefined) {
+				// Find the ID
+				const [key] = [...keyToIdsMap].find(([, ids]) => ids.has(toId)) ?? "0";
+				//console.log("getCorrespondingReverse() key found: " + key);
+				if (key !== "0" && typeof key === "string") {
+					fromId = key.split(" ");
+					fromId.shift();
+				}
+			}
+
+			return fromId;
+		} catch (err) {
+			//console.log("getCorrespondingReverse() Error: " + err);
+			// Unknown message ID. Don't do anything
+			return [];
 		}
-
-		return fromId;
 	}
 
 	/** Constant indicating direction discord to telegram */
@@ -100,3 +138,13 @@ export class MessageMap {
 	}
 }
 
+// Recursive Timeout to handle delays larger than the maximum value of 32-bit signed integers
+function safeTimeout(onTimeout: Function, delay: number) {
+	setTimeout(() => {
+		if (delay > MAX_32_BIT) {
+			return safeTimeout(onTimeout, delay - MAX_32_BIT);
+		} else {
+			onTimeout();
+		}
+	}, Math.min(MAX_32_BIT, delay));
+}

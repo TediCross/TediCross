@@ -7,6 +7,7 @@ import { deleteMessage, ignoreAlreadyDeletedError } from "./helpers";
 import { createFromObjFromUser } from "./From";
 import { MessageEditOptions } from "discord.js";
 import { Message, User } from "telegraf/typings/core/types/typegram";
+import { Logger } from "../Logger";
 
 export interface TediCrossContext extends Context {
 	TediCross: any;
@@ -152,13 +153,51 @@ export const relayMessage = (ctx: TediCrossContext) =>
 			const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, prepared.bridge);
 
 			let dcMessage = null;
+
+			// Check if the message is a reply and get the id of that message on Discord
+			let replyId = "0";
+			const messageReference = ctx.tediCross.message?.reply_to_message;
+
+
+			if (typeof messageReference !== "undefined") {
+				const referenceId = messageReference?.message_id;
+				if (typeof referenceId !== "undefined") {
+					//console.log("==== telegram2discord/endware.ts reply ====");
+					//console.log("referenceId: " + referenceId);
+					//console.log("prepared.bridge.name: " + prepared.bridge.name);
+					[replyId] = ctx.TediCross.messageMap.getCorrespondingReverse(MessageMap.DISCORD_TO_TELEGRAM, prepared.bridge, referenceId as string);
+					//console.log("d2t replyId: " + replyId);
+					if (replyId === undefined ) {
+						[replyId] = ctx.TediCross.messageMap.getCorresponding(MessageMap.TELEGRAM_TO_DISCORD, prepared.bridge, referenceId as string);
+						//console.log("t2d replyId: " + replyId);
+					}
+				}
+			}
+
+			let messageToReply: any;
+
+			if (replyId !== "0" || replyId === undefined) {
+				messageToReply = await channel.messages.fetch((replyId)).catch((err: Error) => {
+					console.error(`Could not find Message ${replyId} in Discord Channel ${channel.id} on bridge ${prepared.bridge.name}: ${err.message}`);
+					throw err;
+				}) as unknown as Promise<Message>;
+				//console.log("messageToReply.id: " + messageToReply.id);
+			}
+
 			// Send the attachment first, if there is one
 			if (!R.isNil(prepared.file)) {
 				try {
-					dcMessage = await channel.send({
-						content: R.head(chunks),
-						files: [prepared.file]
-					});
+					if (replyId === "0" || replyId === undefined || messageToReply === undefined) {
+						dcMessage = await channel.send({
+							content: R.head(chunks),
+							files: [prepared.file]
+						});
+					} else {
+						dcMessage = await messageToReply.reply({
+							content: R.head(chunks),
+							files: [prepared.file]
+						});
+					}
 					chunks = R.tail(chunks);
 				} catch (err: any) {
 					if (err.message === "Request entity too large") {
@@ -170,12 +209,19 @@ export const relayMessage = (ctx: TediCrossContext) =>
 					}
 				}
 			}
-			// Send the rest in serial
-			dcMessage = await R.reduce(
-				(p, chunk) => p.then(() => channel.send(chunk)),
-				Promise.resolve(dcMessage),
-				chunks
-			);
+			if (replyId === "0" || replyId === undefined || messageToReply === undefined) {
+				dcMessage = await R.reduce(
+					(p, chunk) => p.then(() => channel.send(chunk)),
+					Promise.resolve(dcMessage),
+					chunks
+				);
+			} else {
+				dcMessage = await R.reduce(
+					(p, chunk) => p.then(() => messageToReply.reply(chunk)),
+					Promise.resolve(dcMessage),
+					chunks
+				);
+			}
 
 			// Make the mapping so future edits can work XXX Only the last chunk is considered
 			ctx.TediCross.messageMap.insert(
