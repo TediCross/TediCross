@@ -163,10 +163,18 @@ export function setup(
 						//console.log("==== discord2telegram/setup.ts reply ====");
 						//console.log("referenceId: " + referenceId);
 						//console.log("bridge.name: " + bridge.name);
-						[replyId] = messageMap.getCorrespondingReverse(MessageMap.TELEGRAM_TO_DISCORD, bridge, referenceId as string);
+						[replyId] = messageMap.getCorrespondingReverse(
+							MessageMap.TELEGRAM_TO_DISCORD,
+							bridge,
+							referenceId as string
+						);
 						//console.log("t2d replyId: " + replyId);
 						if (replyId === undefined) {
-							[replyId] = messageMap.getCorresponding(MessageMap.DISCORD_TO_TELEGRAM, bridge, referenceId as string);
+							[replyId] = messageMap.getCorresponding(
+								MessageMap.DISCORD_TO_TELEGRAM,
+								bridge,
+								referenceId as string
+							);
 							//console.log("d2t replyId: " + replyId);
 						}
 					}
@@ -286,8 +294,8 @@ export function setup(
 				message
 					.reply(
 						"This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. " +
-						"If you wish to use TediCross yourself, please download and create an instance. " +
-						"See https://github.com/TediCross/TediCross"
+							"If you wish to use TediCross yourself, please download and create an instance. " +
+							"See https://github.com/TediCross/TediCross"
 					)
 					// Delete it again after some time
 					.then(sleepOneMinute)
@@ -350,11 +358,9 @@ export function setup(
 
 			try {
 				// Get the corresponding Telegram message IDs
-				const tgMessageIds = (
-					isFromTelegram
-						? messageMap.getCorrespondingReverse(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id)
-						: messageMap.getCorresponding(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id)
-				);
+				const tgMessageIds = isFromTelegram
+					? messageMap.getCorrespondingReverse(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id)
+					: messageMap.getCorresponding(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id);
 				// Try to delete them
 				await Promise.all(
 					tgMessageIds.map(tgMessageId => tgBot.telegram.deleteMessage(bridge.telegram.chatId, +tgMessageId))
