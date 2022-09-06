@@ -276,8 +276,8 @@ function informThisIsPrivateBot(ctx: TediCrossContext, next: () => void) {
 				// Send the reply
 				ctx.reply(
 					"This is an instance of a [TediCross](https://github.com/TediCross/TediCross) bot, " +
-						"bridging a chat in Telegram with one in Discord. " +
-						"If you wish to use TediCross yourself, please download and create an instance.",
+					"bridging a chat in Telegram with one in Discord. " +
+					"If you wish to use TediCross yourself, please download and create an instance.",
 					{
 						parse_mode: "Markdown"
 					}
@@ -514,17 +514,22 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 			if (typeof messageReference !== "undefined") {
 				const referenceId = messageReference?.message_id;
 				if (typeof referenceId !== "undefined") {
-					[replyId] = ctx.TediCross.messageMap.getCorrespondingReverse(
+					//console.log("==== telegram2discord reply ====");
+					//console.log("referenceId: " + referenceId);
+					//console.log("bridge.name: " + bridge.name);
+					[replyId] = await ctx.TediCross.messageMap.getCorrespondingReverse(
 						MessageMap.DISCORD_TO_TELEGRAM,
 						bridge,
 						referenceId as string
 					);
+					//console.log("d2t replyId: " + replyId);
 					if (replyId === undefined) {
-						[replyId] = ctx.TediCross.messageMap.getCorresponding(
+						[replyId] = await ctx.TediCross.messageMap.getCorresponding(
 							MessageMap.TELEGRAM_TO_DISCORD,
 							bridge,
 							referenceId as string
 						);
+						//console.log("t2d replyId: " + replyId);
 					}
 				}
 			}
@@ -555,19 +560,19 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				const repliedToName = R.isNil(tc.replyTo)
 					? null
 					: await R.ifElse(
-							R.prop("isReplyToTediCross") as any,
-							R.compose(
-								(username: string) => makeDiscordMention(username, ctx.TediCross.dcBot, bridge),
-								R.prop("dcUsername") as any
-							),
-							R.compose(
-								R.partial(makeDisplayName, [
-									ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername
-								]),
-								//@ts-ignore
-								R.prop("originalFrom")
-							)
-					  )(tc.replyTo);
+						R.prop("isReplyToTediCross") as any,
+						R.compose(
+							(username: string) => makeDiscordMention(username, ctx.TediCross.dcBot, bridge),
+							R.prop("dcUsername") as any
+						),
+						R.compose(
+							R.partial(makeDisplayName, [
+								ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername
+							]),
+							//@ts-ignore
+							R.prop("originalFrom")
+						)
+					)(tc.replyTo);
 				// Build the header
 				let header = "";
 				if (bridge.telegram.sendUsernames) {

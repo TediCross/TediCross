@@ -160,17 +160,17 @@ export function setup(
 				if (typeof messageReference !== "undefined") {
 					const referenceId = messageReference?.messageId;
 					if (typeof referenceId !== "undefined") {
-						//console.log("==== discord2telegram/setup.ts reply ====");
+						//console.log("==== discord2telegram reply ====");
 						//console.log("referenceId: " + referenceId);
 						//console.log("bridge.name: " + bridge.name);
-						[replyId] = messageMap.getCorrespondingReverse(
+						[replyId] = await messageMap.getCorrespondingReverse(
 							MessageMap.TELEGRAM_TO_DISCORD,
 							bridge,
 							referenceId as string
 						);
 						//console.log("t2d replyId: " + replyId);
 						if (replyId === undefined) {
-							[replyId] = messageMap.getCorresponding(
+							[replyId] = await messageMap.getCorresponding(
 								MessageMap.DISCORD_TO_TELEGRAM,
 								bridge,
 								referenceId as string
@@ -294,8 +294,8 @@ export function setup(
 				message
 					.reply(
 						"This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. " +
-							"If you wish to use TediCross yourself, please download and create an instance. " +
-							"See https://github.com/TediCross/TediCross"
+						"If you wish to use TediCross yourself, please download and create an instance. " +
+						"See https://github.com/TediCross/TediCross"
 					)
 					// Delete it again after some time
 					.then(sleepOneMinute)
@@ -316,12 +316,14 @@ export function setup(
 		// Pass it on to the bridges
 		bridgeMap.fromDiscordChannelId(Number(newMessage.channel.id)).forEach(async bridge => {
 			try {
+
 				// Get the corresponding Telegram message ID
-				const [tgMessageId] = messageMap.getCorresponding(
+				let [tgMessageId] = await messageMap.getCorresponding(
 					MessageMap.DISCORD_TO_TELEGRAM,
 					bridge,
 					newMessage.id
 				);
+				//console.log("d2t edit getCorresponding: " + tgMessageId);
 
 				// Get info about the sender
 				const senderName =
@@ -359,8 +361,9 @@ export function setup(
 			try {
 				// Get the corresponding Telegram message IDs
 				const tgMessageIds = isFromTelegram
-					? messageMap.getCorrespondingReverse(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id)
-					: messageMap.getCorresponding(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id);
+					? await messageMap.getCorrespondingReverse(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id) 
+					: await messageMap.getCorresponding(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id);
+				console.log("d2t delete: " + tgMessageIds);
 				// Try to delete them
 				await Promise.all(
 					tgMessageIds.map(tgMessageId => tgBot.telegram.deleteMessage(bridge.telegram.chatId, +tgMessageId))

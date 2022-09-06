@@ -23,8 +23,7 @@ export class MessageMap {
 		this._messageTimeoutAmount = settings.messageTimeoutAmount;
 		this._messageTimeoutUnit = settings.messageTimeoutUnit;
 		if (settings.persistentMessageMap) {
-			this._persistentMap = new PersistentMessageMap(logger, path.join(dataDirPath, "persistentMessageMap.json"));
-			this._map = this._persistentMap.getMap();
+			this._persistentMap = new PersistentMessageMap(logger, path.join(dataDirPath, "persistentMessageMap.db"));
 		}
 	}
 
@@ -37,26 +36,26 @@ export class MessageMap {
 	 * @param toId	Message ID to map to, i.e. the ID of the message the bot sent
 	 */
 	insert(direction: Direction, bridge: Bridge, fromId: string, toId: string) {
-		// Get/create the entry for the bridge
-		let keyToIdsMap = this._map.get(bridge.name);
-		if (keyToIdsMap === undefined) {
-			keyToIdsMap = new Map();
-			this._map.set(bridge.name, keyToIdsMap);
-		}
-
-		// Generate the key and get the corresponding IDs
-		const key = `${direction} ${fromId}`;
-		let toIds = keyToIdsMap.get(key);
-		if (toIds === undefined) {
-			toIds = new Set();
-			keyToIdsMap.set(key, toIds);
-		}
-
-		// Shove the new ID into it
-		toIds.add(toId);
-
-		//Check if persistent MessageMap is enabled
+		//Check if persistent MessageMap is not enabled
 		if (Object.keys(this._persistentMap).length === 0) {
+			// Get/create the entry for the bridge
+			let keyToIdsMap = this._map.get(bridge.name);
+			if (keyToIdsMap === undefined) {
+				keyToIdsMap = new Map();
+				this._map.set(bridge.name, keyToIdsMap);
+			}
+
+			// Generate the key and get the corresponding IDs
+			const key = `${direction} ${fromId}`;
+			let toIds = keyToIdsMap.get(key);
+			if (toIds === undefined) {
+				toIds = new Set();
+				keyToIdsMap.set(key, toIds);
+			}
+
+			// Shove the new ID into it
+			toIds.add(toId);
+
 			// Start a timeout removing it again after a configured amount of time. Default is 24 hours
 			safeTimeout(() => {
 				if (keyToIdsMap) {
@@ -64,14 +63,8 @@ export class MessageMap {
 				}
 			}, moment.duration(this._messageTimeoutAmount, this._messageTimeoutUnit).asMilliseconds());
 		} else {
-			//Update the Persistent MessageMap with the current MessageMap
-			this._persistentMap.updateMap(this._map);
+			this._persistentMap.insert(direction, bridge, fromId, toId);
 		}
-
-		// Start a timeout removing it again after a configured amount of time. Default is 24 hours
-		// setTimeout(() => {
-		// 	keyToIdsMap.delete(key);
-		// }, moment.duration(this._messageTimeoutAmount, this._messageTimeoutUnit).asMilliseconds());
 	}
 
 	/**
@@ -83,42 +76,66 @@ export class MessageMap {
 	 *
 	 * @returns Message IDs of the corresponding message, i.e. the IDs of the messages the bot sent
 	 */
-	getCorresponding(direction: Direction, bridge: Bridge, fromId: string) {
+	async getCorresponding(direction: Direction, bridge: Bridge, fromId: string) {
 		try {
-			// Get the key-to-IDs map
-			const keyToIdsMap = this._map.get(bridge.name);
+			//Check if persistent MessageMap is not enabled
+			if (Object.keys(this._persistentMap).length === 0) {
+				// Get the key-to-IDs map
+				const keyToIdsMap = this._map.get(bridge.name);
 
-			// Create the key
-			const key = `${direction} ${fromId}`;
+				// Create the key
+				const key = `${direction} ${fromId}`;
 
-			// Extract the IDs
-			const toIds = keyToIdsMap?.get(key.toString());
+				// Extract the IDs
+				const toIds = keyToIdsMap?.get(key.toString());
 
-			// Return the ID
-			return [...(toIds ?? [])];
+				// Return the ID
+				console.log([...(toIds ?? [])]);
+				return [...(toIds ?? [])];
+			} else {
+				let toIds: string[] = [];
+				toIds = await this._persistentMap.getCorresponding(direction, bridge, fromId);
+				// console.log("getCorresponding Return");
+				// console.log(toIds);
+				return toIds
+			}
 		} catch (err) {
 			// Unknown message ID. Don't do anything
 			return [];
 		}
 	}
 
-	getCorrespondingReverse(_direction: string, bridge: Bridge, toId: string) {
+	async getCorrespondingReverse(_direction: string, bridge: Bridge, toId: string) {
 		try {
-			// The ID to return
-			let fromId: string[] = [];
+			//Check if persistent MessageMap is not enabled
+			if (Object.keys(this._persistentMap).length === 0) {
+				// The ID to return
+				let fromId: string[] = [];
 
-			// Get the mappings for this bridge
-			const keyToIdsMap = this._map.get(bridge.name);
-			if (keyToIdsMap !== undefined) {
-				// Find the ID
-				const [key] = [...keyToIdsMap].find(([, ids]) => ids.has(toId.toString())) ?? "0";
+				// Get the mappings for this bridge
+				const keyToIdsMap = this._map.get(bridge.name);
+				if (keyToIdsMap !== undefined) {
+					// Find the ID
+					const [key] = [...keyToIdsMap].find(([, ids]) => ids.has(toId.toString())) ?? "0";
+					if (key !== "0" && typeof key === "string") {
+						fromId = key.split(" ");
+						fromId.shift();
+					}
+				}
+
+				console.log(fromId);
+				return fromId;
+			} else {
+				let fromId: string[] = [];
+				let key = await this._persistentMap.getCorrespondingReverse(bridge, toId);
+				// console.log("getCorrespondingReverse Return");
+				// console.log(fromId);
 				if (key !== "0" && typeof key === "string") {
 					fromId = key.split(" ");
 					fromId.shift();
 				}
+				return fromId;
 			}
-
-			return fromId;
 		} catch (err) {
 			// Unknown message ID. Don't do anything
 			return [];
