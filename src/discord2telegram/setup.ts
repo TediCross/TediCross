@@ -363,7 +363,7 @@ export function setup(
 				const tgMessageIds = isFromTelegram
 					? await messageMap.getCorrespondingReverse(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id) 
 					: await messageMap.getCorresponding(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id);
-				console.log("d2t delete: " + tgMessageIds);
+				//console.log("d2t delete: " + tgMessageIds);
 				// Try to delete them
 				await Promise.all(
 					tgMessageIds.map(tgMessageId => tgBot.telegram.deleteMessage(bridge.telegram.chatId, +tgMessageId))

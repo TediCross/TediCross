@@ -90,7 +90,7 @@ export class MessageMap {
 				const toIds = keyToIdsMap?.get(key.toString());
 
 				// Return the ID
-				console.log([...(toIds ?? [])]);
+				//console.log([...(toIds ?? [])]);
 				return [...(toIds ?? [])];
 			} else {
 				let toIds: string[] = [];
@@ -123,7 +123,7 @@ export class MessageMap {
 					}
 				}
 
-				console.log(fromId);
+				//console.log(fromId);
 				return fromId;
 			} else {
 				let fromId: string[] = [];
