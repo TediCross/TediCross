@@ -31,26 +31,29 @@ export class PersistentMessageMap {
 		/** The path of the file this map is connected to */
 		this._filepath = filepath;
 
+
+		let dbExists = true;
+
 		try {
 			// Check if the file exists. This throws if it doesn't
 			fs.accessSync(this._filepath, fs.constants.F_OK);
 		} catch (e) {
 			// Nope, it doesn't. Create it
-			open({
-				filename: this._filepath,
-				driver: sqlite3.cached.Database
-			}).then(async (db) => {
-				await db.exec('CREATE TABLE Bridges (BridgeName TEXT PRIMARY KEY)');
-				await db.exec('CREATE TABLE KeysToIds ("Key" TEXT PRIMARY KEY, BridgeName REFERENCES Bridges (BridgeName))');
-				await db.exec('CREATE TABLE ToIds (Ids TEXT PRIMARY KEY, "Key" TEXT REFERENCES KeysToIds ("Key"))');
-				await db.close();
-			}).catch(err => this._logger.error("Error Creating Database", err));
+			dbExists = false;
 		}
 
 		this._db = open({
 			filename: this._filepath,
 			driver: sqlite3.cached.Database
 		});
+
+		if (!dbExists) {
+			this._db.then(async (db) => {
+				await db.exec('CREATE TABLE Bridges (pk INTEGER PRIMARY KEY AUTOINCREMENT, BridgeName TEXT)');
+				await db.exec('CREATE TABLE KeysToIds (pk INTEGER PRIMARY KEY AUTOINCREMENT, [Bridges.pk] INTEGER REFERENCES Bridges (pk), Keys TEXT)');
+				await db.exec('CREATE TABLE ToIds (pk INTEGER PRIMARY KEY AUTOINCREMENT, [KeysToIds.pk] INTEGER REFERENCES KeysToIds (pk), Ids TEXT)');
+			}).catch(err => this._logger.error("Error Creating Database", err));
+		}
 	}
 
 	insert(direction: Direction, bridge: Bridge, fromId: string, toId: string) {
@@ -65,14 +68,15 @@ export class PersistentMessageMap {
 						':sqlBridgeName': bridge.name
 					});
 			}
-			await db.run("INSERT INTO KeysToIds ([Key],BridgeName) VALUES (:sqlKey,:sqlBridgeName)",
+			await db.run("INSERT INTO KeysToIds ([Bridges.pk], Keys) VALUES ((SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName), :sqlKey)",
 				{
 					':sqlKey': `${direction} ${fromId}`,
 					':sqlBridgeName': bridge.name
 				});
-			await db.run("INSERT INTO ToIds (Ids,[Key]) VALUES (:sqlIds,:sqlKey)",
+			await db.run("INSERT INTO ToIds ([KeysToIds.pk],Ids) VALUES ((SELECT pk FROM KeysToIds WHERE Keys = :sqlKey and [Bridges.pk] = (SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName)),:sqlIds)",
 				{
 					':sqlIds': toId,
+					':sqlBridgeName': bridge.name,
 					':sqlKey': `${direction} ${fromId}`
 				});
 		}).catch(err => this._logger.error("Error Inserting into Database", err));
@@ -82,7 +86,7 @@ export class PersistentMessageMap {
 		let toId: string[] = [];
 		const results = await this._db.then(async (db) => {
 
-			const result = await db.all('SELECT Ids FROM ToIds WHERE [Key] = (SELECT [Key] FROM KeysToIds WHERE [Key] = :sqlKey AND BridgeName = :sqlBridgeName)',
+			const result = await db.all('SELECT Ids FROM ToIds WHERE [KeysToIds.pk] = (SELECT pk FROM KeysToIds WHERE Keys = :sqlKey and [Bridges.pk] = (SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName))',
 				{
 					':sqlKey': `${direction} ${fromId}`,
 					':sqlBridgeName': bridge.name
@@ -92,16 +96,16 @@ export class PersistentMessageMap {
 		if (results !== undefined) {
 			results.forEach((id) => { toId.push(id.Ids); });
 		}
-		// this._logger.log("getCorresponding for: " + bridge.name + " " + direction + " " + fromId);
-		// this._logger.log(results);
-		// this._logger.log(toId);
+		 //this._logger.log("getCorresponding for: " + bridge.name + " " + direction + " " + fromId);
+		 //this._logger.log(results);
+		 //this._logger.log(toId);
 		return toId;
 	}
 
 	async getCorrespondingReverse(bridge: Bridge, toId: string) {
 		let fromId = "";
 		const results = await this._db.then(async (db) => {
-			const result = await db.get('SELECT [Key] FROM KeysToIds WHERE BridgeName = :sqlBridgeName AND [Key] = (SELECT [Key] FROM ToIds WHERE Ids = :sqlIds)',
+			const result = await db.get('SELECT Keys FROM KeysToIds WHERE [Bridges.pk] = (SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName) AND pk = (SELECT [KeysToIds.pk] FROM ToIds WHERE Ids = :sqlIds)',
 				{
 					':sqlBridgeName': bridge.name,
 					':sqlIds': toId
@@ -109,11 +113,11 @@ export class PersistentMessageMap {
 			return result;
 		}).catch(err => this._logger.error("Error getting Corresponding Reverse from Database", err));
 		if (results !== undefined) {
-			fromId = results.Key;
+			fromId = results.Keys;
 		}
-		// this._logger.log("getCorrespondingReverse for: " + bridge.name + " " + toId);
-		// this._logger.log(results);
-		// this._logger.log(fromId);
+		 //this._logger.log("getCorrespondingReverse for: " + bridge.name + " " + toId);
+		 //this._logger.log(results);
+		 //this._logger.log(fromId);
 		return fromId;
 	}
 }
