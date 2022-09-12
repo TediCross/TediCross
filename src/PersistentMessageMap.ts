@@ -1,6 +1,10 @@
 import fs from "fs";
 import { Logger } from "./Logger";
-const promisify = require("util").promisify;
+import sqlite3 from 'sqlite3';
+import { Database, open } from 'sqlite';
+import { Bridge } from "./bridgestuff/Bridge";
+import { forEach } from "ramda";
+type Direction = "d2t" | "t2d";
 
 /*************************************
  * The PersistentMessageMap class *
@@ -12,8 +16,7 @@ const promisify = require("util").promisify;
 export class PersistentMessageMap {
 	private _logger: Logger;
 	private _filepath: string;
-	private _map: Map<string, Map<string, Set<string>>>;
-	private _finishedWriting: Promise<void>;
+	private _db: Promise<Database<sqlite3.Database, sqlite3.Statement>>;
 
 	/**
 	 * Creates a new instance which keeps track of messages and bridges
@@ -28,95 +31,93 @@ export class PersistentMessageMap {
 		/** The path of the file this map is connected to */
 		this._filepath = filepath;
 
-		/** The actual map */
-		this._map = new Map();
+
+		let dbExists = true;
 
 		try {
 			// Check if the file exists. This throws if it doesn't
 			fs.accessSync(this._filepath, fs.constants.F_OK);
 		} catch (e) {
 			// Nope, it doesn't. Create it
-			fs.writeFileSync(this._filepath, JSON.stringify({}));
+			dbExists = false;
 		}
 
-		// Read the file
-		let data = null;
-		try {
-			//TODO added encoding. Check if it still works
-			data = fs.readFileSync(this._filepath, "utf8");
-		} catch (err) {
-			// Well, the file has been confirmed to exist, so there must be no read access
-			this._logger.error(`Cannot read the file ${this._filepath}:`, err);
-			data = JSON.stringify({});
-		}
+		this._db = open({
+			filename: this._filepath,
+			driver: sqlite3.cached.Database
+		});
 
-		try {
-			// Read the contents as JSON
-			this._map = new Map(JSON.parse(data, reviver));
-		} catch (err) {
-			// Invalid JSON
-			this._logger.error(`Could not read or parse the file ${this._filepath}:`, err);
-			this._map = new Map();
-		}
-
-		/** Promise which resolves when writing has finished. Meant to be chained with every write operation */
-		this._finishedWriting = Promise.resolve();
-
-		// Bind methods to avoid problems with `this`
-		this.updateMap = this.updateMap.bind(this);
-		this.getMap = this.getMap.bind(this);
-	}
-
-	/**
-	 * Update the Persistent MessageMap with the current MessageMap
-	 *
-	 * @param map The current map from MessageMap
-	 */
-	updateMap(map: Map<string, any>) {
-		// Update the bridge map
-		this._map = map;
-
-		// Write it to file when previous writes have completed
-		this._finishedWriting = this._finishedWriting
-			.then(() => promisify(fs.writeFile)(this._filepath, JSON.stringify(this._map, replacer, "\t")))
-			.catch(err => this._logger.error("Writing last Discord message ID to file failed!", err));
-	}
-
-	/**
-	 * Get the current Persistent MessageMap
-	 *
-	 * @returns Map of the current Persistent MessageMap
-	 */
-	getMap() {
-		return this._map;
-	}
-}
-
-// Replacer function to stringify MessageMap
-function replacer(key: string, value: any) {
-	if (value instanceof Map) {
-		return {
-			dataType: 'Map',
-			value: Array.from(value.entries()), // or with spread: value: [...value]
-		};
-	} else if (value instanceof Set) {
-		return {
-			dataType: 'Set',
-			value: Array.from(value.values()), // or with spread: value: [...value]
-		};
-	} else {
-		return value;
-	}
-}
-
-// Reviver function to parse MessageMap
-function reviver(key: string, value: any) {
-	if (typeof value === 'object' && value !== null) {
-		if (value.dataType === 'Map') {
-			return new Map(value.value);
-		} else if (value.dataType === 'Set') {
-			return new Set(value.value);
+		if (!dbExists) {
+			this._db.then(async (db) => {
+				await db.exec('CREATE TABLE Bridges (pk INTEGER PRIMARY KEY AUTOINCREMENT, BridgeName TEXT)');
+				await db.exec('CREATE TABLE KeysToIds (pk INTEGER PRIMARY KEY AUTOINCREMENT, [Bridges.pk] INTEGER REFERENCES Bridges (pk), Keys TEXT)');
+				await db.exec('CREATE TABLE ToIds (pk INTEGER PRIMARY KEY AUTOINCREMENT, [KeysToIds.pk] INTEGER REFERENCES KeysToIds (pk), Ids TEXT)');
+			}).catch(err => this._logger.error("Error Creating Database", err));
 		}
 	}
-	return value;
+
+	insert(direction: Direction, bridge: Bridge, fromId: string, toId: string) {
+		this._db.then(async (db) => {
+			const bridgeCheck = await db.get("SELECT BridgeName FROM Bridges WHERE BridgeName = :sqlBridgeName",
+				{
+					':sqlBridgeName': bridge.name
+				});
+			if (bridgeCheck === undefined) {
+				await db.run("INSERT INTO Bridges (BridgeName) VALUES (:sqlBridgeName)",
+					{
+						':sqlBridgeName': bridge.name
+					});
+			}
+			await db.run("INSERT INTO KeysToIds ([Bridges.pk], Keys) VALUES ((SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName), :sqlKey)",
+				{
+					':sqlKey': `${direction} ${fromId}`,
+					':sqlBridgeName': bridge.name
+				});
+			await db.run("INSERT INTO ToIds ([KeysToIds.pk],Ids) VALUES ((SELECT pk FROM KeysToIds WHERE Keys = :sqlKey and [Bridges.pk] = (SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName)),:sqlIds)",
+				{
+					':sqlIds': toId,
+					':sqlBridgeName': bridge.name,
+					':sqlKey': `${direction} ${fromId}`
+				});
+		}).catch(err => this._logger.error("Error Inserting into Database", err));
+	}
+
+	async getCorresponding(direction: Direction, bridge: Bridge, fromId: string) {
+		let toId: string[] = [];
+		const results = await this._db.then(async (db) => {
+
+			const result = await db.all('SELECT Ids FROM ToIds WHERE [KeysToIds.pk] = (SELECT pk FROM KeysToIds WHERE Keys = :sqlKey and [Bridges.pk] = (SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName))',
+				{
+					':sqlKey': `${direction} ${fromId}`,
+					':sqlBridgeName': bridge.name
+				});
+			return result;
+		}).catch(err => this._logger.error("Error getting Corresponding from Database", err));
+		if (results !== undefined) {
+			results.forEach((id) => { toId.push(id.Ids); });
+		}
+		 //this._logger.log("getCorresponding for: " + bridge.name + " " + direction + " " + fromId);
+		 //this._logger.log(results);
+		 //this._logger.log(toId);
+		return toId;
+	}
+
+	async getCorrespondingReverse(bridge: Bridge, toId: string) {
+		let fromId = "";
+		const results = await this._db.then(async (db) => {
+			const result = await db.get('SELECT Keys FROM KeysToIds WHERE [Bridges.pk] = (SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName) AND pk = (SELECT [KeysToIds.pk] FROM ToIds WHERE Ids = :sqlIds)',
+				{
+					':sqlBridgeName': bridge.name,
+					':sqlIds': toId
+				});
+			return result;
+		}).catch(err => this._logger.error("Error getting Corresponding Reverse from Database", err));
+		if (results !== undefined) {
+			fromId = results.Keys;
+		}
+		 //this._logger.log("getCorrespondingReverse for: " + bridge.name + " " + toId);
+		 //this._logger.log(results);
+		 //this._logger.log(fromId);
+		return fromId;
+	}
 }

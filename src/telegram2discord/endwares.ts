@@ -216,12 +216,17 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 	// Function to "delete" a message on Discord
 	const del = async (ctx: TediCrossContext, bridge: any) => {
 		try {
+
+			// Wait for the Discord bot to become ready
+			await ctx.TediCross.dcBot.ready;
+
 			// Find the ID of this message on Discord
-			const [dcMessageId] = ctx.TediCross.messageMap.getCorresponding(
+			let [dcMessageId] = await ctx.TediCross.messageMap.getCorresponding(
 				MessageMap.TELEGRAM_TO_DISCORD,
 				bridge,
 				ctx.tediCross.message.message_id
 			);
+			//console.log("t2d delete getCorresponding: " + dcMessageId);
 
 			// Get the channel to delete on
 			const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, bridge);
@@ -245,15 +250,16 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 		try {
 			const tgMessage = ctx.tediCross.message;
 
+			// Wait for the Discord bot to become ready
+			await ctx.TediCross.dcBot.ready;
+
 			// Find the ID of this message on Discord
-			const [dcMessageId] = ctx.TediCross.messageMap.getCorresponding(
+			let [dcMessageId] = await ctx.TediCross.messageMap.getCorresponding(
 				MessageMap.TELEGRAM_TO_DISCORD,
 				bridge,
 				tgMessage.message_id
 			);
-
-			// Wait for the Discord bot to become ready
-			await ctx.TediCross.dcBot.ready;
+			//console.log("t2d edit getCorresponding: " + dcMessageId);
 
 			// Get the messages from Discord
 			const dcMessage = await fetchDiscordChannel(ctx.TediCross.dcBot, bridge).then(channel =>
