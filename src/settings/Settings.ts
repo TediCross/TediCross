@@ -4,11 +4,15 @@ import { Bridge } from "../bridgestuff/Bridge";
 import { TelegramSettings } from "./TelegramSettings";
 import { DiscordSettings } from "./DiscordSettings";
 import jsYaml from "js-yaml";
+import moment from "moment";
 
 interface SettingProperties {
 	telegram: TelegramSettings;
 	discord: DiscordSettings;
 	debug: boolean;
+	messageTimeoutAmount: number;
+	messageTimeoutUnit: moment.unitOfTime.DurationConstructor;
+	persistentMessageMap: boolean;
 	bridges: Bridge[];
 	token: string;
 }
@@ -22,6 +26,9 @@ interface SettingProperties {
  */
 export class Settings {
 	debug: boolean;
+	messageTimeoutAmount: number;
+	messageTimeoutUnit: moment.unitOfTime.DurationConstructor;
+	persistentMessageMap: boolean;
 	discord: DiscordSettings;
 	telegram: TelegramSettings;
 	bridges: Bridge[];
@@ -34,6 +41,9 @@ export class Settings {
 	 * @param settings.discord Settings for the Discord bot. See the constructor of {@link DiscordSettings}
 	 * @param settings.bridges Settings for the bridges. See the constructor of {@link Bridge}
 	 * @param settings.debug Whether or not to print debug messages
+	 * @param settings.messageTimeoutAmount Amount for your unit of time to expire messages in MessageMap
+	 * @param settings.messageTimeoutUnit Format of time as a string (ie: 'hours', 'days', 'weeks', etc)
+	 * @param settings.persistentMessageMap Allow MessageMap to persist between reboots by saving it to a file
 	 *
 	 * @throws If the raw settings object does not validate
 	 */
@@ -49,6 +59,15 @@ export class Settings {
 
 		/** Whether or not to print debug messages */
 		this.debug = settings.debug;
+
+		/** Amount for your unit of time to expire messages in MessageMap */
+		this.messageTimeoutAmount = settings.messageTimeoutAmount;
+
+		/** Format of time as a string (ie: 'hours', 'days', 'weeks', etc) */
+		this.messageTimeoutUnit = settings.messageTimeoutUnit;
+
+		/** Allow MessageMap to persist between reboots by saving it to a file */
+		this.persistentMessageMap = settings.persistentMessageMap;
 
 		/** The config for the bridges */
 		this.bridges = settings.bridges;
@@ -88,6 +107,12 @@ export class Settings {
 	 * @throws If the object is not suitable. The error message says what the problem is
 	 */
 	static validate(settings: SettingProperties) {
+
+		// An Array of valid units of time
+		const validUnitsOfTime = ["year", "years", "y", "month", "months", "M", "week", "weeks", "w",
+			"day", "days", "d", "hour", "hours", "h", "minute", "minutes", "m", "second", "seconds", "s",
+			"millisecond", "milliseconds", "ms"];
+
 		// Check that the settings are indeed in object form
 		if (!(settings instanceof Object)) {
 			throw new Error("`settings` must be an object");
@@ -98,6 +123,21 @@ export class Settings {
 			throw new Error("`settings.debug` must be a boolean");
 		}
 
+		// Check that messageTimeoutAmount is a number
+		if (isNaN(settings.messageTimeoutAmount)) {
+			throw new Error("`settings.messageTimeoutAmount` must be a number");
+		}
+
+		// Check that messageTimeoutUnit is also a valid unit of time
+		if (!validUnitsOfTime.includes(settings.messageTimeoutUnit)) {
+			throw new Error("`settings.messageTimeoutUnit` is not a valid unit of time");
+		}
+
+		// Check that persistentMessageMap is a boolean
+		if (Boolean(settings.persistentMessageMap) !== settings.persistentMessageMap) {
+			throw new Error("`settings.persistentMessageMap` must be a boolean");
+		}
+
 		// Check that `bridges` is an array
 		if (!(settings.bridges instanceof Array)) {
 			throw new Error("`settings.bridges` must be an array");
@@ -105,6 +145,15 @@ export class Settings {
 
 		// Check that the bridges are valid
 		settings.bridges.forEach(Bridge.validate);
+
+		// Check that all the bridges have unique names
+		settings.bridges.forEach(function (value: Bridge, index: number, array: Bridge[]) {
+			for (let i = 0; i < array.length; i++) {
+				if ((value.name === array[i].name) && (i !== index)) {
+					throw new Error("`settings.bridges` must have unique names for each bridge");
+				}
+			}
+		});
 	}
 
 	/**
@@ -181,6 +230,9 @@ export class Settings {
 			telegram: TelegramSettings.DEFAULTS,
 			discord: DiscordSettings.DEFAULTS,
 			bridges: [],
+			messageTimeoutAmount: 24,
+			messageTimeoutUnit: 'hours',
+			persistentMessageMap: false,
 			debug: false
 		} as any;
 	}

@@ -11,7 +11,7 @@
     "build": "tsc",
     "postinstall": "npm run build",
     "start": "node dist/main.js",
-    "start:dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/main.ts -i data/",
+    "start:dev": "nodemon --watch 'src/**/*.ts' --exec ts-node src/main.ts -i data/",
     "lint": "eslint src/**/*.ts",
     "clean": "rimraf dist/"
   },
@@ -23,7 +23,7 @@
     "@types/yargs": "^17.0.8",
     "@typescript-eslint/eslint-plugin": "^5.13.0",
     "@typescript-eslint/parser": "^5.13.0",
-    "discord.js": "^13.3.1",
+    "discord.js": "^14.3.0",
     "js-yaml": "^4.1.0",
     "mime": "^3.0.0",
     "moment": "^2.29.1",
@@ -32,7 +32,9 @@
     "simple-markdown": "^0.7.3",
     "telegraf": "^4.7.0",
     "typescript": "^4.5.5",
-    "yargs": "^17.3.0"
+    "yargs": "^17.3.0",
+    "sqlite3": "^5.0.11",
+    "sqlite": "^4.1.2"
   },
   "devDependencies": {
     "eslint": "^8.5.0",

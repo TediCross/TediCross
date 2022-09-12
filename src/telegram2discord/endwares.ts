@@ -25,6 +25,7 @@ export interface TediCrossContext extends Context {
 		text: any;
 		forwardFrom: any;
 		from: any;
+		hasActualReference: boolean;
 	};
 }
 
@@ -141,10 +142,6 @@ export const leftChatMember = createMessageHandler((ctx: TediCrossContext, bridg
 export const relayMessage = (ctx: TediCrossContext) =>
 	R.forEach(async (prepared: any) => {
 		try {
-			// Discord doesn't handle messages longer than 2000 characters. Split it up into chunks that big
-			const messageText = prepared.header + "\n" + prepared.text;
-			let chunks = R.splitEvery(2000, messageText);
-
 			// Wait for the Discord bot to become ready
 			await ctx.TediCross.dcBot.ready;
 
@@ -152,13 +149,27 @@ export const relayMessage = (ctx: TediCrossContext) =>
 			const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, prepared.bridge);
 
 			let dcMessage = null;
+			const messageToReply = prepared.messageToReply;
+			const replyId = prepared.replyId;
+
+			// Discord doesn't handle messages longer than 2000 characters. Split it up into chunks that big
+			const messageText = prepared.header + "\n" + prepared.text;
+			let chunks = R.splitEvery(2000, messageText);
+
 			// Send the attachment first, if there is one
 			if (!R.isNil(prepared.file)) {
 				try {
-					dcMessage = await channel.send({
-						content: R.head(chunks),
-						files: [prepared.file]
-					});
+					if (replyId === "0" || replyId === undefined || messageToReply === undefined) {
+						dcMessage = await channel.send({
+							content: R.head(chunks),
+							files: [prepared.file]
+						});
+					} else {
+						dcMessage = await messageToReply.reply({
+							content: R.head(chunks),
+							files: [prepared.file]
+						});
+					}
 					chunks = R.tail(chunks);
 				} catch (err: any) {
 					if (err.message === "Request entity too large") {
@@ -170,12 +181,19 @@ export const relayMessage = (ctx: TediCrossContext) =>
 					}
 				}
 			}
-			// Send the rest in serial
-			dcMessage = await R.reduce(
-				(p, chunk) => p.then(() => channel.send(chunk)),
-				Promise.resolve(dcMessage),
-				chunks
-			);
+			if (replyId === "0" || replyId === undefined || messageToReply === undefined) {
+				dcMessage = await R.reduce(
+					(p, chunk) => p.then(() => channel.send(chunk)),
+					Promise.resolve(dcMessage),
+					chunks
+				);
+			} else {
+				dcMessage = await R.reduce(
+					(p, chunk) => p.then(() => messageToReply.reply(chunk)),
+					Promise.resolve(dcMessage),
+					chunks
+				);
+			}
 
 			// Make the mapping so future edits can work XXX Only the last chunk is considered
 			ctx.TediCross.messageMap.insert(
@@ -198,12 +216,17 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 	// Function to "delete" a message on Discord
 	const del = async (ctx: TediCrossContext, bridge: any) => {
 		try {
+
+			// Wait for the Discord bot to become ready
+			await ctx.TediCross.dcBot.ready;
+
 			// Find the ID of this message on Discord
-			const [dcMessageId] = ctx.TediCross.messageMap.getCorresponding(
+			let [dcMessageId] = await ctx.TediCross.messageMap.getCorresponding(
 				MessageMap.TELEGRAM_TO_DISCORD,
 				bridge,
 				ctx.tediCross.message.message_id
 			);
+			//console.log("t2d delete getCorresponding: " + dcMessageId);
 
 			// Get the channel to delete on
 			const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, bridge);
@@ -227,15 +250,16 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 		try {
 			const tgMessage = ctx.tediCross.message;
 
+			// Wait for the Discord bot to become ready
+			await ctx.TediCross.dcBot.ready;
+
 			// Find the ID of this message on Discord
-			const [dcMessageId] = ctx.TediCross.messageMap.getCorresponding(
+			let [dcMessageId] = await ctx.TediCross.messageMap.getCorresponding(
 				MessageMap.TELEGRAM_TO_DISCORD,
 				bridge,
 				tgMessage.message_id
 			);
-
-			// Wait for the Discord bot to become ready
-			await ctx.TediCross.dcBot.ready;
+			//console.log("t2d edit getCorresponding: " + dcMessageId);
 
 			// Get the messages from Discord
 			const dcMessage = await fetchDiscordChannel(ctx.TediCross.dcBot, bridge).then(channel =>
