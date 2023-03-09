@@ -26,7 +26,7 @@
     "discord.js": "^14.3.0",
     "js-yaml": "^4.1.0",
     "mime": "^3.0.0",
-    "moment": "^2.29.1",
+    "moment": "^2.29.4",
     "ramda": "^0.27.1",
     "semver": "^7.3.5",
     "simple-markdown": "^0.7.3",
