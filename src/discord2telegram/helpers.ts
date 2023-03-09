@@ -11,11 +11,9 @@ import R from "ramda";
  *
  * @throws The error, if it is another type
  */
-export const ignoreAlreadyDeletedError = R.ifElse(
-	R.propEq("message", "Unknown Message"),
-	R.always(undefined),
-	err => {throw err;}
-);
+export const ignoreAlreadyDeletedError = R.ifElse(R.propEq("message", "Unknown Message"), R.always(undefined), err => {
+	throw err;
+});
 
 /**
  * Converts characters '&', '<' and '>' in strings into HTML safe strings
@@ -29,4 +27,3 @@ export const escapeHTMLSpecialChars = R.compose(
 	R.replace(/</g, "&lt;"),
 	R.replace(/&/g, "&amp;")
 );
-

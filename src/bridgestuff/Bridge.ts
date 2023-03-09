@@ -3,7 +3,6 @@ import { BridgeSettingsDiscord } from "./BridgeSettingsDiscord";
 import { BridgeSettingsTelegramProperties } from "./BridgeSettingsTelegram";
 import { BridgeSettingsDiscordProperties } from "./BridgeSettingsDiscord";
 
-
 export interface BridgeProperties {
 	name: string;
 	telegram: BridgeSettingsTelegramProperties;
@@ -67,7 +66,13 @@ export class Bridge {
 		}
 
 		// Check the direction
-		if (![Bridge.DIRECTION_BOTH, Bridge.DIRECTION_DISCORD_TO_TELEGRAM, Bridge.DIRECTION_TELEGRAM_TO_DISCORD].includes(settings.direction)) {
+		if (
+			![
+				Bridge.DIRECTION_BOTH,
+				Bridge.DIRECTION_DISCORD_TO_TELEGRAM,
+				Bridge.DIRECTION_TELEGRAM_TO_DISCORD
+			].includes(settings.direction)
+		) {
 			throw new Error("`settings.direction` is not a valid bridge direction");
 		}
 

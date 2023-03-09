@@ -24,19 +24,22 @@ import { chatinfo, handleEdits, leftChatMember, newChatMembers, relayMessage, Te
 function clearOldMessages(tgBot: Telegraf, offset = -1): Promise<void> {
 	const timeout = 0;
 	const limit = 100;
-	return tgBot.telegram.getUpdates(timeout, limit, offset, []).then(
-		R.ifElse(
-			R.isEmpty,
-			R.always(undefined),
-			R.compose<any, any>(
-				newOffset => clearOldMessages(tgBot, newOffset),
-				//@ts-ignore
-				R.add(1),
-				R.prop("update_id"),
-				R.last
+	return tgBot.telegram
+		.getUpdates(timeout, limit, offset, [])
+		.then(
+			R.ifElse(
+				R.isEmpty,
+				R.always(undefined),
+				R.compose<any, any>(
+					newOffset => clearOldMessages(tgBot, newOffset),
+					//@ts-ignore
+					R.add(1),
+					R.prop("update_id"),
+					R.last
+				)
 			)
 		)
-	).then(() => undefined);
+		.then(() => undefined);
 }
 
 /**********************
@@ -45,8 +48,9 @@ function clearOldMessages(tgBot: Telegraf, offset = -1): Promise<void> {
 
 export interface TediTelegraf extends Telegraf {
 	use: any | TediCrossContext;
+	// eslint-disable-next-line
 	on: any | ((value: string) => TediCrossContext);
-	context: TediCrossContext
+	context: TediCrossContext;
 }
 
 /**
@@ -59,7 +63,14 @@ export interface TediTelegraf extends Telegraf {
  * @param bridgeMap Map of the bridges to use
  * @param settings The settings to use
  */
-export function setup(logger: Logger, tgBot: TediTelegraf, dcBot: Client, messageMap: MessageMap, bridgeMap: BridgeMap, settings: Settings) {
+export function setup(
+	logger: Logger,
+	tgBot: TediTelegraf,
+	dcBot: Client,
+	messageMap: MessageMap,
+	bridgeMap: BridgeMap,
+	settings: Settings
+) {
 	//@ts-ignore
 	tgBot.ready = Promise.all([
 		// Get info about the bot

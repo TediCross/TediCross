@@ -22,9 +22,7 @@ export class Logger extends console.Console {
 		this.info = this._wrapper(this.info, "INFO");
 		this.error = this._wrapper(this.error, "ERR");
 		this.warn = this._wrapper(this.warn, "WARN");
-		this.debug = this._debugEnabled
-			? this._wrapper(this.debug, "DEBUG")
-			: dummy;
+		this.debug = this._debugEnabled ? this._wrapper(this.debug, "DEBUG") : dummy;
 	}
 
 	/**

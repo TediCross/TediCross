@@ -44,10 +44,7 @@ export function createFromObjFromMessage(message: Message) {
 		// This message is from a channel
 		message => createFromObj(message.chat.title, "", ""),
 		// This message is from a user
-		R.compose(
-			createFromObjFromUser,
-			R.prop("from") as any
-		)
+		R.compose(createFromObjFromUser, R.prop("from") as any)
 	)(message);
 }
 

@@ -2,7 +2,7 @@ TediCross
 =========
 TediCross is a bot which bridges a chat in [Telegram](https://telegram.org) with a channel in [Discord](https://discordapp.com/).
 
-There is no public TediCross bot. You need to host it yourself. To host a bot, you need [nodejs](https://nodejs.org). The bot requires NodeJS 14.9 or higher
+There is no public TediCross bot. You need to host it yourself. To host a bot, you need [nodejs](https://nodejs.org). The bot requires NodeJS 16 or higher
 
 
 TediCross News Channel
@@ -23,7 +23,7 @@ Step by step installation:
 --------------------------
 Setting up the bot requires basic knowledge of the command line, which is bash or similar on Linux/Mac, and cmd.exe in Windows
 
- 1. Install [nodejs](https://nodejs.org). TediCross requires at least node version 14.9
+ 1. Install [nodejs](https://nodejs.org). TediCross requires at least node version 16
  2. Clone this git repo, or download it as a zip or whatever
  3. Open a terminal and enter the repo with the [`cd`](https://en.wikipedia.org/wiki/Cd_(command)) command. Something like `cd Downloads/TediCross-master`. Your exact command may differ
  4. Run the command `npm install --production`
@@ -31,11 +31,11 @@ Setting up the bot requires basic knowledge of the command line, which is bash o
  6. Aquire a bot token for Telegram ([How to create a Telegram bot](https://core.telegram.org/bots#3-how-do-i-create-a-bot)) and put it in the settings file
    - The Telegram bot must be able to access all messages. Talk to [@BotFather](https://t.me/BotFather) to disable privacy mode for the bot
    - Do NOT use another bot you already have running. That will cause all sorts of weird problems. Make a new one
- 7. Aquire a bot token for Discord ([How to create a Discord bot](https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token)) and put it in the settings file under `discord.token`. **NOTE** that the token is NOT the "Client Secret". The token is under the section "App bot user" further down the page
+ 7. Aquire a bot token for Discord ([How to create a Discord bot](https://discordjs.guide/preparations/setting-up-a-bot-application.html)), enable the `Message Content Intent` under `Bot` > `Privileged Gateway Intents` and put it in the settings file under `discord.token`. **NOTE** that the token is NOT the "Client Secret". The token is under the section "Bot" further down the page
    - Do NOT use another bot you already have running. That will cause all sorts of weird problems. Make a new one
  8. Add the Telegram bot to the Telegram chat
    - If the Telegram chat is a supergroup, the bot also needs to be admin of the group, or it won't get the messages. The creator of the supergroup is able to give it admin rights
- 9. Add the Discord bot to the Discord server (https://discordapp.com/oauth2/authorize?client_id=YOUR_CLIENT_ID_HERE&scope=bot&permissions=248832). This requires that you have admin rights on the server
+ 9. Add the Discord bot to the Discord server (https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID_HERE&scope=bot&permissions=248832). This requires that you have admin rights on the server
  10. Start TediCross: `npm start`
  11. Ask the bots for the remaining details. In the Telegram chat and the Discord channel, write `/chatinfo`. Put the info you get in the settings file.
    - If you want to bridge a Telegram group or channel, remember that the ID is negative. Include the `-` when entering it into the settings file
@@ -63,6 +63,9 @@ As mentioned in the step by step installation guide, there is a settings file. H
 	* `replyLength`: How many characters of the original message to display on replies
 	* `maxReplyLines`: How many lines of the original message to display on replies
 * `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
+* `messageTimeoutAmount`: Amount for your unit of time to expire messages in MessageMap. Defaults to `24`
+* `messageTimeoutUnit`: Format of time as a string (ie: 'hours', 'days', 'weeks', etc). Defaults to `'hours'`
+* `persistentMessageMap`: Allow MessageMap to persist between reboots by saving it to a file. Defaults to `false`
 * `bridges`: An array containing all your chats and channels. For each object in this array, you should have the following properties:
 	* `name`: A internal name of the chat. Appears in the log
 	* `direction`: Direction of the bridge. "both" for bidirectional, "d2t" for discord-to-telegram, "t2d" for telegram-to-discord
@@ -97,10 +100,10 @@ Not much at all. Almost all the commands are written in the installation guide e
 
 This likely means you are using Ubuntu or another Debian based Linux distro. You get node version 4 when you do `apt-get install nodejs`, and it is called `nodejs` instead of `node`.
 
-TediCross requires node 14.9 or higher to run. To get node 14 on a debian based system (including Ubuntu), run the following two commands:
+TediCross requires node 16 or higher to run. To get node 16 on a debian based system (including Ubuntu), run the following two commands:
 
 ```
-curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
@@ -192,6 +195,9 @@ This has been tried, and it did indeed make the messages much prettier. The bot 
 
 No
 
+### Why is TediCross sending a link to this repository to my chat (Advertizing? Spam?)?
+
+TediCross will send a link to this documentation to every chat it is in which is not configured to bridge correctly. Please use this documentation to configure your bot for bridging and the behavior will stop.
 
 Other questions?
 ----------------
