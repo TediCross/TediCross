@@ -69,7 +69,7 @@ As mentioned in the step by step installation guide, there is a settings file. H
 * `bridges`: An array containing all your chats and channels. For each object in this array, you should have the following properties:
 	* `name`: A internal name of the chat. Appears in the log
 	* `direction`: Direction of the bridge. "both" for bidirectional, "d2t" for discord-to-telegram, "t2d" for telegram-to-discord
-	* `telegram.chatId`: ID of the chat that is the Telegram end of this bridge. See step 11 on how to aquire it
+	* `telegram.chatId`: ID of the chat that is the Telegram end of this bridge. See step 11 on how to acquire it
 	* `telegram.relayJoinMessages`: Whether or not to relay messages to Discord about people joining the Telegram chat
 	* `telegram.relayLeaveMessages`: Whether or not to relay messages to Discord about people leaving the Telegram chat
 	* `telegram.sendUsernames`: Whether or not to send the sender's name with the messages to Discord
