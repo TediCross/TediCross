@@ -1,0 +1,18 @@
+{
+    "image": "mcr.microsoft.com/devcontainers/javascript-node:0-18-bullseye",
+    "features": {
+      "ghcr.io/devcontainers/features/common-utils:1": {
+          "version": "latest"
+      },
+      "ghcr.io/devcontainers/features/github-cli:1": {
+          "version": "latest"
+      },
+      "ghcr.io/devcontainers/features/git-lfs:1": {
+          "version": "latest"
+      },
+      "ghcr.io/devcontainers/features/sshd:1": {
+          "version": "latest"
+      }
+    }
+  }
+  
