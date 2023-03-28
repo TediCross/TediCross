@@ -47,3 +47,4 @@ data/
 
 # Built files
 dist/
+.vscode/settings.json
