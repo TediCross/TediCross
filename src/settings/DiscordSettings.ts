@@ -4,6 +4,8 @@ interface Settings {
 	useNickname: boolean;
 	maxReplyLines: number;
 	skipOldMessages: boolean;
+	enablePlayingStatus: boolean;
+	usePlayingStatusMessage: string;
 }
 
 /*****************************
@@ -21,6 +23,8 @@ export class DiscordSettings {
 	replyLength: number;
 	maxReplyLines: number;
 	skipOldMessages: boolean;
+	enablePlayingStatus: boolean;
+	usePlayingStatusMessage: string;
 
 	/**
 	 * Creates a new DiscordSettings object
@@ -49,6 +53,10 @@ export class DiscordSettings {
 
 		/** How many lines of the original message to show in replies from Telegram */
 		this.maxReplyLines = settings.maxReplyLines;
+
+		this.enablePlayingStatus = settings.enablePlayingStatus;
+
+		this.usePlayingStatusMessage = settings.usePlayingStatusMessage;
 	}
 
 	/** The bot token to use */
@@ -108,6 +116,16 @@ export class DiscordSettings {
 		if (!Number.isInteger(settings.maxReplyLines) || settings.maxReplyLines <= 0) {
 			throw new Error("`settings.maxReplyLines` must be an integer greater than 0");
 		}
+
+		// Check that `enablePlayingStatus` is a boolean
+		if (Boolean(settings.enablePlayingStatus) !== settings.enablePlayingStatus) {
+			throw new Error("`settings.enablePlayingStatus` must be a boolean");
+		}
+
+		// Check that the usePlayingStatusMessage is a string
+		if (typeof settings.usePlayingStatusMessage !== "string") {
+			throw new Error("`settings.usePlayingStatusMessage` must be a string");
+		}
 	}
 
 	/** Constant telling the Discord token should be gotten from the environment */
@@ -120,7 +138,9 @@ export class DiscordSettings {
 		return {
 			token: DiscordSettings.GET_TOKEN_FROM_ENVIRONMENT,
 			skipOldMessages: true,
-			useNickname: false
+			useNickname: false,
+			enablePlayingStatus: false,
+			usePlayingStatusMessage: "TediCross"
 		};
 	}
 }
