@@ -5,6 +5,8 @@ interface Settings {
 	maxReplyLines: number;
 	skipOldMessages: boolean;
 	suppressThisIsPrivateBotMessage: boolean;
+	enablePlayingStatus: boolean;
+	usePlayingStatusMessage: string;
 }
 
 /*****************************
@@ -23,6 +25,8 @@ export class DiscordSettings {
 	maxReplyLines: number;
 	skipOldMessages: boolean;
 	suppressThisIsPrivateBotMessage: boolean;
+	enablePlayingStatus: boolean;
+	usePlayingStatusMessage: string;
 
 	/**
 	 * Creates a new DiscordSettings object
@@ -52,6 +56,12 @@ export class DiscordSettings {
 
 		/** Whether to suppress warning in channel when no bridge configured */
 		this.suppressThisIsPrivateBotMessage = settings.suppressThisIsPrivateBotMessage;
+
+		/** Whether to enable the playing status */
+		this.enablePlayingStatus = settings.enablePlayingStatus;
+
+		/** The playing status message */
+		this.usePlayingStatusMessage = settings.usePlayingStatusMessage;
 	}
 
 	/** The bot token to use */
@@ -106,6 +116,16 @@ export class DiscordSettings {
 		if (Boolean(settings.suppressThisIsPrivateBotMessage) !== settings.suppressThisIsPrivateBotMessage) {
 			throw new Error("`settings.suppressThisIsPrivateBotMessage` must be a boolean");
 		}
+
+		// Check that `enablePlayingStatus` is a boolean
+		if (Boolean(settings.enablePlayingStatus) !== settings.enablePlayingStatus) {
+			throw new Error("`settings.enablePlayingStatus` must be a boolean");
+		}
+
+		// Check that the usePlayingStatusMessage is a string
+		if (typeof settings.usePlayingStatusMessage !== "string") {
+			throw new Error("`settings.usePlayingStatusMessage` must be a string");
+		}
 	}
 
 	/** Constant telling the Discord token should be gotten from the environment */
@@ -119,7 +139,9 @@ export class DiscordSettings {
 			token: DiscordSettings.GET_TOKEN_FROM_ENVIRONMENT,
 			skipOldMessages: true,
 			useNickname: false,
-			suppressThisIsPrivateBotMessage: false
+			suppressThisIsPrivateBotMessage: false,
+			enablePlayingStatus: false,
+			usePlayingStatusMessage: "TediCross"
 		};
 	}
 }
