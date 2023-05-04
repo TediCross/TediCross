@@ -1,5 +1,6 @@
 import { Embed } from "discord.js";
 import { md2html } from "./md2html";
+import { TelegramSettings } from "../settings/TelegramSettings";
 
 /****************************
  * The handleEmbed function *
@@ -13,7 +14,7 @@ import { md2html } from "./md2html";
  *
  * @returns A string ready to send to Telegram
  */
-export function handleEmbed(embed: Embed, senderName: string) {
+export function handleEmbed(embed: Embed, senderName: string, settings: TelegramSettings) {
 	// Construct the text to send
 	let text = `<b>${senderName}</b>\n`;
 
@@ -32,12 +33,12 @@ export function handleEmbed(embed: Embed, senderName: string) {
 
 	// Handle the description
 	if (embed.description !== undefined) {
-		text += md2html(embed.description!) + "\n";
+		text += md2html(embed.description!, settings) + "\n";
 	}
 
 	// Handle the fields
 	embed.fields.forEach(field => {
-		text += `\n<b>${field.name}</b>\n` + md2html(field.value) + "\n";
+		text += `\n<b>${field.name}</b>\n` + md2html(field.value, settings) + "\n";
 	});
 
 	// Handle the author part

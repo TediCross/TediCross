@@ -4,6 +4,10 @@ telegram:
   colonAfterSenderName: false
   skipOldMessages: true
   sendEmojiWithStickers: true
+  useCustomEmojiFilter: false # Experimental, might break
+  replaceAtWithHash: false # Experimental, might break
+  replaceExcessiveSpaces: false # Experimental, might break
+  removeNewlineSpaces: false # Experimental, might break
 discord:
   useNickname: false
   token: DISCORD_BOT_TOKEN_HERE # Discord bot tokens look like this: MjI3MDA1NzIvOBQ2MzAzMiMz.DRf-aw.N0MVYtDxXYPSQew4g2TPqvQve2c
