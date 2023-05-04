@@ -1,5 +1,12 @@
 import simpleMarkdown, { SingleASTNode } from "simple-markdown";
-import { escapeHTMLSpecialChars } from "./helpers";
+import { TelegramSettings } from "../settings/TelegramSettings";
+import {
+	escapeHTMLSpecialChars,
+	customEmojiFilter,
+	replaceAtWithHash,
+	replaceExcessiveSpaces,
+	removeNewlineSpaces
+} from "./helpers";
 import R from "ramda";
 
 /***********
@@ -80,7 +87,7 @@ const mdParse = simpleMarkdown.defaultBlockParse;
  *
  * @return Telegram-friendly HTML
  */
-export function md2html(text: string) {
+export function md2html(text: string, settings: TelegramSettings) {
 	// XXX Some users get a space after @ in mentions bridged to Telegram. See #148
 	// This is compensation for that discord error
 	text = R.replace("@\u200B", "@", R.defaultTo("", text));
@@ -118,6 +125,24 @@ export function md2html(text: string) {
 			// Build the HTML
 			return html + `${tags.start}${extractText(node)}${tags.end}`;
 		}, "");
+	return htmlCleanup(html, settings);
+}
 
-	return html;
+function htmlCleanup(input: string, settings: TelegramSettings) {
+	if (settings.useCustomEmojiFilter) {
+		input = customEmojiFilter(input);
+	}
+
+	if (settings.replaceAtWithHash) {
+		input = replaceAtWithHash(input);
+	}
+
+	if (settings.replaceExcessiveSpaces) {
+		input = replaceExcessiveSpaces(input);
+	}
+
+	if (settings.removeNewlineSpaces) {
+		input = removeNewlineSpaces(input);
+	}
+	return input;
 }
