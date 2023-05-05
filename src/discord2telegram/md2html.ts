@@ -2,7 +2,6 @@ import simpleMarkdown, { SingleASTNode } from "simple-markdown";
 import { escapeHTMLSpecialChars } from "./helpers";
 import R from "ramda";
 
-
 /***********
  * Helpers *
  ***********/
