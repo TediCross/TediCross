@@ -4,6 +4,11 @@ interface SettingProperties {
 	colonAfterSenderName: boolean;
 	sendEmojiWithStickers: boolean;
 	useFirstNameInsteadOfUsername: boolean;
+	filterCustomEmojis: string;
+	replaceCustomEmojisWith: string;
+	replaceAtSign: boolean;
+	replaceAtSignWith: string;
+	removeExcessiveSpacings: boolean;
 }
 
 /******************************
@@ -17,6 +22,11 @@ export class TelegramSettings {
 	colonAfterSenderName: boolean;
 	skipOldMessages: boolean;
 	sendEmojiWithStickers: boolean;
+	filterCustomEmojis: string;
+	replaceCustomEmojisWith: string;
+	replaceAtSign: boolean;
+	replaceAtSignWith: string;
+	removeExcessiveSpacings: boolean;
 
 	/**
 	 * Creates a new TelegramSettings object
@@ -27,7 +37,11 @@ export class TelegramSettings {
 	 * @param settings.colonAfterSenderName Whether or not to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name`
 	 * @param settings.skipOldMessages Whether or not to skip through all previous messages cached from the telegram-side and start processing new messages ONLY
 	 * @param settings.sendEmojiWithStickers Whether or not to send the corresponding emoji when relaying stickers to Discord
-	 *
+	 * @param settings.filterCustomEmojis Determines what to do with custom emojis from Discord message before it reaches telegram
+	 * @param settings.replaceCustomEmojisWith Determines the string that will be used as a replacement for custom emojis
+	 * @param settings.replaceAtSign Whether or not to replace '@' sign to something else from Discord message before it reaches telegram
+	 * @param settings.replaceAtSignWith Determines the string that will be used as a replacement for '@' sign
+	 * @param settings.removeExcessiveSpacings Whether or not to remove excessive (2 or more) whitespaces from Discord message
 	 * @throws If the settings object does not validate
 	 */
 	constructor(settings: SettingProperties) {
@@ -48,6 +62,21 @@ export class TelegramSettings {
 
 		/** Whether or not to send the corresponding emoji when relaying stickers to Discord */
 		this.sendEmojiWithStickers = settings.sendEmojiWithStickers;
+
+		/** Determines what to do with custom emojis from Discord message before it reaches telegram */
+		this.filterCustomEmojis = settings.filterCustomEmojis;
+
+		/** Determines the string that will be used as a replacement for custom emojis */
+		this.replaceCustomEmojisWith = settings.replaceCustomEmojisWith;
+
+		/** Whether or not to replace '@' sign to something else from discord message before it reaches telegram */
+		this.replaceAtSign = settings.replaceAtSign;
+
+		/** Determines the string that will be used as a replacement for '@' sign */
+		this.replaceAtSignWith = settings.replaceAtSignWith;
+
+		/** Whether or not to remove excessive (2 or more) whitespaces from Discord message */
+		this.removeExcessiveSpacings = settings.removeExcessiveSpacings;
 	}
 
 	/** The bot token to use */
@@ -107,6 +136,27 @@ export class TelegramSettings {
 		if (Boolean(settings.sendEmojiWithStickers) !== settings.sendEmojiWithStickers) {
 			throw new Error("`settings.sendEmojiWithStickers` must be a boolean");
 		}
+
+		// Check that filterCustomEmojis is a string
+		if (typeof settings.filterCustomEmojis !== 'string') {
+			throw new Error("`settings.filterCustomEmojis` must be a string");
+		}
+		// Check that replaceCustomEmojisWith is a string
+		if (typeof settings.replaceCustomEmojisWith !== 'string') {
+			throw new Error("`settings.replaceCustomEmojisWith` must be a string");
+		}
+		// Check that replaceAtSign is a boolean
+		if (Boolean(settings.replaceAtSign) !== settings.replaceAtSign) {
+			throw new Error("`settings.replaceAtSign` must be a boolean");
+		}
+		// Check that replaceAtSignWith is a string
+		if (typeof settings.replaceAtSignWith !== 'string') {
+			throw new Error("`settings.replaceAtSignWith` must be a string");
+		}
+		// Check that removeExcessiveSpacings is a boolean
+		if (Boolean(settings.removeExcessiveSpacings) !== settings.removeExcessiveSpacings) {
+			throw new Error("`settings.removeExcessiveSpacings` must be a boolean");
+		}
 	}
 
 	/** Constant telling the Telegram token should be gotten from the environment */
@@ -121,7 +171,12 @@ export class TelegramSettings {
 			useFirstNameInsteadOfUsername: false,
 			colonAfterSenderName: false,
 			skipOldMessages: true,
-			sendEmojiWithStickers: true
+			sendEmojiWithStickers: true,
+			filterCustomEmojis: 'default',
+			replaceCustomEmojisWith: '🔹',
+			replaceAtSign: false,
+			replaceAtSignWith: '#',
+			removeExcessiveSpacings: false
 		};
 	}
 }

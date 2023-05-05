@@ -35,21 +35,35 @@ export const escapeHTMLSpecialChars = R.compose(
  *
  * @returns Filtered string
  */
-export function customEmojiFilter(input: string){
-	const regex = /\&lt;[^;]*\&gt;/gi;
+export function removeCustomEmojis(input: string){
+	const regex = /\&lt;[^;]*\&gt;\s?/gi;
 	return input.split(regex).join('');
+}
+
+/**
+ * Replaces custom emojis with a definable custom string
+ *
+ * @param input The string that needs to be processed
+ * @param replacement The string that will be used as a replacement for custom emojis
+ *
+ * @returns Filtered string
+ */
+export function replaceCustomEmojis(input: string, replacement: string){
+	const regex = /\&lt;[^;]*\&gt;/g;
+	return input.replace(regex, replacement);
 }
 
 /**
  * Replaces @ with # to prevent unneeded references in Telegram
  *
  * @param input The string that needs to be processed
+ * @param replacement The string that will be used as a replacement for @ in the output
  *
  * @returns Processed string
  */
-export function replaceAtWithHash(input: string){
+export function replaceAtWith(input: string, replacement: string ){
 	const regex = /\@/g;
-	return input.replace(regex, '#');
+	return input.replace(regex, replacement);
 }
 
 /**
@@ -62,17 +76,5 @@ export function replaceAtWithHash(input: string){
 export function replaceExcessiveSpaces(input: string){
 	const regex = /[^\S\n]{2,}/g;
 	return input.replace(regex, ' ');
-}
-
-/**
- * Removes whitespaces if they're placed at the beginning of the newline
- *
- * @param input The string that needs to be processed
- *
- * @returns Processed string
- */
-export function removeNewlineSpaces(input: string){
-	const regex = /^[^\S\n]*/gm;
-	return input.replace(regex, '');
 }
 
