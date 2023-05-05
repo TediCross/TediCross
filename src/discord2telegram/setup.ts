@@ -11,7 +11,7 @@ import { fetchDiscordChannel } from "../fetchDiscordChannel";
 import { Logger } from "../Logger";
 import { BridgeMap } from "../bridgestuff/BridgeMap";
 import { Telegraf } from "telegraf";
-import { escapeHTMLSpecialChars, ignoreAlreadyDeletedError } from "./helpers";
+import { escapeHTMLSpecialChars, ignoreAlreadyDeletedError, removeCustomEmojis, replaceCustomEmojis, replaceAtWith, replaceExcessiveSpaces } from "./helpers";
 import { Client, Message, TextChannel } from "discord.js";
 import { Settings } from "../settings/Settings";
 
@@ -245,7 +245,32 @@ export function setup(
 				// Check if there is an ordinary text message
 				if (message.cleanContent) {
 					// Modify the message to fit Telegram
-					const processedMessage = md2html(message.cleanContent);
+					const processedMessage = messageCleanup(md2html(message.cleanContent));
+
+					// Making a couple of optional formatting adjustments 
+					function messageCleanup(input: string){
+						// Processing custom emojis per settings
+						if(settings.telegram.filterCustomEmojis !== 'default'){
+							switch(settings.telegram.filterCustomEmojis){
+								case 'remove' :
+									input = removeCustomEmojis(input)
+									break
+								case 'replace' :
+									input = replaceCustomEmojis(input, settings.telegram.replaceCustomEmojisWith)
+									break
+							}
+						}
+						// Replacing @ character with # character to prevent unintentional references in Telegram
+						if(settings.telegram.replaceAtSign){
+							input = replaceAtWith(input, settings.telegram.replaceAtSignWith)
+						}
+						// Replacing excessive whitespaces with a single space (tends to be an issue after custom emoji filtering)
+						if(settings.telegram.removeExcessiveSpacings){
+							input = replaceExcessiveSpaces(input)
+						}
+
+						return input;
+					}
 
 					// Pass the message on to Telegram
 					try {
