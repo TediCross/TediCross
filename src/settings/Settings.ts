@@ -107,11 +107,33 @@ export class Settings {
 	 * @throws If the object is not suitable. The error message says what the problem is
 	 */
 	static validate(settings: SettingProperties) {
-
 		// An Array of valid units of time
-		const validUnitsOfTime = ["year", "years", "y", "month", "months", "M", "week", "weeks", "w",
-			"day", "days", "d", "hour", "hours", "h", "minute", "minutes", "m", "second", "seconds", "s",
-			"millisecond", "milliseconds", "ms"];
+		const validUnitsOfTime = [
+			"year",
+			"years",
+			"y",
+			"month",
+			"months",
+			"M",
+			"week",
+			"weeks",
+			"w",
+			"day",
+			"days",
+			"d",
+			"hour",
+			"hours",
+			"h",
+			"minute",
+			"minutes",
+			"m",
+			"second",
+			"seconds",
+			"s",
+			"millisecond",
+			"milliseconds",
+			"ms"
+		];
 
 		// Check that the settings are indeed in object form
 		if (!(settings instanceof Object)) {
@@ -149,7 +171,7 @@ export class Settings {
 		// Check that all the bridges have unique names
 		settings.bridges.forEach(function (value: Bridge, index: number, array: Bridge[]) {
 			for (let i = 0; i < array.length; i++) {
-				if ((value.name === array[i].name) && (i !== index)) {
+				if (value.name === array[i].name && i !== index) {
 					throw new Error("`settings.bridges` must have unique names for each bridge");
 				}
 			}
@@ -231,7 +253,7 @@ export class Settings {
 			discord: DiscordSettings.DEFAULTS,
 			bridges: [],
 			messageTimeoutAmount: 24,
-			messageTimeoutUnit: 'hours',
+			messageTimeoutUnit: "hours",
 			persistentMessageMap: false,
 			debug: false
 		} as any;
