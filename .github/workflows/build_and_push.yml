@@ -35,4 +35,4 @@ jobs:
           file: ./Dockerfile
           platforms: linux/arm64, linux/amd64
           push: true
-          tags: plugfox/tedicross:latest, plugfox/tedicross:${{ github.event.inputs.version }}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/tedicross:latest, ${{ secrets.DOCKER_HUB_USERNAME }}/tedicross:${{ github.event.inputs.version }}
