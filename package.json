@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@types/js-yaml": "^4.0.5",
-    "@types/mime": "^2.0.3",
+    "@types/mime": "^3.0.1",
     "@types/ramda": "^0.27.64",
     "@types/semver": "^7.3.9",
     "@types/yargs": "^17.0.8",
