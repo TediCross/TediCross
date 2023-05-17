@@ -1,12 +1,6 @@
 import simpleMarkdown, { SingleASTNode } from "simple-markdown";
 import { TelegramSettings } from "../settings/TelegramSettings";
-import {
-	escapeHTMLSpecialChars,
-	customEmojiFilter,
-	replaceAtWithHash,
-	replaceExcessiveSpaces,
-	removeNewlineSpaces
-} from "./helpers";
+import { escapeHTMLSpecialChars, removeCustomEmojis, replaceAtWith, replaceExcessiveSpaces } from "./helpers";
 import R from "ramda";
 
 /***********
@@ -130,19 +124,15 @@ export function md2html(text: string, settings: TelegramSettings) {
 
 function htmlCleanup(input: string, settings: TelegramSettings) {
 	if (settings.useCustomEmojiFilter) {
-		input = customEmojiFilter(input);
+		input = removeCustomEmojis(input);
 	}
 
 	if (settings.replaceAtWithHash) {
-		input = replaceAtWithHash(input);
+		input = replaceAtWith(input, "#");
 	}
 
 	if (settings.replaceExcessiveSpaces) {
 		input = replaceExcessiveSpaces(input);
-	}
-
-	if (settings.removeNewlineSpaces) {
-		input = removeNewlineSpaces(input);
 	}
 	return input;
 }

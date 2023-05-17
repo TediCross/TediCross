@@ -35,9 +35,9 @@ export const escapeHTMLSpecialChars = R.compose(
  *
  * @returns Filtered string
  */
-export function removeCustomEmojis(input: string){
-	const regex = /\&lt;[^;]*\&gt;\s?/gi;
-	return input.split(regex).join('');
+export function removeCustomEmojis(input: string) {
+	const regex = /&lt;[^;]*&gt;\s?/gi;
+	return input.split(regex).join("");
 }
 
 /**
@@ -48,8 +48,8 @@ export function removeCustomEmojis(input: string){
  *
  * @returns Filtered string
  */
-export function replaceCustomEmojis(input: string, replacement: string){
-	const regex = /\&lt;[^;]*\&gt;/g;
+export function replaceCustomEmojis(input: string, replacement: string) {
+	const regex = /&lt;[^;]*&gt;/g;
 	return input.replace(regex, replacement);
 }
 
@@ -61,8 +61,8 @@ export function replaceCustomEmojis(input: string, replacement: string){
  *
  * @returns Processed string
  */
-export function replaceAtWith(input: string, replacement: string ){
-	const regex = /\@/g;
+export function replaceAtWith(input: string, replacement: string) {
+	const regex = /@/g;
 	return input.replace(regex, replacement);
 }
 
@@ -73,8 +73,7 @@ export function replaceAtWith(input: string, replacement: string ){
  *
  * @returns Processed string
  */
-export function replaceExcessiveSpaces(input: string){
+export function replaceExcessiveSpaces(input: string) {
 	const regex = /[^\S\n]{2,}/g;
-	return input.replace(regex, ' ');
+	return input.replace(regex, "");
 }
-
