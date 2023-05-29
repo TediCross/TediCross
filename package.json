@@ -30,7 +30,7 @@
     "ramda": "^0.29.0",
     "semver": "^7.5.1",
     "simple-markdown": "^0.7.3",
-    "sqlite": "^4.2.0",
+    "sqlite": "^4.2.1",
     "sqlite3": "^5.1.6",
     "telegraf": "^4.12.2",
     "typescript": "^5.0.4",
