@@ -18,7 +18,7 @@
   "dependencies": {
     "@types/js-yaml": "^4.0.5",
     "@types/mime": "^3.0.1",
-    "@types/ramda": "^0.27.66",
+    "@types/ramda": "^0.29.2",
     "@types/semver": "^7.5.0",
     "@types/yargs": "^17.0.24",
     "@typescript-eslint/eslint-plugin": "^5.59.7",
