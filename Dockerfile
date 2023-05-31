@@ -10,5 +10,5 @@ RUN npm install --production
 
 VOLUME /opt/TediCross/data/
 
-ENTRYPOINT /usr/local/bin/npm start
-CMD ["-c", "data/settings.yaml"]
+ENTRYPOINT ["/usr/local/bin/npm"]
+CMD ["start", "--", "-c", "data/settings.yaml"]
