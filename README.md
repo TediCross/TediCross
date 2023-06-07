@@ -24,7 +24,7 @@ Step by step installation:
 Setting up the bot requires basic knowledge of the command line, which is bash or similar on Linux/Mac, and cmd.exe in Windows
 
  1. Install [nodejs](https://nodejs.org). TediCross requires at least node version 16
- 2. Clone this git repo, or download the latest [release](https://github.com/TediCross/TediCross/releases/latest)
+ 2. Download the latest [release](https://github.com/TediCross/TediCross/releases/latest)
  3. Open a terminal and enter the repo with the [`cd`](https://en.wikipedia.org/wiki/Cd_(command)) command. Something like `cd Downloads/TediCross-master`. Your exact command may differ
  4. Run the command `npm install --omit=dev`
  5. Make a copy of the file `example.settings.yaml` and name it `settings.yaml`
