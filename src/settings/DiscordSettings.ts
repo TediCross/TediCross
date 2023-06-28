@@ -4,6 +4,7 @@ interface Settings {
 	useNickname: boolean;
 	maxReplyLines: number;
 	skipOldMessages: boolean;
+	suppressFileTooBigMessages: boolean;
 }
 
 /*****************************
@@ -21,6 +22,7 @@ export class DiscordSettings {
 	replyLength: number;
 	maxReplyLines: number;
 	skipOldMessages: boolean;
+	suppressFileTooBigMessages: boolean;
 
 	/**
 	 * Creates a new DiscordSettings object
@@ -49,6 +51,9 @@ export class DiscordSettings {
 
 		/** How many lines of the original message to show in replies from Telegram */
 		this.maxReplyLines = settings.maxReplyLines;
+
+		/** Don't send a warning message to Discord if a file is too big to be sent from Telegram to Discord */
+		this.suppressFileTooBigMessages = settings.suppressFileTooBigMessages;
 	}
 
 	/** The bot token to use */
@@ -108,6 +113,11 @@ export class DiscordSettings {
 		if (!Number.isInteger(settings.maxReplyLines) || settings.maxReplyLines <= 0) {
 			throw new Error("`settings.maxReplyLines` must be an integer greater than 0");
 		}
+
+		// Check that `suppressFileTooBigMessages` is a boolean
+		if (Boolean(settings.suppressFileTooBigMessages) !== settings.suppressFileTooBigMessages) {
+			throw new Error("`settings.suppressFileTooBigMessages` must be a boolean");
+		}
 	}
 
 	/** Constant telling the Discord token should be gotten from the environment */
@@ -120,7 +130,8 @@ export class DiscordSettings {
 		return {
 			token: DiscordSettings.GET_TOKEN_FROM_ENVIRONMENT,
 			skipOldMessages: true,
-			useNickname: false
+			useNickname: false,
+			suppressFileTooBigMessages: false
 		};
 	}
 }
