@@ -48,3 +48,4 @@ data/
 # Built files
 dist/
 .vscode/settings.json
+/todo.txt

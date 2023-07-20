@@ -72,7 +72,7 @@ export const chatinfo = (ctx: TediCrossContext, next: () => void) => {
 					ctx.deleteMessage()
 				])
 			)
-			.catch(ignoreAlreadyDeletedError);
+			.catch(ignoreAlreadyDeletedError as any);
 	} else {
 		next();
 	}
@@ -98,7 +98,7 @@ export const newChatMembers = createMessageHandler((ctx: TediCrossContext, bridg
 
 		// Pass it on
 		ctx.TediCross.dcBot.ready
-			.then(() => fetchDiscordChannel(ctx.TediCross.dcBot, bridge).then(channel => channel.send(text)))
+			.then(() => fetchDiscordChannel(ctx.TediCross.dcBot, bridge).then((channel: any) => channel.send(text)))
 			.catch((err: any) =>
 				console.error(`Could not tell Discord about a new chat member on bridge ${bridge.name}: ${err.message}`)
 			);
@@ -139,7 +139,7 @@ export const leftChatMember = createMessageHandler((ctx: TediCrossContext, bridg
  * @param ctx.tediCross	The TediCross context of the message
  * @param ctx.TediCross	The global TediCross context of the message
  */
-export const relayMessage = (ctx: TediCrossContext) =>
+export const relayMessage = (ctx: TediCrossContext) => {
 	R.forEach(async (prepared: any) => {
 		try {
 			// Wait for the Discord bot to become ready
@@ -172,6 +172,7 @@ export const relayMessage = (ctx: TediCrossContext) =>
 					}
 					chunks = R.tail(chunks);
 				} catch (err: any) {
+					console.dir(`relayMessage err: ${err.message}`);
 					if (err.message === "Request entity too large") {
 						dcMessage = await channel.send(
 							`***${prepared.senderName}** on Telegram sent a file, but it was too large for Discord. If you want it, ask them to send it some other way*`
@@ -206,6 +207,7 @@ export const relayMessage = (ctx: TediCrossContext) =>
 			console.error(`Could not relay a message to Discord on bridge ${prepared.bridge.name}: ${err.message}`);
 		}
 	})(ctx.tediCross.prepared);
+};
 
 /**
  * Handles message edits
@@ -216,12 +218,11 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 	// Function to "delete" a message on Discord
 	const del = async (ctx: TediCrossContext, bridge: any) => {
 		try {
-
 			// Wait for the Discord bot to become ready
 			await ctx.TediCross.dcBot.ready;
 
 			// Find the ID of this message on Discord
-			let [dcMessageId] = await ctx.TediCross.messageMap.getCorresponding(
+			const [dcMessageId] = await ctx.TediCross.messageMap.getCorresponding(
 				MessageMap.TELEGRAM_TO_DISCORD,
 				bridge,
 				ctx.tediCross.message.message_id
@@ -254,7 +255,7 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 			await ctx.TediCross.dcBot.ready;
 
 			// Find the ID of this message on Discord
-			let [dcMessageId] = await ctx.TediCross.messageMap.getCorresponding(
+			const [dcMessageId] = await ctx.TediCross.messageMap.getCorresponding(
 				MessageMap.TELEGRAM_TO_DISCORD,
 				bridge,
 				tgMessage.message_id

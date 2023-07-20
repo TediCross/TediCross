@@ -120,7 +120,7 @@ export function setup(
 				.reply("\nchannelId: '" + message.channel.id + "'")
 				.then(sleepOneMinute)
 				.then((info: any) => Promise.all([info.delete(), message.delete()]))
-				.catch(ignoreAlreadyDeletedError);
+				.catch(ignoreAlreadyDeletedError as any);
 
 			// Don't process the message any further
 			return;
@@ -300,7 +300,7 @@ export function setup(
 					// Delete it again after some time
 					.then(sleepOneMinute)
 					.then((message: any) => message.delete())
-					.catch(ignoreAlreadyDeletedError)
+					.catch(ignoreAlreadyDeletedError as any)
 					.then(() => antiInfoSpamSet.delete(message.channel.id));
 			}
 		}
