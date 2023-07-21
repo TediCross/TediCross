@@ -136,9 +136,10 @@ export class Settings {
 		];
 
 		// Check that the settings are indeed in object form
-		if (!(settings instanceof Object)) {
-			throw new Error("`settings` must be an object");
-		}
+		// NOTE: redundant check
+		// if (!(settings instanceof Object)) {
+		// 	throw new Error("`settings` must be an object");
+		// }
 
 		// Check that debug is a boolean
 		if (Boolean(settings.debug) !== settings.debug) {
@@ -161,9 +162,10 @@ export class Settings {
 		}
 
 		// Check that `bridges` is an array
-		if (!(settings.bridges instanceof Array)) {
-			throw new Error("`settings.bridges` must be an array");
-		}
+		// NOTE: redundant check
+		// if (!(settings.bridges instanceof Array)) {
+		// 	throw new Error("`settings.bridges` must be an array");
+		// }
 
 		// Check that the bridges are valid
 		settings.bridges.forEach(Bridge.validate);

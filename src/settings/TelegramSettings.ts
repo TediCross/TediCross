@@ -8,6 +8,7 @@ interface SettingProperties {
 	replaceAtWithHash: boolean;
 	replaceExcessiveSpaces: boolean;
 	removeNewlineSpaces: boolean;
+	suppressThisIsPrivateBotMessage: boolean;
 }
 
 /******************************
@@ -25,6 +26,7 @@ export class TelegramSettings {
 	replaceAtWithHash: boolean;
 	replaceExcessiveSpaces: boolean;
 	removeNewlineSpaces: boolean;
+	suppressThisIsPrivateBotMessage: boolean;
 
 	/**
 	 * Creates a new TelegramSettings object
@@ -39,6 +41,7 @@ export class TelegramSettings {
 	 * @param settings.replaceAtWithHash Whether or not to replace @ with #
 	 * @param settings.replaceExcessiveSpaces Whether or not to replace excessive spaces
 	 * @param settings.removeNewlineSpaces Whether or not to remove newline spaces
+	 * @param settings.suppressThisIsPrivateBotMessage Suppress warning in chat when no bridge configured
 	 *
 	 * @throws If the settings object does not validate
 	 */
@@ -72,6 +75,9 @@ export class TelegramSettings {
 
 		/** Whether or not to remove newline spaces */
 		this.removeNewlineSpaces = settings.removeNewlineSpaces;
+
+		/** Whether or not to suppress warning in chat when no bridge configured */
+		this.suppressThisIsPrivateBotMessage = settings.suppressThisIsPrivateBotMessage;
 	}
 
 	/** The bot token to use */
@@ -103,14 +109,15 @@ export class TelegramSettings {
 	 */
 	static validate(settings: SettingProperties) {
 		// Check that the settings are indeed in object form
-		if (!(settings instanceof Object)) {
-			throw new Error("`settings` must be an object");
-		}
-
-		// Check that the token is a string
-		if (typeof settings.token !== "string") {
-			throw new Error("`settings.token` must be a string");
-		}
+		// NOTE: redundant checks
+		// if (!(settings instanceof Object)) {
+		// 	throw new Error("`settings` must be an object");
+		// }
+		//
+		// // Check that the token is a string
+		// if (typeof settings.token !== "string") {
+		// 	throw new Error("`settings.token` must be a string");
+		// }
 
 		// Check that useFirstNameInsteadOfUsername is a boolean
 		if (Boolean(settings.useFirstNameInsteadOfUsername) !== settings.useFirstNameInsteadOfUsername) {
@@ -151,6 +158,11 @@ export class TelegramSettings {
 		if (Boolean(settings.removeNewlineSpaces) !== settings.removeNewlineSpaces) {
 			throw new Error("`settings.removeNewlineSpaces` must be a boolean");
 		}
+
+		// Check that suppressThisIsPrivateBotMessage is a boolean
+		if (Boolean(settings.suppressThisIsPrivateBotMessage) !== settings.suppressThisIsPrivateBotMessage) {
+			throw new Error("`settings.suppressThisIsPrivateBotMessage` must be a boolean");
+		}
 	}
 
 	/** Constant telling the Telegram token should be gotten from the environment */
@@ -169,7 +181,8 @@ export class TelegramSettings {
 			useCustomEmojiFilter: false,
 			replaceAtWithHash: false,
 			replaceExcessiveSpaces: false,
-			removeNewlineSpaces: false
+			removeNewlineSpaces: false,
+			suppressThisIsPrivateBotMessage: false
 		};
 	}
 }

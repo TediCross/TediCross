@@ -57,9 +57,11 @@ export class BridgeSettingsTelegram {
 	 */
 	static validate(settings: BridgeSettingsTelegramProperties) {
 		// Check that the settings are indeed in object form
-		if (!(settings instanceof Object)) {
-			throw new Error("`settings` must be an object");
-		}
+
+		// NOTE: redundant check
+		// if (!(settings instanceof Object)) {
+		// 	throw new Error("`settings` must be an object");
+		// }
 
 		// Check that relayJoinMessages is a boolean
 		if (Boolean(settings.relayJoinMessages) !== settings.relayJoinMessages) {

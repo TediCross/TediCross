@@ -56,14 +56,16 @@ export class Bridge {
 	 */
 	static validate(settings: BridgeProperties) {
 		// Check that the settings are indeed in object form
-		if (!(settings instanceof Object)) {
-			throw new Error("`settings` must be an object");
-		}
 
-		// Check the name
-		if (typeof settings.name !== "string") {
-			throw new Error("`settings.name` must be a string");
-		}
+		// NOTE: redundant checks
+		// if (!(settings instanceof Object)) {
+		// 	throw new Error("`settings` must be an object");
+		// }
+		//
+		// // Check the name
+		// if (typeof settings.name !== "string") {
+		// 	throw new Error("`settings.name` must be a string");
+		// }
 
 		// Check the direction
 		if (

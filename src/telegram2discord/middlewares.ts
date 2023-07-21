@@ -176,9 +176,13 @@ function addMessageObj(ctx: TediCrossContext, next: () => void) {
  * @param next Function to pass control to next middleware
  */
 function addMessageId(ctx: TediCrossContext, next: () => void) {
-	ctx.tediCross.messageId = ctx.tediCross.message.message_id;
+	if (ctx.tediCross.message && ctx.tediCross.message.message_id) {
+		ctx.tediCross.messageId = ctx.tediCross.message.message_id;
 
-	next();
+		next();
+	} else {
+		console.error("Unsupported telegram message type");
+	}
 }
 
 /**
@@ -275,22 +279,27 @@ function informThisIsPrivateBot(ctx: TediCrossContext, next: () => void) {
 				ctx.TediCross.antiInfoSpamSet.add(ctx.tediCross.message.chat.id);
 
 				// Send the reply
-				ctx.reply(
-					"This is an instance of a [TediCross](https://github.com/TediCross/TediCross) bot, " +
-						"bridging a chat in Telegram with one in Discord. " +
-						"If you wish to use TediCross yourself, please download and create an instance.",
-					{
-						parse_mode: "Markdown"
-					}
-				).then(msg =>
-					// Delete it again after a while
-					//@ts-ignore
-					sleepOneMinute()
-						.then(() => deleteMessage(ctx, msg))
-						.catch(ignoreAlreadyDeletedError as any)
-						// Remove it from the antispam set again
-						.then(() => ctx.TediCross.antiInfoSpamSet.delete(ctx.message!.chat.id))
-				);
+				if (!ctx.TediCross.settings.telegram.suppressThisIsPrivateBotMessage) {
+					ctx.reply(
+						"This is an instance of a [TediCross](https://github.com/TediCross/TediCross) bot, " +
+							"bridging a chat in Telegram with one in Discord. " +
+							"If you wish to use TediCross yourself, please download and create an instance.",
+						{
+							parse_mode: "Markdown"
+						}
+					).then(msg =>
+						// Delete it again after a while
+						//@ts-ignore
+						sleepOneMinute()
+							.then(() => deleteMessage(ctx, msg))
+							.catch(ignoreAlreadyDeletedError as any)
+							// Remove it from the antispam set again
+							.then(() => ctx.TediCross.antiInfoSpamSet.delete(ctx.message!.chat.id))
+					);
+				} else {
+					ctx.TediCross.antiInfoSpamSet.delete(ctx.message!.chat.id);
+					console.log("Suppressing 'This is an instance of...' message");
+				}
 			}
 		),
 		// Otherwise go to next middleware
