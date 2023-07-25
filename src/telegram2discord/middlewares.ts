@@ -181,7 +181,7 @@ function addMessageId(ctx: TediCrossContext, next: () => void) {
 
 		next();
 	} else {
-		console.error("Unsupported telegram message type");
+		// console.error("Unsupported telegram message type");
 	}
 }
 
@@ -298,7 +298,6 @@ function informThisIsPrivateBot(ctx: TediCrossContext, next: () => void) {
 					);
 				} else {
 					ctx.TediCross.antiInfoSpamSet.delete(ctx.message!.chat.id);
-					console.log("Suppressing 'This is an instance of...' message");
 				}
 			}
 		),

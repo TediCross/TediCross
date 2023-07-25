@@ -291,17 +291,21 @@ export function setup(
 			if (!antiInfoSpamSet.has(message.channel.id)) {
 				antiInfoSpamSet.add(message.channel.id);
 
-				message
-					.reply(
-						"This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. " +
-							"If you wish to use TediCross yourself, please download and create an instance. " +
-							"See https://github.com/TediCross/TediCross"
-					)
-					// Delete it again after some time
-					.then(sleepOneMinute)
-					.then((message: any) => message.delete())
-					.catch(ignoreAlreadyDeletedError as any)
-					.then(() => antiInfoSpamSet.delete(message.channel.id));
+				if (!settings.discord.suppressThisIsPrivateBotMessage) {
+					message
+						.reply(
+							"This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. " +
+								"If you wish to use TediCross yourself, please download and create an instance. " +
+								"See https://github.com/TediCross/TediCross"
+						)
+						// Delete it again after some time
+						.then(sleepOneMinute)
+						.then((message: any) => message.delete())
+						.catch(ignoreAlreadyDeletedError as any)
+						.then(() => antiInfoSpamSet.delete(message.channel.id));
+				} else {
+					antiInfoSpamSet.delete(message.channel.id);
+				}
 			}
 		}
 	});

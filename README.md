@@ -65,7 +65,7 @@ As mentioned in the step by step installation guide, there is a settings file. H
 	* `replaceAtSign`: Whether or not to replace `@` sign to something else from Discord message before it reaches. When set to `true` will replace `@` with a string you put into `settings.replaceAtSignWith`. If set to `false` - will do nothing. Defaults to `false`
 	* `replaceAtSignWith`: Determines the string that will be used as a replacement for `@` sign. Anything that can be passed as a string is supported, including emojis. Defaults to `#`
 	* `removeExcessiveSpacings`: **USE WITH CAUTION** Whether or not to remove excessive (2 or more) `whitespaces` from Discord message. Can help to neat your message up if it wasn't particulary untidy in the source. When set to `true` will remove excessive `whitespaces` and replace them with a single `whitespace` instead. If set to `false` - will do nothing. Defaults to `false`
-	* `suppressThisIsPrivateBotMessage`: Suppress warning messages in telegram chats outside configured bridges. Defaults to `false`
+	* `suppressThisIsPrivateBotMessage`: If set to `true` - suppress warning messages (`This is an instance of a TediCross bot...`) in telegram chats outside configured bridges. Defaults to `false`
 * `discord`: Object authorizing and defining the Discord bot's behavior
 	* `token`: The Discord bot's token. It is needed for the bot to authenticate to the Discord servers and be able to send and receive messages. If set to `"env"`, TediCross will read the token from the environment variable `DISCORD_BOT_TOKEN`
 	* `skipOldMessages`: Whether or not to skip through all previous messages sent since the bot was last turned off and start processing new messages ONLY. Defaults to true. Note that there is no guarantee the old messages will arrive at Telegram in order. **NOTE:** [Telegram has a limit](https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this) on how quickly a bot can send messages. If there is a big backlog, this will cause problems
@@ -73,6 +73,7 @@ As mentioned in the step by step installation guide, there is a settings file. H
 	* `replyLength`: How many characters of the original message to display on replies
 	* `maxReplyLines`: How many lines of the original message to display on replies
 	* `suppressFileTooBigMessages`: Suppress warning messages on errors with sending too big files (due to API limitations) from telegram to discord. Defaults to `false`.
+	* `suppressThisIsPrivateBotMessage`: If set to `true` - suppress warning messages (`This is an instance of a TediCross bot...`) in discord channels outside configured bridges. Defaults to `false`
 * `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
 * `messageTimeoutAmount`: Amount for your unit of time to expire messages in MessageMap. Defaults to `24`
 * `messageTimeoutUnit`: Format of time as a string (ie: 'hours', 'days', 'weeks', etc). Defaults to `'hours'`

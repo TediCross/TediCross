@@ -5,6 +5,7 @@ interface Settings {
 	maxReplyLines: number;
 	skipOldMessages: boolean;
 	suppressFileTooBigMessages: boolean;
+	suppressThisIsPrivateBotMessage: boolean;
 }
 
 /*****************************
@@ -23,6 +24,7 @@ export class DiscordSettings {
 	maxReplyLines: number;
 	skipOldMessages: boolean;
 	suppressFileTooBigMessages: boolean;
+	suppressThisIsPrivateBotMessage: boolean;
 
 	/**
 	 * Creates a new DiscordSettings object
@@ -54,6 +56,9 @@ export class DiscordSettings {
 
 		/** Don't send a warning message to Discord if a file is too big to be sent from Telegram to Discord */
 		this.suppressFileTooBigMessages = settings.suppressFileTooBigMessages;
+
+		/** Whether or not to suppress warning in channel when no bridge configured */
+		this.suppressThisIsPrivateBotMessage = settings.suppressThisIsPrivateBotMessage;
 	}
 
 	/** The bot token to use */
@@ -119,6 +124,11 @@ export class DiscordSettings {
 		if (Boolean(settings.suppressFileTooBigMessages) !== settings.suppressFileTooBigMessages) {
 			throw new Error("`settings.suppressFileTooBigMessages` must be a boolean");
 		}
+
+		// Check that `suppressThisIsPrivateBotMessage` is a boolean
+		if (Boolean(settings.suppressThisIsPrivateBotMessage) !== settings.suppressThisIsPrivateBotMessage) {
+			throw new Error("`settings.suppressThisIsPrivateBotMessage` must be a boolean");
+		}
 	}
 
 	/** Constant telling the Discord token should be gotten from the environment */
@@ -132,7 +142,8 @@ export class DiscordSettings {
 			token: DiscordSettings.GET_TOKEN_FROM_ENVIRONMENT,
 			skipOldMessages: true,
 			useNickname: false,
-			suppressFileTooBigMessages: false
+			suppressFileTooBigMessages: false,
+			suppressThisIsPrivateBotMessage: false
 		};
 	}
 }
