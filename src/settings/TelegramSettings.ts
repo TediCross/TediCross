@@ -8,6 +8,7 @@ interface SettingProperties {
 	replaceAtWithHash: boolean;
 	replaceExcessiveSpaces: boolean;
 	removeNewlineSpaces: boolean;
+	suppressFileTooBigMessages: boolean;
 	suppressThisIsPrivateBotMessage: boolean;
 }
 
@@ -26,6 +27,7 @@ export class TelegramSettings {
 	replaceAtWithHash: boolean;
 	replaceExcessiveSpaces: boolean;
 	removeNewlineSpaces: boolean;
+	suppressFileTooBigMessages: boolean;
 	suppressThisIsPrivateBotMessage: boolean;
 
 	/**
@@ -75,6 +77,9 @@ export class TelegramSettings {
 
 		/** Whether or not to remove newline spaces */
 		this.removeNewlineSpaces = settings.removeNewlineSpaces;
+
+		/** Don't send a warning message to telegram if a file is too big to be sent from Telegram to Discord */
+		this.suppressFileTooBigMessages = settings.suppressFileTooBigMessages;
 
 		/** Whether or not to suppress warning in chat when no bridge configured */
 		this.suppressThisIsPrivateBotMessage = settings.suppressThisIsPrivateBotMessage;
@@ -159,6 +164,11 @@ export class TelegramSettings {
 			throw new Error("`settings.removeNewlineSpaces` must be a boolean");
 		}
 
+		// Check that `suppressFileTooBigMessages` is a boolean
+		if (Boolean(settings.suppressFileTooBigMessages) !== settings.suppressFileTooBigMessages) {
+			throw new Error("`settings.suppressFileTooBigMessages` must be a boolean");
+		}
+
 		// Check that suppressThisIsPrivateBotMessage is a boolean
 		if (Boolean(settings.suppressThisIsPrivateBotMessage) !== settings.suppressThisIsPrivateBotMessage) {
 			throw new Error("`settings.suppressThisIsPrivateBotMessage` must be a boolean");
@@ -182,6 +192,7 @@ export class TelegramSettings {
 			replaceAtWithHash: false,
 			replaceExcessiveSpaces: false,
 			removeNewlineSpaces: false,
+			suppressFileTooBigMessages: false,
 			suppressThisIsPrivateBotMessage: false
 		};
 	}

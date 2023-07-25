@@ -4,7 +4,6 @@ interface Settings {
 	useNickname: boolean;
 	maxReplyLines: number;
 	skipOldMessages: boolean;
-	suppressFileTooBigMessages: boolean;
 	suppressThisIsPrivateBotMessage: boolean;
 }
 
@@ -23,15 +22,12 @@ export class DiscordSettings {
 	replyLength: number;
 	maxReplyLines: number;
 	skipOldMessages: boolean;
-	suppressFileTooBigMessages: boolean;
 	suppressThisIsPrivateBotMessage: boolean;
 
 	/**
 	 * Creates a new DiscordSettings object
 	 *
 	 * @param settings The raw settings object to use
-	 * @param token The bot token to use. Set to {@link DiscordSettings#GET_TOKEN_FROM_ENVIRONMENT} to read the token from the DISCORD_BOT_TOKEN environment variable
-	 * @param skipOldMessages Whether or not to skip through all previous messages sent on Discord since last bot shutdown and start processing new messages ONLY
 	 *
 	 * @throws If the settings object does not validate
 	 */
@@ -53,9 +49,6 @@ export class DiscordSettings {
 
 		/** How many lines of the original message to show in replies from Telegram */
 		this.maxReplyLines = settings.maxReplyLines;
-
-		/** Don't send a warning message to Discord if a file is too big to be sent from Telegram to Discord */
-		this.suppressFileTooBigMessages = settings.suppressFileTooBigMessages;
 
 		/** Whether or not to suppress warning in channel when no bridge configured */
 		this.suppressThisIsPrivateBotMessage = settings.suppressThisIsPrivateBotMessage;
@@ -120,11 +113,6 @@ export class DiscordSettings {
 			throw new Error("`settings.maxReplyLines` must be an integer greater than 0");
 		}
 
-		// Check that `suppressFileTooBigMessages` is a boolean
-		if (Boolean(settings.suppressFileTooBigMessages) !== settings.suppressFileTooBigMessages) {
-			throw new Error("`settings.suppressFileTooBigMessages` must be a boolean");
-		}
-
 		// Check that `suppressThisIsPrivateBotMessage` is a boolean
 		if (Boolean(settings.suppressThisIsPrivateBotMessage) !== settings.suppressThisIsPrivateBotMessage) {
 			throw new Error("`settings.suppressThisIsPrivateBotMessage` must be a boolean");
@@ -142,7 +130,6 @@ export class DiscordSettings {
 			token: DiscordSettings.GET_TOKEN_FROM_ENVIRONMENT,
 			skipOldMessages: true,
 			useNickname: false,
-			suppressFileTooBigMessages: false,
 			suppressThisIsPrivateBotMessage: false
 		};
 	}

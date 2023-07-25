@@ -505,7 +505,7 @@ function addFileLink(ctx: TediCrossContext, next: () => void) {
 		.then(next)
 		.then(R.always(undefined))
 		.catch(err => {
-			if (ctx.TediCross.settings.discord.suppressFileTooBigMessages) {
+			if (ctx.TediCross.settings.telegram.suppressFileTooBigMessages) {
 				console.log(err.response ? err.response.description : "Bad Request");
 			} else if (err.response && err.response.description === "Bad Request: file is too big") {
 				ctx.reply(`<i>File '${ctx.tediCross.file.name}' is too big for TediCross to handle</i>`, {
