@@ -13,6 +13,8 @@ const tagMap = new Proxy(
 		u: "u",
 		strong: "b",
 		em: "em",
+		i: "i",
+		del: "strike",
 		inlineCode: "code",
 		codeBlock: "pre"
 	},
@@ -78,6 +80,7 @@ const mdParse = simpleMarkdown.defaultBlockParse;
  * Parse Discord's Markdown format to Telegram-accepted HTML
  *
  * @param text The markdown string to convert
+ * @param settings Telegram settings objcet
  *
  * @return Telegram-friendly HTML
  */
@@ -114,6 +117,8 @@ export function md2html(text: string, settings: TelegramSettings) {
 			// Turn the nodes into HTML
 			// Telegram doesn't support nested tags, so only apply tags to the outer nodes
 			// Get the tag type of this node
+			console.log(node.type);
+
 			const tags = tagMap[node.type];
 
 			// Build the HTML

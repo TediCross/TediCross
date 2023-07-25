@@ -156,6 +156,12 @@ function addTediCrossObj(ctx: TediCrossContext, next: () => void) {
  */
 function addMessageObj(ctx: TediCrossContext, next: () => void) {
 	// Put it on the context
+
+	// bypass pinned message notification
+	if ((ctx as any).update.message && (ctx as any).update.message.pinned_message) {
+		return;
+	}
+
 	ctx.tediCross.message = R.cond([
 		// XXX I tried both R.has and R.hasIn as conditions. Neither worked for some reason
 		[ctx => !R.isNil((ctx as any).update.channel_post), R.path(["update", "channel_post"])],

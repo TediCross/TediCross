@@ -102,7 +102,17 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 			}
 			case "italic": {
 				// Italic text
-				substitute = "*" + part + "*";
+				const reg = /(\r\n|\r|\n)$/i;
+				if (reg.test(part)) {
+					substitute = "*" + part.substring(0, part.length - 1) + "*\n";
+				} else {
+					substitute = "*" + part + "*";
+				}
+				break;
+			}
+			case "strikethrough": {
+				// strikethrough text
+				substitute = "~~" + part + "~~";
 				break;
 			}
 			case "underline": {
