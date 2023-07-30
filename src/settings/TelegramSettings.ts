@@ -54,45 +54,45 @@ export class TelegramSettings {
 		/** The bot token to use, or `env` to indicate the token should be collected from the environment */
 		this._token = settings.token;
 
-		/** Whether or not to use a Telegram user's first name instead of the username when displaying the name in the Discord messages */
+		/** Whether to use a Telegram user's first name instead of the username when displaying the name in the Discord messages */
 		this.useFirstNameInsteadOfUsername = settings.useFirstNameInsteadOfUsername;
 
-		/** Whether or not to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name` */
+		/** Whether to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name` */
 		this.colonAfterSenderName = settings.colonAfterSenderName;
 
-		/** Whether or not to skip through all previous messages cached from the telegram-side and start processing new messages ONLY */
+		/** Whether to skip through all previous messages cached from the telegram-side and start processing new messages ONLY */
 		this.skipOldMessages = settings.skipOldMessages;
 
-		/** Whether or not to send the corresponding emoji when relaying stickers to Discord */
+		/** Whether to send the corresponding emoji when relaying stickers to Discord */
 		this.sendEmojiWithStickers = settings.sendEmojiWithStickers;
 
-		/** Whether or not to use the custom emoji filter */
+		/** Whether to use the custom emoji filter */
 		this.useCustomEmojiFilter = settings.useCustomEmojiFilter;
 
-		/** Whether or not to replace @ with # */
+		/** Whether to replace @ with # */
 		this.replaceAtWithHash = settings.replaceAtWithHash;
 
-		/** Whether or not to replace excessive spaces */
+		/** Whether to replace excessive spaces */
 		this.replaceExcessiveSpaces = settings.replaceExcessiveSpaces;
 
-		/** Whether or not to remove newline spaces */
+		/** Whether to remove newline spaces */
 		this.removeNewlineSpaces = settings.removeNewlineSpaces;
 
 		/** Don't send a warning message to telegram if a file is too big to be sent from Telegram to Discord */
 		this.suppressFileTooBigMessages = settings.suppressFileTooBigMessages;
 
-		/** Whether or not to suppress warning in chat when no bridge configured */
+		/** Whether to suppress warning in chat when no bridge configured */
 		this.suppressThisIsPrivateBotMessage = settings.suppressThisIsPrivateBotMessage;
 	}
 
 	/** The bot token to use */
 	get token(): string {
 		return this._token === TelegramSettings.GET_TOKEN_FROM_ENVIRONMENT
-			? process.env.TELEGRAM_BOT_TOKEN!
+			? (process.env.TELEGRAM_BOT_TOKEN as string)!
 			: this._token;
 	}
 
-	/** Makes a JSONifiable object of the settings. Called automatically by JSON.stringify */
+	/** Makes a JSON object of the settings. Called automatically by JSON.stringify */
 	toJSON() {
 		// Make a clone of the object
 		const clone = Object.assign({}, this) as Record<string, any>;

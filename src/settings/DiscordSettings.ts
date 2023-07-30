@@ -38,10 +38,10 @@ export class DiscordSettings {
 		/** The bot token to use, or `env` to indicate the token should be collected from the environment */
 		this._token = settings.token;
 
-		/** Whether or not to skip through all previous messages sent on Discord since last bot shutdown and start processing new messages ONLY */
+		/** Whether to skip through all previous messages sent on Discord since last bot shutdown and start processing new messages ONLY */
 		this.skipOldMessages = settings.skipOldMessages;
 
-		/** Whether or not to show the Nickname of the user on the server or use his username */
+		/** Whether to show the Nickname of the user on the server or use his username */
 		this.useNickname = settings.useNickname;
 
 		/** How much of the original message to show in replies from Telegram */
@@ -50,18 +50,18 @@ export class DiscordSettings {
 		/** How many lines of the original message to show in replies from Telegram */
 		this.maxReplyLines = settings.maxReplyLines;
 
-		/** Whether or not to suppress warning in channel when no bridge configured */
+		/** Whether to suppress warning in channel when no bridge configured */
 		this.suppressThisIsPrivateBotMessage = settings.suppressThisIsPrivateBotMessage;
 	}
 
 	/** The bot token to use */
 	get token(): string {
 		return this._token === DiscordSettings.GET_TOKEN_FROM_ENVIRONMENT
-			? process.env.DISCORD_BOT_TOKEN!
+			? (process.env.DISCORD_BOT_TOKEN as string)!
 			: this._token;
 	}
 
-	/** Makes a JSONifiable object of the settings. Called automatically by JSON.stringify */
+	/** Makes a JSON object of the settings. Called automatically by JSON.stringify */
 	toJSON() {
 		// Make a clone of the object
 		const clone = Object.assign({}, this) as Record<string, any>;

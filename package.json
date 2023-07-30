@@ -1,6 +1,6 @@
 {
   "name": "tedicross",
-  "version": "0.11.9",
+  "version": "0.11.10",
   "description": "Bridging Telegram and Discord",
   "license": "MIT",
   "repository": {
@@ -34,9 +34,11 @@
     "sqlite3": "^5.1.6",
     "telegraf": "^4.12.2",
     "typescript": "^5.1.6",
+    "underscore": "^1.13.6",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
+    "@types/underscore": "^1.11.6",
     "eslint": "^8.45.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^5.0.0",

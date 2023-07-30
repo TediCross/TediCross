@@ -290,18 +290,20 @@ function informThisIsPrivateBot(ctx: TediCrossContext, next: () => void) {
 						"This is an instance of a [TediCross](https://github.com/TediCross/TediCross) bot, " +
 							"bridging a chat in Telegram with one in Discord. " +
 							"If you wish to use TediCross yourself, please download and create an instance.",
-						{
-							parse_mode: "Markdown"
-						}
-					).then(msg =>
-						// Delete it again after a while
-						//@ts-ignore
-						sleepOneMinute()
-							.then(() => deleteMessage(ctx, msg))
-							.catch(ignoreAlreadyDeletedError as any)
-							// Remove it from the antispam set again
-							.then(() => ctx.TediCross.antiInfoSpamSet.delete(ctx.message!.chat.id))
-					);
+						{parse_mode: "Markdown"}
+					)
+						.then(msg =>
+							// Delete it again after a while
+							//@ts-ignore
+							sleepOneMinute(null)
+								.then(() => deleteMessage(ctx, msg))
+								.catch(ignoreAlreadyDeletedError as any)
+								// Remove it from the antispam set again
+								.then(() => ctx.TediCross.antiInfoSpamSet.delete(ctx.message!.chat.id))
+						)
+						.catch(err => {
+							console.log(`Error send tg message: ${err}`);
+						});
 				} else {
 					ctx.TediCross.antiInfoSpamSet.delete(ctx.message!.chat.id);
 				}

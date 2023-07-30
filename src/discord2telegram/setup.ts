@@ -57,7 +57,10 @@ function makeJoinLeaveFunc(logger: Logger, verb: "joined" | "left", bridgeMap: B
 						parse_mode: "HTML"
 					});
 				} catch (err) {
-					logger.error(`[${bridge.name}] Could not notify Telegram about a user that ${verb} Discord`, err);
+					logger.error(
+						`[${bridge.name}] Could not notify Telegram about a user that ${verb} Discord`,
+						(err as Error).toString()
+					);
 				}
 			});
 	};
@@ -209,7 +212,7 @@ export function setup(
 							);
 						}
 					} catch (err) {
-						logger.error(`[${bridge.name}] Telegram did not accept an attachment:`, err);
+						logger.error(`[${bridge.name}] Telegram did not accept an attachment:`, (err as Error).toString());
 					}
 				});
 
@@ -238,7 +241,7 @@ export function setup(
 							});
 						}
 					} catch (err) {
-						logger.error(`[${bridge.name}] Telegram did not accept an embed:`, err);
+						logger.error(`[${bridge.name}] Telegram did not accept an embed:`, (err as Error).toString());
 					}
 				});
 
@@ -277,8 +280,8 @@ export function setup(
 							);
 						}
 					} catch (err) {
-						logger.error(`[${bridge.name}] Telegram did not accept a message:`, err);
-						logger.error(`[${bridge.name}] Failed message:`, err);
+						logger.error(`[${bridge.name}] Telegram did not accept a message`);
+						logger.error(`[${bridge.name}] Failed message:`, (err as Error).toString());
 					}
 				}
 			});
@@ -344,7 +347,7 @@ export function setup(
 					parse_mode: "HTML"
 				});
 			} catch (err) {
-				logger.error(`[${bridge.name}] Could not edit Telegram message:`, err);
+				logger.error(`[${bridge.name}] Could not edit Telegram message:`, (err as Error).toString());
 			}
 		});
 	});
@@ -372,7 +375,7 @@ export function setup(
 					tgMessageIds.map(tgMessageId => tgBot.telegram.deleteMessage(bridge.telegram.chatId, +tgMessageId))
 				);
 			} catch (err) {
-				logger.error(`[${bridge.name}] Could not delete Telegram message:`, err);
+				logger.error(`[${bridge.name}] Could not delete Telegram message:`, (err as Error).toString());
 				logger.warn(
 					'If the previous message was a result of a message being "deleted" on Telegram, you can safely ignore it'
 				);
@@ -386,7 +389,7 @@ export function setup(
 	dcBot
 		.login(settings.discord.token)
 		// Complain if it could not authenticate for some reason
-		.catch(err => logger.error("Could not authenticate the Discord bot:", err));
+		.catch(err => logger.error("Could not authenticate the Discord bot:", err.toString()));
 
 	// Listen for the 'disconnected' event
 	dcBot.on("disconnected", async evt => {
@@ -399,7 +402,7 @@ export function setup(
 					"**TEDICROSS**\nThe discord side of the bot disconnected! Please check the log"
 				);
 			} catch (err) {
-				logger.error(`[${bridge.name}] Could not send message to Telegram:`, err);
+				logger.error(`[${bridge.name}] Could not send message to Telegram:`, (err as Error).toString());
 			}
 		});
 	});
@@ -417,7 +420,7 @@ export function setup(
 			logger.error(
 				"The Discord bot ran into an error. Please post the following error message in the TediCross support channel"
 			);
-			logger.error(err);
+			logger.error(err.toString());
 		}
 	});
 
