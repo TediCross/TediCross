@@ -8,12 +8,15 @@ telegram:
   replaceAtWithHash: false # Experimental, might break
   replaceExcessiveSpaces: false # Experimental, might break
   removeNewlineSpaces: false # Experimental, might break
+  suppressFileTooBigMessages: false
+  suppressThisIsPrivateBotMessage: false
 discord:
   useNickname: false
   token: DISCORD_BOT_TOKEN_HERE # Discord bot tokens look like this: MjI3MDA1NzIvOBQ2MzAzMiMz.DRf-aw.N0MVYtDxXYPSQew4g2TPqvQve2c
   skipOldMessages: true
   replyLength: 100
   maxReplyLines: 2
+  suppressThisIsPrivateBotMessage: false
 bridges:
   - name: First bridge
     direction: both
