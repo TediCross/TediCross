@@ -162,13 +162,6 @@ function addMessageObj(ctx: TediCrossContext, next: () => void) {
 		return;
 	}
 
-	// TODO: console
-	console.dir((ctx as any).update);
-
-	if ((ctx as any).update.message.photo) {
-		console.log(JSON.stringify((ctx as any).update.message.photo, null, " "));
-	}
-
 	ctx.tediCross.message = R.cond([
 		// XXX I tried both R.has and R.hasIn as conditions. Neither worked for some reason
 		[ctx => !R.isNil((ctx as any).update.channel_post), R.path(["update", "channel_post"])],
