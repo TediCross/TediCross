@@ -85,6 +85,8 @@ export function setup(
 			// Set keeping track of where the "This is an instance of TediCross..." has been sent the last minute
 			const antiInfoSpamSet = new Set();
 
+			const groupIdMap: Map<string, TediCrossContext[]> = new Map();
+
 			// Add some global context
 			tgBot.context.TediCross = {
 				me,
@@ -93,7 +95,8 @@ export function setup(
 				settings,
 				messageMap,
 				logger,
-				antiInfoSpamSet
+				antiInfoSpamSet,
+				groupIdMap
 			};
 
 			// Apply middlewares and endwares
