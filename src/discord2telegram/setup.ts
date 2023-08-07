@@ -196,30 +196,30 @@ export function setup(
 						const textToSend = bridge.discord.sendUsernames
 							? `<b>${senderName}</b>\n${processedMessage}`
 							: processedMessage;
-						if (replyId === "0" || replyId === undefined) {
-							const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, textToSend, {
-								parse_mode: "HTML"
-							});
-
-							// Make the mapping so future edits can work
-							messageMap.insert(
-								MessageMap.DISCORD_TO_TELEGRAM,
-								bridge,
-								message.id,
-								tgMessage.message_id.toString()
-							);
-						} else {
-							const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, textToSend, {
-								reply_to_message_id: +replyId,
-								parse_mode: "HTML"
-							});
-							messageMap.insert(
-								MessageMap.DISCORD_TO_TELEGRAM,
-								bridge,
-								message.id,
-								tgMessage.message_id.toString()
-							);
-						}
+						// if (replyId === "0" || replyId === undefined) {
+						// 	const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, textToSend, {
+						// 		parse_mode: "HTML"
+						// 	});
+						//
+						// 	// Make the mapping so future edits can work
+						// 	messageMap.insert(
+						// 		MessageMap.DISCORD_TO_TELEGRAM,
+						// 		bridge,
+						// 		message.id,
+						// 		tgMessage.message_id.toString()
+						// 	);
+						// } else {
+						const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, textToSend, {
+							reply_to_message_id: +replyId,
+							parse_mode: "HTML"
+						});
+						messageMap.insert(
+							MessageMap.DISCORD_TO_TELEGRAM,
+							bridge,
+							message.id,
+							tgMessage.message_id.toString()
+						);
+						// }
 					} catch (err) {
 						logger.error(`[${bridge.name}] Telegram did not accept a message`);
 						logger.error(`[${bridge.name}] Failed message:`, (err as Error).toString());
@@ -317,131 +317,6 @@ export function setup(
 					}
 				}
 
-				// const images = []; // size limit = 10 mb
-				// const videos = []; // size limit = 20 mb
-				// const audios = [];
-				// const documents = [];
-				// const mediaArrays = [];
-				//
-				// for (const attachment of message.attachments.values()) {
-				// 	const fileType: string = attachment.contentType || "";
-				// 	if (fileType.indexOf("video") >= 0) {
-				// 		if (attachment.size < 20000000) {
-				// 			videos.push({
-				// 				media: { url: attachment.url },
-				// 				type: "video"
-				// 			} as InputMediaVideo);
-				// 		} else {
-				// 			logger.error(`[${bridge.name}] Too big attachment Video File: ${attachment.name}`);
-				// 		}
-				// 	} else if (fileType.indexOf("image") >= 0) {
-				// 		if (attachment.size < 10000000) {
-				// 			images.push({ media: { url: attachment.url }, type: "photo" } as InputMediaPhoto);
-				// 		} else {
-				// 			logger.error(`[${bridge.name}] Too big attachment Image File: ${attachment.name}`);
-				// 		}
-				// 	} else if (fileType.indexOf("audio") >= 0) {
-				// 		if (attachment.size < 20000000) {
-				// 			audios.push({ media: { url: attachment.url }, type: "audio" } as InputMediaAudio);
-				// 		} else {
-				// 			logger.error(`[${bridge.name}] Too big attachment Audio File: ${attachment.name}`);
-				// 		}
-				// 	} else {
-				// 		if (attachment.size < 20000000) {
-				// 			documents.push({ media: { url: attachment.url }, type: "document" } as InputMediaDocument);
-				// 		} else {
-				// 			logger.error(`[${bridge.name}] Too big attachment Document File: ${attachment.name}`);
-				// 		}
-				// 	}
-				// }
-
-				// let tgMessage;
-
-				// if (images.length) {
-				// 	try {
-				// 		if (images.length > 1) {
-				// 			// tgMessage =
-				// 			await tgBot.telegram.sendMediaGroup(bridge.telegram.chatId, images, {
-				// 				reply_to_message_id: +replyId
-				// 			});
-				// 		} else {
-				// 			// tgMessage =
-				// 			await tgBot.telegram.sendPhoto(bridge.telegram.chatId, images[0].media, {
-				// 				reply_to_message_id: +replyId
-				// 			});
-				// 		}
-				// 		// NOTE: disabled message mapping for galleries
-				// 		// messageMap.insert(
-				// 		// 	MessageMap.DISCORD_TO_TELEGRAM,
-				// 		// 	bridge,
-				// 		// 	message.id,
-				// 		// 	tgMessage.message_id.toString()
-				// 		// );
-				// 	} catch (err) {
-				// 		logger.error(
-				// 			`[${bridge.name}] Telegram did not accept an Image attachment:`,
-				// 			(err as Error).toString()
-				// 		);
-				// 	}
-				// }
-				//
-				// if (videos.length) {
-				// 	try {
-				// 		if (videos.length > 1) {
-				// 			await tgBot.telegram.sendMediaGroup(bridge.telegram.chatId, videos, {
-				// 				reply_to_message_id: +replyId
-				// 			});
-				// 		} else {
-				// 			await tgBot.telegram.sendVideo(bridge.telegram.chatId, videos[0].media, {
-				// 				reply_to_message_id: +replyId
-				// 			});
-				// 		}
-				// 	} catch (err) {
-				// 		logger.error(
-				// 			`[${bridge.name}] Telegram did not accept Video attachment:`,
-				// 			(err as Error).toString()
-				// 		);
-				// 	}
-				// }
-				//
-				// if (audios.length) {
-				// 	try {
-				// 		if (videos.length > 1) {
-				// 			await tgBot.telegram.sendMediaGroup(bridge.telegram.chatId, audios, {
-				// 				reply_to_message_id: +replyId
-				// 			});
-				// 		} else {
-				// 			await tgBot.telegram.sendAudio(bridge.telegram.chatId, audios[0].media, {
-				// 				reply_to_message_id: +replyId
-				// 			});
-				// 		}
-				// 	} catch (err) {
-				// 		logger.error(
-				// 			`[${bridge.name}] Telegram did not accept Audio attachment:`,
-				// 			(err as Error).toString()
-				// 		);
-				// 	}
-				// }
-				//
-				// if (documents.length) {
-				// 	try {
-				// 		if (videos.length > 1) {
-				// 			await tgBot.telegram.sendMediaGroup(bridge.telegram.chatId, documents, {
-				// 				reply_to_message_id: +replyId
-				// 			});
-				// 		} else {
-				// 			await tgBot.telegram.sendDocument(bridge.telegram.chatId, documents[0].media, {
-				// 				reply_to_message_id: +replyId
-				// 			});
-				// 		}
-				// 	} catch (err) {
-				// 		logger.error(
-				// 			`[${bridge.name}] Telegram did not accept Document attachment:`,
-				// 			(err as Error).toString()
-				// 		);
-				// 	}
-				// }
-
 				// Check the message for embeds
 				message.embeds.forEach(embed => {
 					// Ignore it if it is not a "rich" embed (image, link, video, ...)
@@ -454,18 +329,18 @@ export function setup(
 
 					try {
 						// Send it
-						if (replyId === "0" || replyId === undefined) {
-							tgBot.telegram.sendMessage(bridge.telegram.chatId, text, {
-								parse_mode: "HTML",
-								disable_web_page_preview: true
-							});
-						} else {
-							tgBot.telegram.sendMessage(bridge.telegram.chatId, text, {
-								reply_to_message_id: +replyId,
-								parse_mode: "HTML",
-								disable_web_page_preview: true
-							});
-						}
+						// if (replyId === "0" || replyId === undefined) {
+						// 	tgBot.telegram.sendMessage(bridge.telegram.chatId, text, {
+						// 		parse_mode: "HTML",
+						// 		disable_web_page_preview: true
+						// 	});
+						// } else {
+						tgBot.telegram.sendMessage(bridge.telegram.chatId, text, {
+							reply_to_message_id: +replyId,
+							parse_mode: "HTML",
+							disable_web_page_preview: true
+						});
+						// }
 					} catch (err) {
 						logger.error(`[${bridge.name}] Telegram did not accept an embed:`, (err as Error).toString());
 					}
