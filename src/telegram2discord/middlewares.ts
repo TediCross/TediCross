@@ -652,14 +652,14 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 			)(tc);
 
 			// Make the text to send
-			const text = await (async () => {
-				let text = await handleEntities(tc.text.raw, tc.text.entities, ctx.TediCross.dcBot, bridge);
+			const [text, hasLinks] = await (async () => {
+				let [text, hasLinks] = await handleEntities(tc.text.raw, tc.text.entities, ctx.TediCross.dcBot, bridge);
 
 				if (!R.isNil(replyQuote) && !tc.hasActualReference) {
 					text = replyQuote + "\n" + text;
 				}
 
-				return text;
+				return [text, hasLinks];
 			})();
 
 			return {
@@ -669,7 +669,8 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				file,
 				text,
 				messageToReply,
-				replyId
+				replyId,
+				hasLinks
 			};
 		}, tc.bridges)
 	);

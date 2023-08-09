@@ -5,8 +5,14 @@ import { fetchDiscordChannel } from "../fetchDiscordChannel";
 import { Context } from "telegraf";
 import { deleteMessage, ignoreAlreadyDeletedError } from "./helpers";
 import { createFromObjFromUser } from "./From";
-import { MessageEditOptions } from "discord.js";
+import { MessageEditOptions, EmbedBuilder } from "discord.js";
 import { Message, User } from "telegraf/typings/core/types/typegram";
+
+interface DiscordMessage {
+	embeds?: any[];
+	content?: string;
+	files?: any[];
+}
 
 export interface TediCrossContext extends Context {
 	TediCross: any;
@@ -155,6 +161,9 @@ const parseMediaGroup = (ctx: TediCrossContext, byTimer: boolean = false) => {
 					if (lPrepared.header) {
 						prepared.header = lPrepared.header;
 					}
+					if (lPrepared.hasLinks) {
+						prepared.hasLinks = lPrepared.hasLinks;
+					}
 					if (lPrepared.text) {
 						prepared.text = lPrepared.text;
 					}
@@ -209,47 +218,37 @@ export const relayMessage = (ctx: TediCrossContext) => {
 			const messageToReply = prepared.messageToReply;
 			const replyId = prepared.replyId;
 
-			// Discord doesn't handle messages longer than 2000 characters. Split it up into chunks that big
 			const messageText = prepared.header + "\n" + prepared.text;
-			let chunks = R.splitEvery(2000, messageText);
 
-			// Send the attachment first, if there is one
-			if (!R.isNil(prepared.file)) {
-				try {
-					if (replyId === "0" || replyId === undefined || messageToReply === undefined) {
-						dcMessage = await channel.send({
-							content: R.head(chunks),
-							files: prepared.files || [prepared.file]
-						});
-					} else {
-						dcMessage = await messageToReply.reply({
-							content: R.head(chunks),
-							files: prepared.files || [prepared.file]
-						});
-					}
-					chunks = R.tail(chunks);
-				} catch (err: any) {
-					if (err.message === "Request entity too large") {
-						dcMessage = await channel.send(
-							`***${prepared.senderName}** on Telegram sent a file, but it was too large for Discord. If you want it, ask them to send it some other way*`
-						);
-					} else {
-						throw err;
-					}
-				}
-			}
-			if (replyId === "0" || replyId === undefined || messageToReply === undefined) {
-				dcMessage = await R.reduce(
-					(p, chunk) => p.then(() => channel.send(chunk)),
-					Promise.resolve(dcMessage),
-					chunks
-				);
+			// NOTE: using EMBED when over 2000 symbols length
+
+			const sendObject: DiscordMessage = {};
+			if ((messageText.length > 2000) || prepared.hasLinks) {
+				const text = prepared.text.length > 4096 ? prepared.text.substring(0, 4090) + "..." : prepared.text;
+				const embed = new EmbedBuilder().setTitle(prepared.header).setDescription(text);
+				sendObject.embeds = [embed];
 			} else {
-				dcMessage = await R.reduce(
-					(p, chunk) => p.then(() => messageToReply.reply(chunk)),
-					Promise.resolve(dcMessage),
-					chunks
-				);
+				sendObject.content = messageText;
+			}
+
+			if (!R.isNil(prepared.file)) {
+				sendObject.files = prepared.files || [prepared.file];
+			}
+
+			try {
+				if (replyId === "0" || replyId === undefined || messageToReply === undefined) {
+					dcMessage = await channel.send(sendObject);
+				} else {
+					dcMessage = await messageToReply.reply(sendObject);
+				}
+			} catch (err: any) {
+				if (err.message === "Request entity too large") {
+					dcMessage = await channel.send(
+						`***${prepared.senderName}** on Telegram sent a file, but it was too large for Discord. If you want it, ask them to send it some other way*`
+					);
+				} else {
+					throw err;
+				}
 			}
 
 			// Make the mapping so future edits can work XXX Only the last chunk is considered
@@ -325,16 +324,31 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 
 			R.forEach(async (prepared: any) => {
 				// Discord doesn't handle messages longer than 2000 characters. Take only the first 2000
-				const messageText = R.slice(0, 2000, prepared.header + "\n" + prepared.text);
+				const messageText = prepared.header + "\n" + prepared.text; //  R.slice(0, 2000,
+
+				const sendObject: DiscordMessage = {};
+				if ((messageText.length > 2000) || prepared.hasLinks) {
+					const text = prepared.text.length > 4096 ? prepared.text.substring(0, 4090) + "..." : prepared.text;
+					const embed = new EmbedBuilder().setTitle(prepared.header).setDescription(text);
+					sendObject.embeds = [embed];
+				} else {
+					sendObject.content = messageText;
+				}
+
+				if (!R.isNil(prepared.file)) {
+					sendObject.files = prepared.files || [prepared.file];
+				}
 
 				// Send them in serial, with the attachment first, if there is one
 				if (typeof dcMessage.edit !== "function") {
-					console.error("dcMessage.edit is not a function");
+					ctx.TediCross.logger.error("dcMessage.edit is not a function");
 				} else {
-					await dcMessage.edit({
-						content: messageText,
-						attachment: prepared.attachment
-					} as MessageEditOptions);
+					await dcMessage.edit(sendObject as MessageEditOptions);
+					// 	{
+					// 	content: messageText,
+					// 	attachment: prepared.attachment
+					// }
+					// as MessageEditOptions);
 				}
 			})(ctx.tediCross.prepared);
 		} catch (err: any) {
