@@ -13,6 +13,7 @@ import { BridgeMap } from "../bridgestuff/BridgeMap";
 import { Telegraf } from "telegraf";
 import { escapeHTMLSpecialChars, ignoreAlreadyDeletedError } from "./helpers";
 import { Client, Message, TextChannel } from "discord.js";
+import { MessageType } from "discord.js";
 import { Settings } from "../settings/Settings";
 
 /***********
@@ -290,6 +291,8 @@ export function setup(
 			// The message is from the wrong chat. Inform the sender that this is a private bot, if they have not been informed the last minute
 			if (!antiInfoSpamSet.has(message.channel.id)) {
 				antiInfoSpamSet.add(message.channel.id);
+
+				if (message.type !== MessageType.Default && message.type !== MessageType.Reply) return;
 
 				message
 					.reply(
