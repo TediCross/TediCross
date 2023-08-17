@@ -13,6 +13,7 @@ import { BridgeMap } from "../bridgestuff/BridgeMap";
 import { Telegraf } from "telegraf";
 import { escapeHTMLSpecialChars, ignoreAlreadyDeletedError } from "./helpers";
 import { Client, Message, TextChannel } from "discord.js";
+import { MessageType } from "discord.js";
 import { Settings } from "../settings/Settings";
 import { InputMediaVideo, InputMediaAudio, InputMediaDocument, InputMediaPhoto } from "telegraf/types";
 
@@ -356,6 +357,8 @@ export function setup(
 				antiInfoSpamSet.add(message.channel.id);
 
 				if (!settings.discord.suppressThisIsPrivateBotMessage) {
+					if (message.type !== MessageType.Default && message.type !== MessageType.Reply) return;
+
 					message
 						.reply(
 							"This is an instance of a TediCross bot, bridging a chat in Telegram with one in Discord. " +
