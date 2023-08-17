@@ -12,7 +12,7 @@ import { Logger } from "../Logger";
 import { BridgeMap } from "../bridgestuff/BridgeMap";
 import { Telegraf } from "telegraf";
 import { escapeHTMLSpecialChars, ignoreAlreadyDeletedError } from "./helpers";
-import { Client, Message, NonSystemMessageType, TextChannel } from "discord.js";
+import { Client, Message, MessageType, TextChannel } from "discord.js";
 import { Settings } from "../settings/Settings";
 import { InputMediaVideo, InputMediaAudio, InputMediaDocument, InputMediaPhoto } from "telegraf/types";
 
@@ -382,7 +382,7 @@ export function setup(
 				antiInfoSpamSet.add(message.channel.id);
 
 				if (!settings.discord.suppressThisIsPrivateBotMessage) {
-					if (message.type !== NonSystemMessageType) return;
+					if (if (message.type !== MessageType.default && message.type !== MessageType.reply) return;) return;
 
 					message
 						.reply(
