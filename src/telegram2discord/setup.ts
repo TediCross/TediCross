@@ -8,7 +8,7 @@ import { MessageMap } from "../MessageMap";
 import { BridgeMap } from "../bridgestuff/BridgeMap";
 import { Settings } from "../settings/Settings";
 import * as telegraf from "telegraf";
-import { chatinfo, handleEdits, leftChatMember, newChatMembers, relayMessage, TediCrossContext } from "./endwares";
+import { chatinfo, threadinfo, handleEdits, leftChatMember, newChatMembers, relayMessage, TediCrossContext } from "./endwares";
 
 /***********
  * Helpers *
@@ -104,6 +104,7 @@ export function setup(
 			tgBot.use(middlewares.addMessageObj);
 			tgBot.use(middlewares.addMessageId);
 			tgBot.use(chatinfo as any);
+			tgBot.use(threadinfo as any);
 			tgBot.use(middlewares.addBridgesToContext);
 			tgBot.use(middlewares.informThisIsPrivateBot);
 			tgBot.use(middlewares.removeD2TBridges);

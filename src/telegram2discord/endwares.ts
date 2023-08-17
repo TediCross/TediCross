@@ -86,6 +86,52 @@ export const chatinfo = (ctx: TediCrossContext, next: () => void) => {
 };
 
 /**
+ * Replies to a message with info about the thread
+ *
+ * @param ctx	The Telegraf context
+ * @param ctx.tediCross	The TediCross object on the context
+ * @param ctx.tediCross.message	The message to reply to
+ * @param ctx.tediCross.message.chat	The object of the chat the message is from
+ * @param ctx.tediCross.message.chat.id	ID of the chat the message is from
+ */
+export const threadinfo = (ctx: TediCrossContext, next: () => void) => {
+	if (ctx.tediCross.message.text === "/threadinfo") {
+		// Reply with the info
+		if (ctx.tediCross.message.message_thread_id) {
+			ctx.reply(`chatID: ${ctx.tediCross.message.chat.id}\nthreadID: ${ctx.tediCross.message.message_thread_id}`)
+				// Wait some time
+				.then(sleepOneMinute)
+				// Delete the info and the command
+				.then(message =>
+					Promise.all([
+						// Delete the info
+						deleteMessage(ctx, message),
+						// Delete the command
+						ctx.deleteMessage().catch(err => ctx.TediCross.logger.error(err.toString()))
+					])
+				)
+				.catch(ignoreAlreadyDeletedError as any);
+		} else {
+			ctx.reply(`Unable to detect threadID - call /threadinfo command from target thread's chat`)
+				// Wait some time
+				.then(sleepOneMinute)
+				// Delete the info and the command
+				.then(message =>
+					Promise.all([
+						// Delete the info
+						deleteMessage(ctx, message),
+						// Delete the command
+						ctx.deleteMessage().catch(err => ctx.TediCross.logger.error(err.toString()))
+					])
+				)
+				.catch(ignoreAlreadyDeletedError as any);
+		}
+	} else {
+		next();
+	}
+};
+
+/**
  * Handles users joining chats
  *
  * @param ctx The Telegraf context
@@ -212,7 +258,11 @@ export const relayMessage = (ctx: TediCrossContext) => {
 			await ctx.TediCross.dcBot.ready;
 
 			// Get the channel to send to
-			const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, prepared.bridge);
+			const channel = await fetchDiscordChannel(
+				ctx.TediCross.dcBot,
+				prepared.bridge,
+				ctx.tediCross.message?.message_thread_id
+			);
 
 			let dcMessage = null;
 			const messageToReply = prepared.messageToReply;
@@ -234,6 +284,9 @@ export const relayMessage = (ctx: TediCrossContext) => {
 			if (!R.isNil(prepared.file)) {
 				sendObject.files = prepared.files || [prepared.file];
 			}
+
+			// console.log(`messageToReply: ${messageToReply}`);
+			// console.log(`replyId: ${replyId}`);
 
 			try {
 				if (replyId === "0" || replyId === undefined || messageToReply === undefined) {

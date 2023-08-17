@@ -12,8 +12,7 @@ import { Logger } from "../Logger";
 import { BridgeMap } from "../bridgestuff/BridgeMap";
 import { Telegraf } from "telegraf";
 import { escapeHTMLSpecialChars, ignoreAlreadyDeletedError } from "./helpers";
-import { Client, Message, TextChannel } from "discord.js";
-import { MessageType } from "discord.js";
+import { Client, Message, NonSystemMessageType, TextChannel } from "discord.js";
 import { Settings } from "../settings/Settings";
 import { InputMediaVideo, InputMediaAudio, InputMediaDocument, InputMediaPhoto } from "telegraf/types";
 
@@ -56,7 +55,8 @@ function makeJoinLeaveFunc(logger: Logger, verb: "joined" | "left", bridgeMap: B
 				try {
 					// Send it
 					await tgBot.telegram.sendMessage(bridge.telegram.chatId, text, {
-						parse_mode: "HTML"
+						parse_mode: "HTML",
+						message_thread_id: bridge.tgThread
 					});
 				} catch (err) {
 					logger.error(
@@ -125,7 +125,31 @@ export function setup(
 				.reply("\nchannelId: '" + message.channel.id + "'")
 				.then(sleepOneMinute)
 				.then((info: any) => Promise.all([info.delete(), message.delete()]))
-				.catch(ignoreAlreadyDeletedError as any);
+				.catch(ignoreAlreadyDeletedError as any)
+				.catch(err => logger.error(err.toString()));
+
+			// Don't process the message any further
+			return;
+		}
+
+		// Check if this is a request for server info
+		if (message.cleanContent === "/threadinfo") {
+			// It is. Give it
+			if (message.channel.isThread()) {
+				message
+					.reply("\nthreadId: '" + message.channel.id + "'")
+					.then(sleepOneMinute)
+					.then((info: any) => Promise.all([info.delete(), message.delete()]))
+					.catch(ignoreAlreadyDeletedError as any)
+					.catch(err => logger.error(err.toString()));
+			} else {
+				message
+					.reply("Unable to detect threadID - call /threadinfo command from target thread's chat")
+					.then(sleepOneMinute)
+					.then((info: any) => Promise.all([info.delete(), message.delete()]))
+					.catch(ignoreAlreadyDeletedError as any)
+					.catch(err => logger.error(err.toString()));
+			}
 
 			// Don't process the message any further
 			return;
@@ -212,7 +236,8 @@ export function setup(
 						// } else {
 						const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, textToSend, {
 							reply_to_message_id: +replyId,
-							parse_mode: "HTML"
+							parse_mode: "HTML",
+							message_thread_id: bridge.tgThread
 						});
 						messageMap.insert(
 							MessageMap.DISCORD_TO_TELEGRAM,
@@ -284,28 +309,33 @@ export function setup(
 					try {
 						if (oneArray.length > 1) {
 							await tgBot.telegram.sendMediaGroup(bridge.telegram.chatId, oneArray, {
-								reply_to_message_id: +replyId
+								reply_to_message_id: +replyId,
+								message_thread_id: bridge.tgThread
 							});
 						} else {
 							switch (type) {
 								case "video":
 									await tgBot.telegram.sendVideo(bridge.telegram.chatId, oneArray[0].media, {
-										reply_to_message_id: +replyId
+										reply_to_message_id: +replyId,
+										message_thread_id: bridge.tgThread
 									});
 									break;
 								case "audio":
 									await tgBot.telegram.sendAudio(bridge.telegram.chatId, oneArray[0].media, {
-										reply_to_message_id: +replyId
+										reply_to_message_id: +replyId,
+										message_thread_id: bridge.tgThread
 									});
 									break;
 								case "photo":
 									await tgBot.telegram.sendPhoto(bridge.telegram.chatId, oneArray[0].media, {
-										reply_to_message_id: +replyId
+										reply_to_message_id: +replyId,
+										message_thread_id: bridge.tgThread
 									});
 									break;
 								case "document":
 									await tgBot.telegram.sendDocument(bridge.telegram.chatId, oneArray[0].media, {
-										reply_to_message_id: +replyId
+										reply_to_message_id: +replyId,
+										message_thread_id: bridge.tgThread
 									});
 									break;
 							}
@@ -319,10 +349,10 @@ export function setup(
 				}
 
 				// Check the message for embeds
-				message.embeds.forEach(embed => {
+				for (const embed of message.embeds) {
 					// Ignore it if it is not a "rich" embed (image, link, video, ...)
 					if (embed.data.type !== "rich") {
-						return;
+						continue;
 					}
 
 					// Convert it to something Telegram likes
@@ -330,22 +360,17 @@ export function setup(
 
 					try {
 						// Send it
-						// if (replyId === "0" || replyId === undefined) {
-						// 	tgBot.telegram.sendMessage(bridge.telegram.chatId, text, {
-						// 		parse_mode: "HTML",
-						// 		disable_web_page_preview: true
-						// 	});
-						// } else {
-						tgBot.telegram.sendMessage(bridge.telegram.chatId, text, {
+						await tgBot.telegram.sendMessage(bridge.telegram.chatId, text, {
 							reply_to_message_id: +replyId,
 							parse_mode: "HTML",
-							disable_web_page_preview: true
+							disable_web_page_preview: true,
+							message_thread_id: bridge.tgThread
 						});
 						// }
 					} catch (err) {
 						logger.error(`[${bridge.name}] Telegram did not accept an embed:`, (err as Error).toString());
 					}
-				});
+				}
 			}
 		} else if (
 			R.isNil((message.channel as TextChannel).guild) ||
@@ -357,7 +382,7 @@ export function setup(
 				antiInfoSpamSet.add(message.channel.id);
 
 				if (!settings.discord.suppressThisIsPrivateBotMessage) {
-					if (message.type !== MessageType.Default && message.type !== MessageType.Reply) return;
+					if (message.type !== NonSystemMessageType) return;
 
 					message
 						.reply(

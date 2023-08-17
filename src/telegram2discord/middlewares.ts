@@ -336,7 +336,18 @@ function addFromObj(ctx: TediCrossContext, next: () => void) {
  * @param next Function to pass control to next middleware
  */
 function addReplyObj(ctx: TediCrossContext, next: () => void) {
-	const repliedToMessage = ctx.tediCross.message.reply_to_message;
+	// const repliedToMessage = ctx.tediCross.message.reply_to_message;
+
+	const repliedToMessage = ctx.tediCross.message?.message_thread_id
+		? ctx.tediCross.message?.message_thread_id !== ctx.tediCross.message?.reply_to_message.message_id
+			? ctx.tediCross.message?.reply_to_message
+			: ctx.tediCross.message?.reply_to_message?.message_thread_id
+			? undefined
+			: ctx.tediCross.message?.reply_to_message
+		: ctx.tediCross.message?.reply_to_message;
+
+	// console.log(`repliedToMessage: ${repliedToMessage}`);
+	// console.dir(ctx.tediCross.message);
 
 	if (!R.isNil(repliedToMessage)) {
 		// This is a reply
@@ -529,11 +540,22 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 			await ctx.TediCross.dcBot.ready;
 
 			// Get the channel to send to
-			const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, bridge);
+			const channel = await fetchDiscordChannel(
+				ctx.TediCross.dcBot,
+				bridge,
+				ctx.tediCross.message?.message_thread_id
+			);
 
 			// Check if the message is a reply and get the id of that message on Discord
 			let replyId = "0";
-			const messageReference = ctx.tediCross.message?.reply_to_message;
+			const messageReference = ctx.tediCross.message?.message_thread_id
+				? ctx.tediCross.message?.message_thread_id !== ctx.tediCross.message?.reply_to_message.message_id
+					? ctx.tediCross.message?.reply_to_message
+					: ctx.tediCross.message?.reply_to_message?.message_thread_id
+					? undefined
+					: ctx.tediCross.message?.reply_to_message
+				: ctx.tediCross.message?.reply_to_message;
+
 			if (typeof messageReference !== "undefined") {
 				const referenceId = messageReference?.message_id;
 				if (typeof referenceId !== "undefined") {

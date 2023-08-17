@@ -6,9 +6,18 @@ import { Client, TextChannel } from "discord.js";
  * @returns	A Promise resolving to the channel, or rejecting if it could not be fetched for some reason
  */
 // export const fetchDiscordChannel = R.curry((dcBot: Client, bridge) => {
-export const fetchDiscordChannel = (dcBot: Client, bridge: any) => {
+export const fetchDiscordChannel = (dcBot: Client, bridge: any, threadID?: number) => {
 	// Get the channel's ID
-	const channelId = bridge.discord.channelId;
+	let channelId = bridge.discord.channelId;
+
+	if (bridge.threadMap && threadID) {
+		for (const threadMap of bridge.threadMap) {
+			if (threadMap.telegram === threadID) {
+				channelId = threadMap.discord;
+				break;
+			}
+		}
+	}
 
 	// Try to get the channel
 	return dcBot.channels.fetch(channelId).catch((err: Error) => {
