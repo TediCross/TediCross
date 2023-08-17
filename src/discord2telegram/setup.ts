@@ -382,7 +382,7 @@ export function setup(
 				antiInfoSpamSet.add(message.channel.id);
 
 				if (!settings.discord.suppressThisIsPrivateBotMessage) {
-					if (if (message.type !== MessageType.default && message.type !== MessageType.reply) return;) return;
+					if (message.type !== MessageType.Default && message.type !== MessageType.Reply) return;
 
 					message
 						.reply(
