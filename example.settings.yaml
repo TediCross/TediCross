@@ -17,6 +17,8 @@ discord:
   replyLength: 100
   maxReplyLines: 2
   suppressThisIsPrivateBotMessage: false
+  enablePlayingStatus: false
+  usePlayingStatusMessage: "TediCross"
 bridges:
   - name: First bridge
     direction: both
