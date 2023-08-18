@@ -45,6 +45,11 @@ Setting up the bot requires basic knowledge of the command line, which is bash o
 
 Done! You now have a nice bridge between a Telegram chat and a Discord channel
 
+Running in Docker
+--------
+
+Please refer to [Docker Readme](./README-Docker.md) for the details.
+
 
 Settings
 --------
