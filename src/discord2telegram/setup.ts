@@ -4,6 +4,7 @@ import { LatestDiscordMessageIds } from "./LatestDiscordMessageIds";
 import { handleEmbed } from "./handleEmbed";
 import { relayOldMessages } from "./relayOldMessages";
 import { Bridge } from "../bridgestuff/Bridge";
+import fs from "fs";
 import path from "path";
 import R from "ramda";
 import { sleepOneMinute } from "../sleep";
@@ -12,7 +13,7 @@ import { Logger } from "../Logger";
 import { BridgeMap } from "../bridgestuff/BridgeMap";
 import { Telegraf } from "telegraf";
 import { escapeHTMLSpecialChars, ignoreAlreadyDeletedError } from "./helpers";
-import { Client, Message, MessageType, TextChannel } from "discord.js";
+import { Client, Collection, Message, MessageType, REST, Routes, TextChannel } from "discord.js";
 import { Settings } from "../settings/Settings";
 import { InputMediaVideo, InputMediaAudio, InputMediaDocument, InputMediaPhoto } from "telegraf/types";
 
@@ -105,6 +106,52 @@ export function setup(
 	// Set of server IDs. Will be filled when the bot is ready
 	const knownServerIds = new Set();
 
+	// @ts-ignore
+	dcBot.commands = new Collection();
+
+	const commandsPath = path.join(__dirname, "commands");
+	const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".ts") || file.endsWith(".js"));
+
+	for (const file of commandFiles) {
+		const filePath = path.join(commandsPath, file);
+		const command = require(filePath);
+		// Set a new item in the Collection with the key as the command name and the value as the exported module
+		if ("data" in command && "execute" in command) {
+			// @ts-ignore
+			dcBot.commands.set(command.data.name, command);
+		} else {
+			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+		}
+	}
+
+	dcBot.on("interactionCreate", async interaction => {
+		if (!interaction.isChatInputCommand()) return;
+		// @ts-ignore
+		const command = interaction.client.commands.get(interaction.commandName);
+
+		if (!command) {
+			console.error(`No command matching ${interaction.commandName} was found.`);
+			return;
+		}
+
+		try {
+			await command.execute(interaction);
+		} catch (error) {
+			console.error(error);
+			if (interaction.replied || interaction.deferred) {
+				await interaction.followUp({
+					content: "There was an error while executing this command!",
+					ephemeral: true
+				});
+			} else {
+				await interaction.reply({
+					content: "There was an error while executing this command!",
+					ephemeral: true
+				});
+			}
+		}
+	});
+
 	// Listen for users joining the server
 	dcBot.on("guildMemberAdd", makeJoinLeaveFunc(logger, "joined", bridgeMap, tgBot));
 
@@ -115,43 +162,6 @@ export function setup(
 	dcBot.on("messageCreate", async message => {
 		// Ignore the bot's own messages
 		if (message.author.id === dcBot.user?.id) {
-			return;
-		}
-
-		// Check if this is a request for server info
-		if (message.cleanContent === "/chatinfo") {
-			// It is. Give it
-			message
-				.reply("\nchannelId: '" + message.channel.id + "'")
-				.then(sleepOneMinute)
-				.then((info: any) => Promise.all([info.delete(), message.delete()]))
-				.catch(ignoreAlreadyDeletedError as any)
-				.catch(err => logger.error(err.toString()));
-
-			// Don't process the message any further
-			return;
-		}
-
-		// Check if this is a request for server info
-		if (message.cleanContent === "/threadinfo") {
-			// It is. Give it
-			if (message.channel.isThread()) {
-				message
-					.reply("\nthreadId: '" + message.channel.id + "'")
-					.then(sleepOneMinute)
-					.then((info: any) => Promise.all([info.delete(), message.delete()]))
-					.catch(ignoreAlreadyDeletedError as any)
-					.catch(err => logger.error(err.toString()));
-			} else {
-				message
-					.reply("Unable to detect threadID - call /threadinfo command from target thread's chat")
-					.then(sleepOneMinute)
-					.then((info: any) => Promise.all([info.delete(), message.delete()]))
-					.catch(ignoreAlreadyDeletedError as any)
-					.catch(err => logger.error(err.toString()));
-			}
-
-			// Don't process the message any further
 			return;
 		}
 
@@ -548,6 +558,37 @@ export function setup(
 				// Get the bridges
 				R.prop("bridges")
 			)(bridgeMap);
+
+			const rest = new REST().setToken(settings.discord.token);
+
+			(async () => {
+				try {
+					const commands = [];
+
+					const commandsPath = path.join(__dirname, "commands");
+					const commandFiles = fs
+						.readdirSync(commandsPath)
+						.filter(file => file.endsWith(".ts") || file.endsWith(".js"));
+					for (const file of commandFiles) {
+						const filePath = path.join(commandsPath, file);
+						const command = require(filePath);
+						if ("data" in command && "execute" in command) {
+							commands.push(command.data.toJSON());
+						} else {
+							console.log(
+								`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
+							);
+						}
+					}
+
+					const data = await rest.put(Routes.applicationCommands(dcBot.user!.id), { body: commands });
+
+					// @ts-ignore
+					console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+				} catch (error) {
+					console.error(error);
+				}
+			})();
 		});
 	});
 
