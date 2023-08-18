@@ -38,4 +38,4 @@ jobs:
           file: ./Dockerfile
           platforms: linux/arm64,linux/amd64
           push: true
-          tags: ${{ secrets.DOCKER_TARGET }}/tedicross:latest, ${{ secrets.DOCKER_TARGET }}/tedicross:${{ github.event.inputs.version }}
+          tags: ${{ secrets.DOCKER_TARGET }}/tedicross:${{ github.event.inputs.version }}
