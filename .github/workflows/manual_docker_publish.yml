@@ -6,11 +6,6 @@ on:
       version:
         description: "Version"
         required: true
-      latest:
-        description: "Set as latest"
-        default: false
-        type: boolean
-        required: true
 
 jobs:
   build_and_push:
@@ -38,20 +33,9 @@ jobs:
 
       - name: Build and push image
         uses: docker/build-push-action@v4.1.1
-        if: ${{ github.event.inputs.latest }} != true
         with:
           context: .
           file: ./Dockerfile
           platforms: linux/arm64,linux/amd64
           push: true
           tags: ${{ secrets.DOCKER_TARGET }}/tedicross:${{ github.event.inputs.version }}
-
-      - name: Build and push image
-        uses: docker/build-push-action@v4.1.1
-        if: ${{ github.event.inputs.latest }}
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/arm64,linux/amd64
-          push: true
-          tags: ${{ secrets.DOCKER_TARGET }}/tedicross:${{ github.event.inputs.version }},${{ secrets.DOCKER_TARGET }}/tedicross:latest

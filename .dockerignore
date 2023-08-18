@@ -1,3 +1,4 @@
 /node_modules
 /dist
 settings.yaml
+package-lock.json
