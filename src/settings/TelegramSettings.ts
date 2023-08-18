@@ -113,17 +113,6 @@ export class TelegramSettings {
 	 * @throws If the object is not suitable. The error message says what the problem is
 	 */
 	static validate(settings: SettingProperties) {
-		// Check that the settings are indeed in object form
-		// NOTE: redundant checks
-		// if (!(settings instanceof Object)) {
-		// 	throw new Error("`settings` must be an object");
-		// }
-		//
-		// // Check that the token is a string
-		// if (typeof settings.token !== "string") {
-		// 	throw new Error("`settings.token` must be a string");
-		// }
-
 		// Check that useFirstNameInsteadOfUsername is a boolean
 		if (Boolean(settings.useFirstNameInsteadOfUsername) !== settings.useFirstNameInsteadOfUsername) {
 			throw new Error("`settings.useFirstNameInsteadOfUsername` must be a boolean");

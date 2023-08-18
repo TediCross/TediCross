@@ -82,17 +82,6 @@ export class DiscordSettings {
 	 * @throws If the object is not suitable. The error message says what the problem is
 	 */
 	static validate(settings: Settings) {
-		// NOTE: redundant checks
-		// // Check that the settings are indeed in object form
-		// if (!(settings instanceof Object)) {
-		// 	throw new Error("`settings` must be an object");
-		// }
-		//
-		// // Check that the token is a string
-		// if (typeof settings.token !== "string") {
-		// 	throw new Error("`settings.token` must be a string");
-		// }
-
 		// Check that skipOldMessages is a boolean
 		if (Boolean(settings.skipOldMessages) !== settings.skipOldMessages) {
 			throw new Error("`settings.skipOldMessages` must be a boolean");

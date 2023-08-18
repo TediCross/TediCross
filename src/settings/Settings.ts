@@ -135,12 +135,6 @@ export class Settings {
 			"ms"
 		];
 
-		// Check that the settings are indeed in object form
-		// NOTE: redundant check
-		// if (!(settings instanceof Object)) {
-		// 	throw new Error("`settings` must be an object");
-		// }
-
 		// Check that debug is a boolean
 		if (Boolean(settings.debug) !== settings.debug) {
 			throw new Error("`settings.debug` must be a boolean");
@@ -160,12 +154,6 @@ export class Settings {
 		if (Boolean(settings.persistentMessageMap) !== settings.persistentMessageMap) {
 			throw new Error("`settings.persistentMessageMap` must be a boolean");
 		}
-
-		// Check that `bridges` is an array
-		// NOTE: redundant check
-		// if (!(settings.bridges instanceof Array)) {
-		// 	throw new Error("`settings.bridges` must be an array");
-		// }
 
 		// Check that the bridges are valid
 		settings.bridges.forEach(Bridge.validate);

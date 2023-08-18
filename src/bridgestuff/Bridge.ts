@@ -62,18 +62,6 @@ export class Bridge {
 	 * @throws If the object is not suitable. The error message says what the problem is
 	 */
 	static validate(settings: BridgeProperties) {
-		// Check that the settings are indeed in object form
-
-		// NOTE: redundant checks
-		// if (!(settings instanceof Object)) {
-		// 	throw new Error("`settings` must be an object");
-		// }
-		//
-		// // Check the name
-		// if (typeof settings.name !== "string") {
-		// 	throw new Error("`settings.name` must be a string");
-		// }
-
 		// Check the direction
 		if (
 			![
