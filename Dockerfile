@@ -6,7 +6,7 @@ WORKDIR /opt/TediCross/
 
 COPY . .
 
-RUN npm install --production
+RUN npm install --omit=dev
 
 VOLUME /opt/TediCross/data/
 
