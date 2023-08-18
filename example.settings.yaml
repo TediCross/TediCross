@@ -4,15 +4,29 @@ telegram:
   colonAfterSenderName: false
   skipOldMessages: true
   sendEmojiWithStickers: true
+  useCustomEmojiFilter: false # Experimental, might break
+  replaceAtWithHash: false # Experimental, might break
+  replaceExcessiveSpaces: false # Experimental, might break
+  removeNewlineSpaces: false # Experimental, might break
+  suppressFileTooBigMessages: false
+  suppressThisIsPrivateBotMessage: false
 discord:
   useNickname: false
   token: DISCORD_BOT_TOKEN_HERE # Discord bot tokens look like this: MjI3MDA1NzIvOBQ2MzAzMiMz.DRf-aw.N0MVYtDxXYPSQew4g2TPqvQve2c
   skipOldMessages: true
   replyLength: 100
   maxReplyLines: 2
+  suppressThisIsPrivateBotMessage: false
+  enableCustomStatus: false
+  customStatusMessage: "TediCross"
 bridges:
   - name: First bridge
     direction: both
+    threadMap: # Remove this and (telegram/discord pairs below if not planing to use Threads )
+      - telegram: TELEGRAM_THREAD_ID  # Threads have positive IDs
+        discord: 'DISCORD_THREAD_ID' # Discord thread IDs looks like other channel IDs
+      - telegram: TELEGRAM_THREAD_ID  # Threads have positive IDs
+        discord: 'DISCORD_THREAD_ID' # Discord thread IDs looks like other channel IDs
     telegram:
       chatId: TELEGRAM_CHAT_ID # Remember that Telegram group and channel IDs are negative. Include the `-` if you are bridging a group or a channel
       relayJoinMessages: true

@@ -4,6 +4,9 @@ interface Settings {
 	useNickname: boolean;
 	maxReplyLines: number;
 	skipOldMessages: boolean;
+	suppressThisIsPrivateBotMessage: boolean;
+	enableCustomStatus: boolean;
+	customStatusMessage: string;
 }
 
 /*****************************
@@ -21,13 +24,14 @@ export class DiscordSettings {
 	replyLength: number;
 	maxReplyLines: number;
 	skipOldMessages: boolean;
+	suppressThisIsPrivateBotMessage: boolean;
+	enableCustomStatus: boolean;
+	customStatusMessage: string;
 
 	/**
 	 * Creates a new DiscordSettings object
 	 *
 	 * @param settings The raw settings object to use
-	 * @param token The bot token to use. Set to {@link DiscordSettings#GET_TOKEN_FROM_ENVIRONMENT} to read the token from the DISCORD_BOT_TOKEN environment variable
-	 * @param skipOldMessages Whether or not to skip through all previous messages sent on Discord since last bot shutdown and start processing new messages ONLY
 	 *
 	 * @throws If the settings object does not validate
 	 */
@@ -38,10 +42,10 @@ export class DiscordSettings {
 		/** The bot token to use, or `env` to indicate the token should be collected from the environment */
 		this._token = settings.token;
 
-		/** Whether or not to skip through all previous messages sent on Discord since last bot shutdown and start processing new messages ONLY */
+		/** Whether to skip through all previous messages sent on Discord since last bot shutdown and start processing new messages ONLY */
 		this.skipOldMessages = settings.skipOldMessages;
 
-		/** Whether or not to show the Nickname of the user on the server or use his username */
+		/** Whether to show the Nickname of the user on the server or use his username */
 		this.useNickname = settings.useNickname;
 
 		/** How much of the original message to show in replies from Telegram */
@@ -49,16 +53,25 @@ export class DiscordSettings {
 
 		/** How many lines of the original message to show in replies from Telegram */
 		this.maxReplyLines = settings.maxReplyLines;
+
+		/** Whether to suppress warning in channel when no bridge configured */
+		this.suppressThisIsPrivateBotMessage = settings.suppressThisIsPrivateBotMessage;
+
+		/** Whether to enable the playing status */
+		this.enableCustomStatus = settings.enableCustomStatus;
+
+		/** The playing status message */
+		this.customStatusMessage = settings.customStatusMessage;
 	}
 
 	/** The bot token to use */
 	get token(): string {
 		return this._token === DiscordSettings.GET_TOKEN_FROM_ENVIRONMENT
-			? process.env.DISCORD_BOT_TOKEN!
+			? (process.env.DISCORD_BOT_TOKEN as string)!
 			: this._token;
 	}
 
-	/** Makes a JSONifiable object of the settings. Called automatically by JSON.stringify */
+	/** Makes a JSON object of the settings. Called automatically by JSON.stringify */
 	toJSON() {
 		// Make a clone of the object
 		const clone = Object.assign({}, this) as Record<string, any>;
@@ -79,16 +92,6 @@ export class DiscordSettings {
 	 * @throws If the object is not suitable. The error message says what the problem is
 	 */
 	static validate(settings: Settings) {
-		// Check that the settings are indeed in object form
-		if (!(settings instanceof Object)) {
-			throw new Error("`settings` must be an object");
-		}
-
-		// Check that the token is a string
-		if (typeof settings.token !== "string") {
-			throw new Error("`settings.token` must be a string");
-		}
-
 		// Check that skipOldMessages is a boolean
 		if (Boolean(settings.skipOldMessages) !== settings.skipOldMessages) {
 			throw new Error("`settings.skipOldMessages` must be a boolean");
@@ -108,6 +111,21 @@ export class DiscordSettings {
 		if (!Number.isInteger(settings.maxReplyLines) || settings.maxReplyLines <= 0) {
 			throw new Error("`settings.maxReplyLines` must be an integer greater than 0");
 		}
+
+		// Check that `suppressThisIsPrivateBotMessage` is a boolean
+		if (Boolean(settings.suppressThisIsPrivateBotMessage) !== settings.suppressThisIsPrivateBotMessage) {
+			throw new Error("`settings.suppressThisIsPrivateBotMessage` must be a boolean");
+		}
+
+		// Check that `enableCustomStatus` is a boolean
+		if (Boolean(settings.enableCustomStatus) !== settings.enableCustomStatus) {
+			throw new Error("`settings.enableCustomStatus` must be a boolean");
+		}
+
+		// Check that the customStatusMessage is a string
+		if (typeof settings.customStatusMessage !== "string") {
+			throw new Error("`settings.customStatusMessage` must be a string");
+		}
 	}
 
 	/** Constant telling the Discord token should be gotten from the environment */
@@ -120,7 +138,10 @@ export class DiscordSettings {
 		return {
 			token: DiscordSettings.GET_TOKEN_FROM_ENVIRONMENT,
 			skipOldMessages: true,
-			useNickname: false
+			useNickname: false,
+			suppressThisIsPrivateBotMessage: false,
+			enableCustomStatus: false,
+			customStatusMessage: "TediCross"
 		};
 	}
 }

@@ -107,16 +107,33 @@ export class Settings {
 	 * @throws If the object is not suitable. The error message says what the problem is
 	 */
 	static validate(settings: SettingProperties) {
-
 		// An Array of valid units of time
-		const validUnitsOfTime = ["year", "years", "y", "month", "months", "M", "week", "weeks", "w",
-			"day", "days", "d", "hour", "hours", "h", "minute", "minutes", "m", "second", "seconds", "s",
-			"millisecond", "milliseconds", "ms"];
-
-		// Check that the settings are indeed in object form
-		if (!(settings instanceof Object)) {
-			throw new Error("`settings` must be an object");
-		}
+		const validUnitsOfTime = [
+			"year",
+			"years",
+			"y",
+			"month",
+			"months",
+			"M",
+			"week",
+			"weeks",
+			"w",
+			"day",
+			"days",
+			"d",
+			"hour",
+			"hours",
+			"h",
+			"minute",
+			"minutes",
+			"m",
+			"second",
+			"seconds",
+			"s",
+			"millisecond",
+			"milliseconds",
+			"ms"
+		];
 
 		// Check that debug is a boolean
 		if (Boolean(settings.debug) !== settings.debug) {
@@ -138,18 +155,13 @@ export class Settings {
 			throw new Error("`settings.persistentMessageMap` must be a boolean");
 		}
 
-		// Check that `bridges` is an array
-		if (!(settings.bridges instanceof Array)) {
-			throw new Error("`settings.bridges` must be an array");
-		}
-
 		// Check that the bridges are valid
 		settings.bridges.forEach(Bridge.validate);
 
 		// Check that all the bridges have unique names
 		settings.bridges.forEach(function (value: Bridge, index: number, array: Bridge[]) {
 			for (let i = 0; i < array.length; i++) {
-				if ((value.name === array[i].name) && (i !== index)) {
+				if (value.name === array[i].name && i !== index) {
 					throw new Error("`settings.bridges` must have unique names for each bridge");
 				}
 			}
@@ -231,7 +243,7 @@ export class Settings {
 			discord: DiscordSettings.DEFAULTS,
 			bridges: [],
 			messageTimeoutAmount: 24,
-			messageTimeoutUnit: 'hours',
+			messageTimeoutUnit: "hours",
 			persistentMessageMap: false,
 			debug: false
 		} as any;

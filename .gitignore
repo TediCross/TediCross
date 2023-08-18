@@ -47,4 +47,10 @@ data/
 
 # Built files
 dist/
-.vscode/settings.json
+
+# Lock files
+yarn.lock
+package-lock.json
+
+.vscode/
+/todo.txt

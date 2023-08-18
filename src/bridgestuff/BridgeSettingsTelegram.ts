@@ -56,11 +56,6 @@ export class BridgeSettingsTelegram {
 	 * @throws If the object is not suitable. The error message says what the problem is
 	 */
 	static validate(settings: BridgeSettingsTelegramProperties) {
-		// Check that the settings are indeed in object form
-		if (!(settings instanceof Object)) {
-			throw new Error("`settings` must be an object");
-		}
-
 		// Check that relayJoinMessages is a boolean
 		if (Boolean(settings.relayJoinMessages) !== settings.relayJoinMessages) {
 			throw new Error("`settings.relayJoinMessages` must be a boolean");
