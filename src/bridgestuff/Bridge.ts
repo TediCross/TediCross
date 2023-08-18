@@ -8,6 +8,8 @@ export interface BridgeProperties {
 	telegram: BridgeSettingsTelegramProperties;
 	discord: BridgeSettingsDiscordProperties;
 	direction: "both" | "d2t" | "t2d";
+	threadMap: any[] | undefined;
+	tgThread: number | undefined;
 }
 
 /********************
@@ -20,6 +22,8 @@ export class Bridge {
 	public direction: BridgeProperties["direction"];
 	public telegram: BridgeSettingsTelegramProperties;
 	public discord: BridgeSettingsDiscordProperties;
+	public threadMap: any[] | undefined;
+	public tgThread: number | undefined;
 	/**
 	 * Creates a new bridge
 	 *
@@ -45,6 +49,9 @@ export class Bridge {
 
 		/** Settings for the Discord side of the bridge */
 		this.discord = new BridgeSettingsDiscord(settings.discord);
+
+		/** Settings for the Threads mapping */
+		this.threadMap = settings.threadMap;
 	}
 
 	/**
@@ -55,16 +62,6 @@ export class Bridge {
 	 * @throws If the object is not suitable. The error message says what the problem is
 	 */
 	static validate(settings: BridgeProperties) {
-		// Check that the settings are indeed in object form
-		if (!(settings instanceof Object)) {
-			throw new Error("`settings` must be an object");
-		}
-
-		// Check the name
-		if (typeof settings.name !== "string") {
-			throw new Error("`settings.name` must be a string");
-		}
-
 		// Check the direction
 		if (
 			![

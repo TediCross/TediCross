@@ -28,9 +28,10 @@ const findFn = (prop: string, regexp: RegExp) => R.compose(R.not, R.isEmpty, R.m
 export async function handleEntities(text: string, entities: MessageEntity[], dcBot: Client, bridge: Bridge) {
 	// Don't mess up the original
 	const substitutedText = text !== undefined ? text.split("") : [""];
+	let hasLinks = false;
 
 	// Markdown links to put on the message
-	const markdownLinks = [];
+	// const markdownLinks = [];
 
 	// Make sure messages without entities don't crash the thing
 	if (!Array.isArray(entities)) {
@@ -86,13 +87,14 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 			}
 			case "text_link": {
 				// Markdown style link. 'part' is the text, 'e.url' is the URL
-				// substitute = "[" + part + "](" + e.url + ")";
+				substitute = "[" + part + "](" + e.url + ")";
+				hasLinks = true;
 				// Discord appears to not be able to handle this type of links. Make the substitution an object which can be found and properly substituted later
-				markdownLinks.unshift(e.url);
-				substitute = {
-					type: "mdlink",
-					text: part
-				};
+				// markdownLinks.unshift(e.url);
+				// substitute = {
+				// 	type: "mdlink",
+				// 	text: part
+				// };
 				break;
 			}
 			case "bold": {
@@ -102,7 +104,17 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 			}
 			case "italic": {
 				// Italic text
-				substitute = "*" + part + "*";
+				const reg = /(\r\n|\r|\n)$/i;
+				if (reg.test(part)) {
+					substitute = "*" + part.substring(0, part.length - 1) + "*\n";
+				} else {
+					substitute = "*" + part + "*";
+				}
+				break;
+			}
+			case "strikethrough": {
+				// strikethrough text
+				substitute = "~~" + part + "~~";
 				break;
 			}
 			case "underline": {
@@ -152,22 +164,22 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 	}
 
 	// Put the markdown links on the end, if there are any
-	if (!R.isEmpty(markdownLinks)) {
-		substitutedText.push("\n\n");
-		for (let i = 0; i < markdownLinks.length; i++) {
-			// Find out where the corresponding text is
-			const index = substitutedText.findIndex((e: any) => e instanceof Object && e.type === "mdlink");
-			const obj = substitutedText[index];
-
-			// Replace the object with the proper text and reference
-			//@ts-ignore
-			substitutedText[index] = `${obj.text}[${i + 1}]`;
-
-			// Push the link to the end
-			substitutedText.push(`[${i + 1}]: ${markdownLinks[i]}\n`);
-		}
-	}
+	// if (!R.isEmpty(markdownLinks)) {
+	// 	substitutedText.push("\n\n");
+	// 	for (let i = 0; i < markdownLinks.length; i++) {
+	// 		// Find out where the corresponding text is
+	// 		const index = substitutedText.findIndex((e: any) => e instanceof Object && e.type === "mdlink");
+	// 		const obj = substitutedText[index];
+	//
+	// 		// Replace the object with the proper text and reference
+	// 		//@ts-ignore
+	// 		substitutedText[index] = `${obj.text}[${i + 1}]`;
+	//
+	// 		// Push the link to the end
+	// 		substitutedText.push(`[${i + 1}]: ${markdownLinks[i]}\n`);
+	// 	}
+	// }
 
 	// Return the converted string
-	return substitutedText.join("");
+	return [substitutedText.join(""), hasLinks];
 }

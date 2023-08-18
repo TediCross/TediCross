@@ -79,9 +79,16 @@ export function createFromObjFromChat(chat: Record<string, any>) {
  * @returns The display name
  */
 export function makeDisplayName(useFirstNameInsteadOfUsername: boolean, from: From) {
-	return R.ifElse<any, any, any>(
-		from => useFirstNameInsteadOfUsername || R.isNil(from.username),
-		R.prop("firstName"),
-		R.prop("username")
-	)(from);
+	if (useFirstNameInsteadOfUsername || !from.username) {
+		const suffix: string = from.lastName ? ` ${from.lastName}` : "";
+		return `${from.firstName}${suffix}`;
+	}
+
+	return from.username;
+	// return R.ifElse<any, any, any>(
+	// 	from => R.isNil(from.username) || useFirstNameInsteadOfUsername,
+	// 	// (useFirstNameInsteadOfUsername || R.isNil(from.username)),
+	// 	from => R.prop("firstName", from),
+	// 	from => R.prop("username", from)
+	// )(from);
 }

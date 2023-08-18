@@ -17,7 +17,7 @@ import { Telegraf } from "telegraf";
 import { setup as telegramSetup, TediTelegraf } from "./telegram2discord/setup";
 
 // Discord stuff
-import { Client as DiscordClient, GatewayIntentBits } from "discord.js";
+import { Client as DiscordClient, GatewayIntentBits, ActivityType } from "discord.js";
 import { setup as discordSetup } from "./discord2telegram/setup";
 
 if (!semver.gte(process.version, "16.0.0")) {
@@ -92,7 +92,15 @@ const tgBot = new Telegraf(settings.telegram.token);
 
 // Create a Discord bot
 const dcBot = new DiscordClient({
-	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
+	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+	presence: settings.discord.enablePlayingStatus ?  {
+		activities: [
+			{
+				name: settings.discord.usePlayingStatusMessage,
+				type: ActivityType.Playing
+			}
+		]
+	} : {}
 });
 
 // Create a message ID map
