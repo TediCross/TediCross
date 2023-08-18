@@ -93,14 +93,16 @@ const tgBot = new Telegraf(settings.telegram.token);
 // Create a Discord bot
 const dcBot = new DiscordClient({
 	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
-	presence: settings.discord.enablePlayingStatus ?  {
-		activities: [
-			{
-				name: settings.discord.usePlayingStatusMessage,
-				type: ActivityType.Playing
-			}
-		]
-	} : {}
+	presence: settings.discord.enableCustomStatus
+		? {
+				activities: [
+					{
+						name: settings.discord.customStatusMessage,
+						type: ActivityType.Custom
+					}
+				]
+		  }
+		: {}
 });
 
 // Create a message ID map

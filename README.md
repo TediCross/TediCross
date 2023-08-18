@@ -80,8 +80,8 @@ As mentioned in the step-by-step installation guide, there is a settings file. H
 	* `replyLength`: How many characters of the original message to display on replies
 	* `maxReplyLines`: How many lines of the original message to display on replies
 	* `suppressThisIsPrivateBotMessage`: If set to `true` - suppress warning messages (`This is an instance of a TediCross bot...`) in discord channels outside configured bridges. Defaults to `false`
-	* `enablePlayingStatus`: If set to `true` - enables the playing status. Defaults to `false`
-	* `usePlayingStatusMessage`: The message to set as playing status. Defaults to "TediCross"
+	* `enableCustomStatus`: If set to `true` - enables the custom status. Defaults to `false`
+	* `customStatusMessage`: The message to set as custom status. Defaults to "TediCross"
 * `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
 * `messageTimeoutAmount`: Amount for your unit of time to expire messages in MessageMap. Defaults to `24`
 * `messageTimeoutUnit`: Format of time as a string (ie: 'hours', 'days', 'weeks', etc...). Defaults to `'hours'`

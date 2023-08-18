@@ -5,8 +5,8 @@ interface Settings {
 	maxReplyLines: number;
 	skipOldMessages: boolean;
 	suppressThisIsPrivateBotMessage: boolean;
-	enablePlayingStatus: boolean;
-	usePlayingStatusMessage: string;
+	enableCustomStatus: boolean;
+	customStatusMessage: string;
 }
 
 /*****************************
@@ -25,8 +25,8 @@ export class DiscordSettings {
 	maxReplyLines: number;
 	skipOldMessages: boolean;
 	suppressThisIsPrivateBotMessage: boolean;
-	enablePlayingStatus: boolean;
-	usePlayingStatusMessage: string;
+	enableCustomStatus: boolean;
+	customStatusMessage: string;
 
 	/**
 	 * Creates a new DiscordSettings object
@@ -58,10 +58,10 @@ export class DiscordSettings {
 		this.suppressThisIsPrivateBotMessage = settings.suppressThisIsPrivateBotMessage;
 
 		/** Whether to enable the playing status */
-		this.enablePlayingStatus = settings.enablePlayingStatus;
+		this.enableCustomStatus = settings.enableCustomStatus;
 
 		/** The playing status message */
-		this.usePlayingStatusMessage = settings.usePlayingStatusMessage;
+		this.customStatusMessage = settings.customStatusMessage;
 	}
 
 	/** The bot token to use */
@@ -117,14 +117,14 @@ export class DiscordSettings {
 			throw new Error("`settings.suppressThisIsPrivateBotMessage` must be a boolean");
 		}
 
-		// Check that `enablePlayingStatus` is a boolean
-		if (Boolean(settings.enablePlayingStatus) !== settings.enablePlayingStatus) {
-			throw new Error("`settings.enablePlayingStatus` must be a boolean");
+		// Check that `enableCustomStatus` is a boolean
+		if (Boolean(settings.enableCustomStatus) !== settings.enableCustomStatus) {
+			throw new Error("`settings.enableCustomStatus` must be a boolean");
 		}
 
-		// Check that the usePlayingStatusMessage is a string
-		if (typeof settings.usePlayingStatusMessage !== "string") {
-			throw new Error("`settings.usePlayingStatusMessage` must be a string");
+		// Check that the customStatusMessage is a string
+		if (typeof settings.customStatusMessage !== "string") {
+			throw new Error("`settings.customStatusMessage` must be a string");
 		}
 	}
 
@@ -140,8 +140,8 @@ export class DiscordSettings {
 			skipOldMessages: true,
 			useNickname: false,
 			suppressThisIsPrivateBotMessage: false,
-			enablePlayingStatus: false,
-			usePlayingStatusMessage: "TediCross"
+			enableCustomStatus: false,
+			customStatusMessage: "TediCross"
 		};
 	}
 }
