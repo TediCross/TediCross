@@ -8,7 +8,15 @@ import { MessageMap } from "../MessageMap";
 import { BridgeMap } from "../bridgestuff/BridgeMap";
 import { Settings } from "../settings/Settings";
 import * as telegraf from "telegraf";
-import { chatinfo, threadinfo, handleEdits, leftChatMember, newChatMembers, relayMessage, TediCrossContext } from "./endwares";
+import {
+	chatinfo,
+	threadinfo,
+	handleEdits,
+	leftChatMember,
+	newChatMembers,
+	relayMessage,
+	TediCrossContext
+} from "./endwares";
 
 /***********
  * Helpers *
@@ -82,6 +90,20 @@ export function setup(
 			// Log the bot's info
 			logger.info(`Telegram: ${me.username} (${me.id})`);
 
+			const commands = [
+				{
+					command: "chatinfo",
+					description: "Get info about the chat"
+				},
+				{
+					command: "threadinfo",
+					description: "Get info about the thread"
+				}
+			];
+
+			// Set the commands
+			tgBot.telegram.setMyCommands(commands, { scope: { type: "all_chat_administrators" } });
+
 			// Set keeping track of where the "This is an instance of TediCross..." has been sent the last minute
 			const antiInfoSpamSet = new Set();
 
@@ -100,11 +122,11 @@ export function setup(
 			};
 
 			// Apply middlewares and endwares
+			tgBot.command("chatinfo", chatinfo);
+			tgBot.command("threadinfo", threadinfo);
 			tgBot.use(middlewares.addTediCrossObj);
 			tgBot.use(middlewares.addMessageObj);
 			tgBot.use(middlewares.addMessageId);
-			tgBot.use(chatinfo as any);
-			tgBot.use(threadinfo as any);
 			tgBot.use(middlewares.addBridgesToContext);
 			tgBot.use(middlewares.informThisIsPrivateBot);
 			tgBot.use(middlewares.removeD2TBridges);

@@ -59,15 +59,33 @@ const createMessageHandler = R.curry((func, ctx) => {
  * Replies to a message with info about the chat
  *
  * @param ctx	The Telegraf context
- * @param ctx.tediCross	The TediCross object on the context
- * @param ctx.tediCross.message	The message to reply to
- * @param ctx.tediCross.message.chat	The object of the chat the message is from
- * @param ctx.tediCross.message.chat.id	ID of the chat the message is from
  */
-export const chatinfo = (ctx: TediCrossContext, next: () => void) => {
-	if (ctx.tediCross.message.text === "/chatinfo") {
-		// Reply with the info
-		ctx.reply(`chatID: ${ctx.tediCross.message.chat.id}`)
+export const chatinfo = (ctx: Context) => {
+	// Reply with the info
+	ctx.reply(`chatID: ${ctx.message?.chat.id}`)
+		// Wait some time
+		.then(sleepOneMinute)
+		// Delete the info and the command
+		.then(message =>
+			Promise.all([
+				// Delete the info
+				deleteMessage(ctx, message),
+				// Delete the command
+				ctx.deleteMessage()
+			])
+		)
+		.catch(ignoreAlreadyDeletedError as any);
+};
+
+/**
+ * Replies to a message with info about the thread
+ *
+ * @param ctx	The Telegraf context
+ */
+export const threadinfo = (ctx: Context) => {
+	// Reply with the info
+	if (ctx.message?.message_thread_id) {
+		ctx.reply(`chatID: ${ctx.message.chat.id}\nthreadID: ${ctx.message.message_thread_id}`)
 			// Wait some time
 			.then(sleepOneMinute)
 			// Delete the info and the command
@@ -81,53 +99,19 @@ export const chatinfo = (ctx: TediCrossContext, next: () => void) => {
 			)
 			.catch(ignoreAlreadyDeletedError as any);
 	} else {
-		next();
-	}
-};
-
-/**
- * Replies to a message with info about the thread
- *
- * @param ctx	The Telegraf context
- * @param ctx.tediCross	The TediCross object on the context
- * @param ctx.tediCross.message	The message to reply to
- * @param ctx.tediCross.message.chat	The object of the chat the message is from
- * @param ctx.tediCross.message.chat.id	ID of the chat the message is from
- */
-export const threadinfo = (ctx: TediCrossContext, next: () => void) => {
-	if (ctx.tediCross.message.text === "/threadinfo") {
-		// Reply with the info
-		if (ctx.tediCross.message.message_thread_id) {
-			ctx.reply(`chatID: ${ctx.tediCross.message.chat.id}\nthreadID: ${ctx.tediCross.message.message_thread_id}`)
-				// Wait some time
-				.then(sleepOneMinute)
-				// Delete the info and the command
-				.then(message =>
-					Promise.all([
-						// Delete the info
-						deleteMessage(ctx, message),
-						// Delete the command
-						ctx.deleteMessage().catch(err => ctx.TediCross.logger.error(err.toString()))
-					])
-				)
-				.catch(ignoreAlreadyDeletedError as any);
-		} else {
-			ctx.reply(`Unable to detect threadID - call /threadinfo command from target thread's chat`)
-				// Wait some time
-				.then(sleepOneMinute)
-				// Delete the info and the command
-				.then(message =>
-					Promise.all([
-						// Delete the info
-						deleteMessage(ctx, message),
-						// Delete the command
-						ctx.deleteMessage().catch(err => ctx.TediCross.logger.error(err.toString()))
-					])
-				)
-				.catch(ignoreAlreadyDeletedError as any);
-		}
-	} else {
-		next();
+		ctx.reply(`Unable to detect threadID - call /threadinfo command from target thread's chat`)
+			// Wait some time
+			.then(sleepOneMinute)
+			// Delete the info and the command
+			.then(message =>
+				Promise.all([
+					// Delete the info
+					deleteMessage(ctx, message),
+					// Delete the command
+					ctx.deleteMessage()
+				])
+			)
+			.catch(ignoreAlreadyDeletedError as any);
 	}
 };
 
@@ -153,7 +137,9 @@ export const newChatMembers = createMessageHandler((ctx: TediCrossContext, bridg
 		ctx.TediCross.dcBot.ready
 			.then(() => fetchDiscordChannel(ctx.TediCross.dcBot, bridge).then((channel: any) => channel.send(text)))
 			.catch((err: any) =>
-				ctx.TediCross.logger.error(`Could not tell Discord about a new chat member on bridge ${bridge.name}: ${err.message}`)
+				ctx.TediCross.logger.error(
+					`Could not tell Discord about a new chat member on bridge ${bridge.name}: ${err.message}`
+				)
 			);
 	})(ctx.tediCross.message.new_chat_members)
 );
@@ -273,7 +259,7 @@ export const relayMessage = (ctx: TediCrossContext) => {
 			// NOTE: using EMBED when over 2000 symbols length
 
 			const sendObject: DiscordMessage = {};
-			if ((messageText.length > 2000) || prepared.hasLinks) {
+			if (messageText.length > 2000 || prepared.hasLinks) {
 				const text = prepared.text.length > 4096 ? prepared.text.substring(0, 4090) + "..." : prepared.text;
 				const embed = new EmbedBuilder().setTitle(prepared.header).setDescription(text);
 				sendObject.embeds = [embed];
@@ -312,7 +298,9 @@ export const relayMessage = (ctx: TediCrossContext) => {
 				dcMessage?.id
 			);
 		} catch (err: any) {
-			ctx.TediCross.logger.error(`Could not relay a message to Discord on bridge ${prepared.bridge.name}: ${err.message}`);
+			ctx.TediCross.logger.error(
+				`Could not relay a message to Discord on bridge ${prepared.bridge.name}: ${err.message}`
+			);
 		}
 	})(ctx.tediCross.prepared);
 };
@@ -380,7 +368,7 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 				const messageText = prepared.header + "\n" + prepared.text; //  R.slice(0, 2000,
 
 				const sendObject: DiscordMessage = {};
-				if ((messageText.length > 2000) || prepared.hasLinks) {
+				if (messageText.length > 2000 || prepared.hasLinks) {
 					const text = prepared.text.length > 4096 ? prepared.text.substring(0, 4090) + "..." : prepared.text;
 					const embed = new EmbedBuilder().setTitle(prepared.header).setDescription(text);
 					sendObject.embeds = [embed];
