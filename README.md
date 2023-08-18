@@ -225,3 +225,5 @@ Cryptocoins of the following types are accepted:
 
 * BTC: 1Gzr9ZyvTiFCPKfy2BshuZgUeFLebAfbFU
 * ETH: 0x9449D54C85C8FdB079e74379d93A9C9fe611981A
+
+These donations go to the original creator, not the current maintainer.
