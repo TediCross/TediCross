@@ -158,7 +158,12 @@ function addMessageObj(ctx: TediCrossContext, next: () => void) {
 	// Put it on the context
 
 	// bypass pinned message notification
-	if ((ctx as any).update.message && (ctx as any).update.message.pinned_message) {
+	if (
+		(ctx as any).update.message &&
+		((ctx as any).update.message.pinned_message ||
+			(ctx as any).update.message.forum_topic_closed ||
+			(ctx as any).update.message.forum_topic_reopened)
+	) {
 		return;
 	}
 
@@ -339,7 +344,7 @@ function addReplyObj(ctx: TediCrossContext, next: () => void) {
 	// const repliedToMessage = ctx.tediCross.message.reply_to_message;
 
 	const repliedToMessage = ctx.tediCross.message?.message_thread_id
-		? ctx.tediCross.message?.message_thread_id !== ctx.tediCross.message?.reply_to_message.message_id
+		? ctx.tediCross.message?.message_thread_id !== ctx.tediCross.message?.reply_to_message?.message_id
 			? ctx.tediCross.message?.reply_to_message
 			: ctx.tediCross.message?.reply_to_message?.message_thread_id
 			? undefined
@@ -549,7 +554,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 			// Check if the message is a reply and get the id of that message on Discord
 			let replyId = "0";
 			const messageReference = ctx.tediCross.message?.message_thread_id
-				? ctx.tediCross.message?.message_thread_id !== ctx.tediCross.message?.reply_to_message.message_id
+				? ctx.tediCross.message?.message_thread_id !== ctx.tediCross.message?.reply_to_message?.message_id
 					? ctx.tediCross.message?.reply_to_message
 					: ctx.tediCross.message?.reply_to_message?.message_thread_id
 					? undefined
