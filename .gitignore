@@ -53,3 +53,4 @@ yarn.lock
 package-lock.json
 
 .vscode/
+/todo.txt

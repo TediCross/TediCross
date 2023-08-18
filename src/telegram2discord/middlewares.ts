@@ -19,6 +19,7 @@ import { MessageMap } from "../MessageMap";
  * Creates a text object from a Telegram message
  *
  * @param message The message object
+ * @param ctx The TediCrossContext object
  *
  * @returns The text object, or undefined if no text was found
  */
@@ -52,7 +53,7 @@ function createTextObjFromMessage(ctx: TediCrossContext, message: Message) {
 				entities: []
 			})
 		],
-		// Locations must be turned into an URL
+		// Locations must be turned into a URL
 		[
 			R.has<any>("location"),
 			({ location }: any) => ({
@@ -155,12 +156,23 @@ function addTediCrossObj(ctx: TediCrossContext, next: () => void) {
  */
 function addMessageObj(ctx: TediCrossContext, next: () => void) {
 	// Put it on the context
+
+	// bypass pinned message notification
+	if (
+		(ctx as any).update.message &&
+		((ctx as any).update.message.pinned_message ||
+			(ctx as any).update.message.forum_topic_closed ||
+			(ctx as any).update.message.forum_topic_reopened)
+	) {
+		return;
+	}
+
 	ctx.tediCross.message = R.cond([
 		// XXX I tried both R.has and R.hasIn as conditions. Neither worked for some reason
-		[ctx => !R.isNil(ctx.update.channel_post), R.path(["update", "channel_post"])],
-		[ctx => !R.isNil(ctx.update.edited_channel_post), R.path(["update", "edited_channel_post"])],
-		[ctx => !R.isNil(ctx.update.message), R.path(["update", "message"])],
-		[ctx => !R.isNil(ctx.update.edited_message), R.path(["update", "edited_message"])]
+		[ctx => !R.isNil((ctx as any).update.channel_post), R.path(["update", "channel_post"])],
+		[ctx => !R.isNil((ctx as any).update.edited_channel_post), R.path(["update", "edited_channel_post"])],
+		[ctx => !R.isNil((ctx as any).update.message), R.path(["update", "message"])],
+		[ctx => !R.isNil((ctx as any).update.edited_message), R.path(["update", "edited_message"])]
 	])(ctx) as any;
 
 	next();
@@ -175,9 +187,13 @@ function addMessageObj(ctx: TediCrossContext, next: () => void) {
  * @param next Function to pass control to next middleware
  */
 function addMessageId(ctx: TediCrossContext, next: () => void) {
-	ctx.tediCross.messageId = ctx.tediCross.message.message_id;
+	if (ctx.tediCross.message && ctx.tediCross.message.message_id) {
+		ctx.tediCross.messageId = ctx.tediCross.message.message_id;
 
-	next();
+		next();
+	} else {
+		// console.error("Unsupported telegram message type");
+	}
 }
 
 /**
@@ -266,30 +282,36 @@ function informThisIsPrivateBot(ctx: TediCrossContext, next: () => void) {
 		R.compose(R.isEmpty, R.path(["tediCross", "bridges"])),
 		// Inform the user, if enough time has passed since last time
 		R.when<TediCrossContext, any>(
-			// When there is no timer for the chat in the anti spam map
+			// When there is no timer for the chat in the antispam map
 			ctx => R.not(ctx.TediCross.antiInfoSpamSet.has(ctx.tediCross.message.chat.id)),
 			// Inform the chat this is an instance of TediCross
 			ctx => {
-				// Update the anti spam set
+				// Update the antispam set
 				ctx.TediCross.antiInfoSpamSet.add(ctx.tediCross.message.chat.id);
 
 				// Send the reply
-				ctx.reply(
-					"This is an instance of a [TediCross](https://github.com/TediCross/TediCross) bot, " +
-					"bridging a chat in Telegram with one in Discord. " +
-					"If you wish to use TediCross yourself, please download and create an instance.",
-					{
-						parse_mode: "Markdown"
-					}
-				).then(msg =>
-					// Delete it again after a while
-					//@ts-ignore
-					sleepOneMinute()
-						.then(() => deleteMessage(ctx, msg))
-						.catch(ignoreAlreadyDeletedError)
-						// Remove it from the anti spam set again
-						.then(() => ctx.TediCross.antiInfoSpamSet.delete(ctx.message!.chat.id))
-				);
+				if (!ctx.TediCross.settings.telegram.suppressThisIsPrivateBotMessage) {
+					ctx.reply(
+						"This is an instance of a [TediCross](https://github.com/TediCross/TediCross) bot, " +
+							"bridging a chat in Telegram with one in Discord. " +
+							"If you wish to use TediCross yourself, please download and create an instance.",
+						{ parse_mode: "Markdown" }
+					)
+						.then(msg =>
+							// Delete it again after a while
+							//@ts-ignore
+							sleepOneMinute(null)
+								.then(() => deleteMessage(ctx, msg))
+								.catch(ignoreAlreadyDeletedError as any)
+								// Remove it from the antispam set again
+								.then(() => ctx.TediCross.antiInfoSpamSet.delete(ctx.message!.chat.id))
+						)
+						.catch(err => {
+							console.log(`Error send tg message: ${err}`);
+						});
+				} else {
+					ctx.TediCross.antiInfoSpamSet.delete(ctx.message!.chat.id);
+				}
 			}
 		),
 		// Otherwise go to next middleware
@@ -319,7 +341,18 @@ function addFromObj(ctx: TediCrossContext, next: () => void) {
  * @param next Function to pass control to next middleware
  */
 function addReplyObj(ctx: TediCrossContext, next: () => void) {
-	const repliedToMessage = ctx.tediCross.message.reply_to_message;
+	// const repliedToMessage = ctx.tediCross.message.reply_to_message;
+
+	const repliedToMessage = ctx.tediCross.message?.message_thread_id
+		? ctx.tediCross.message?.message_thread_id !== ctx.tediCross.message?.reply_to_message?.message_id
+			? ctx.tediCross.message?.reply_to_message
+			: ctx.tediCross.message?.reply_to_message?.message_thread_id
+			? undefined
+			: ctx.tediCross.message?.reply_to_message
+		: ctx.tediCross.message?.reply_to_message;
+
+	// console.log(`repliedToMessage: ${repliedToMessage}`);
+	// console.dir(ctx.tediCross.message);
 
 	if (!R.isNil(repliedToMessage)) {
 		// This is a reply
@@ -436,14 +469,14 @@ function addFileObj(ctx: TediCrossContext, next: () => void) {
 		ctx.tediCross.file = {
 			type: "photo",
 			id: photo.file_id,
-			name: "photo.jpg" // Telegram will convert it to a jpg no matter which format is orignally sent
+			name: "photo.jpg" // Telegram will convert it to a jpg no matter which format is originally sent
 		};
 	} else if (!R.isNil(message.sticker)) {
 		// Sticker
 		ctx.tediCross.file = {
 			type: "sticker",
 			id: R.ifElse(
-				R.propEq("is_animated", true),
+				R.propEq(true, "is_animated"),
 				R.path(["thumb", "file_id"]),
 				R.prop<any>("file_id")
 			)(message.sticker),
@@ -454,7 +487,7 @@ function addFileObj(ctx: TediCrossContext, next: () => void) {
 		ctx.tediCross.file = {
 			type: "video",
 			id: message.video.file_id,
-			name: "video" + "." + mime.getExtension(message.video.mime_type)
+			name: message.video.file_name || `video.${mime.getExtension(message.video.mime_type)}`
 		};
 	} else if (!R.isNil(message.voice)) {
 		// Voice
@@ -490,9 +523,15 @@ function addFileLink(ctx: TediCrossContext, next: () => void) {
 		.then(next)
 		.then(R.always(undefined))
 		.catch(err => {
-			if (err.response && err.response.description === "Bad Request: file is too big") {
-				ctx.reply("<i>File is too big for TediCross to handle</i>", { parse_mode: "HTML" });
+			if (ctx.TediCross.settings.telegram.suppressFileTooBigMessages) {
+				console.log(err.response ? err.response.description : "Bad Request");
+			} else if (err.response && err.response.description === "Bad Request: file is too big") {
+				ctx.reply(`<i>File '${ctx.tediCross.file.name}' is too big for TediCross to handle</i>`, {
+					parse_mode: "HTML"
+				}).then();
 			}
+
+			next();
 		});
 }
 
@@ -506,11 +545,22 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 			await ctx.TediCross.dcBot.ready;
 
 			// Get the channel to send to
-			const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, bridge);
+			const channel = await fetchDiscordChannel(
+				ctx.TediCross.dcBot,
+				bridge,
+				ctx.tediCross.message?.message_thread_id
+			);
 
 			// Check if the message is a reply and get the id of that message on Discord
 			let replyId = "0";
-			const messageReference = ctx.tediCross.message?.reply_to_message;
+			const messageReference = ctx.tediCross.message?.message_thread_id
+				? ctx.tediCross.message?.message_thread_id !== ctx.tediCross.message?.reply_to_message?.message_id
+					? ctx.tediCross.message?.reply_to_message
+					: ctx.tediCross.message?.reply_to_message?.message_thread_id
+					? undefined
+					: ctx.tediCross.message?.reply_to_message
+				: ctx.tediCross.message?.reply_to_message;
+
 			if (typeof messageReference !== "undefined") {
 				const referenceId = messageReference?.message_id;
 				if (typeof referenceId !== "undefined") {
@@ -560,21 +610,21 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				const repliedToName = R.isNil(tc.replyTo)
 					? null
 					: await R.ifElse(
-						R.prop("isReplyToTediCross") as any,
-						R.compose(
-							(username: string) => makeDiscordMention(username, ctx.TediCross.dcBot, bridge),
-							R.prop("dcUsername") as any
-						),
-						R.compose(
-							R.partial(makeDisplayName, [
-								ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername
-							]),
-							//@ts-ignore
-							R.prop("originalFrom")
-						)
-					)(tc.replyTo);
+							R.prop("isReplyToTediCross") as any,
+							R.compose(
+								(username: string) => makeDiscordMention(username, ctx.TediCross.dcBot, bridge),
+								R.prop("dcUsername") as any
+							),
+							R.compose(
+								R.partial(makeDisplayName, [
+									ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername
+								]),
+								//@ts-ignore
+								R.prop("originalFrom")
+							)
+					  )(tc.replyTo);
 				// Build the header
-				let header = "";
+				let header: string;
 				if (bridge.telegram.sendUsernames) {
 					if (!R.isNil(tc.forwardFrom)) {
 						// Forward
@@ -624,18 +674,19 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 			const file = R.ifElse(
 				R.compose(R.isNil, R.prop("file")),
 				R.always(undefined),
-				(tc: TediCrossContext["TediCross"]["tc"]) => new Discord.AttachmentBuilder(tc.file.link, tc.file.name)
+				(tc: TediCrossContext["TediCross"]["tc"]) =>
+					new Discord.AttachmentBuilder(tc.file.link, { name: tc.file.name })
 			)(tc);
 
 			// Make the text to send
-			const text = await (async () => {
-				let text = await handleEntities(tc.text.raw, tc.text.entities, ctx.TediCross.dcBot, bridge);
+			const [text, hasLinks] = await (async () => {
+				let [text, hasLinks] = await handleEntities(tc.text.raw, tc.text.entities, ctx.TediCross.dcBot, bridge);
 
 				if (!R.isNil(replyQuote) && !tc.hasActualReference) {
 					text = replyQuote + "\n" + text;
 				}
 
-				return text;
+				return [text, hasLinks];
 			})();
 
 			return {
@@ -645,9 +696,10 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				file,
 				text,
 				messageToReply,
-				replyId
+				replyId,
+				hasLinks
 			};
-		})(tc.bridges)
+		}, tc.bridges)
 	);
 
 	next();
