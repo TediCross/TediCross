@@ -1,8 +1,11 @@
 name: Publish Docker Images On Release
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version"
+        required: true
 
 jobs:
   push_to_registries:
