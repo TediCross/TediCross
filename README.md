@@ -48,7 +48,7 @@ Done! You now have a nice bridge between a Telegram chat and a Discord channel
 Running in Docker
 --------
 
-Please refer to [Docker Readme](./README-Docker.md) for the details.
+Please refer to [Docker Guide](./guides/docker/Docker.md) for the details.
 
 
 Settings
