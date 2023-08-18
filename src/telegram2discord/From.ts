@@ -80,8 +80,8 @@ export function createFromObjFromChat(chat: Record<string, any>) {
  */
 export function makeDisplayName(useFirstNameInsteadOfUsername: boolean, from: From) {
 	if (useFirstNameInsteadOfUsername || !from.username) {
-		const prefix: string = from.lastName ? ` ${from.lastName}` : "";
-		return `${from.firstName}${prefix}`;
+		const suffix: string = from.lastName ? ` ${from.lastName}` : "";
+		return `${from.firstName}${suffix}`;
 	}
 
 	return from.username;
