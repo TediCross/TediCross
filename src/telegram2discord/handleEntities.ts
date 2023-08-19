@@ -38,11 +38,17 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 		entities = [];
 	}
 
+	// map for tracking overlapping entities
+	const offsetMap: Set<number> = new Set();
 	// Iterate over the entities backwards, to not fuck up the offset
 	for (let i = entities.length - 1; i >= 0; i--) {
 		// Select the entity object
 		const e = entities[i];
 
+		// NOTE: trying to skip overlapping entities
+		// TODO: need to check whole intersection length not only beginning...
+		if (offsetMap.has(e.offset)) continue;
+		offsetMap.add(e.offset);
 		// Extract the entity part
 		const part = text.substring(e.offset, e.offset + e.length);
 
