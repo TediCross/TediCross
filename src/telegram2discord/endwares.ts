@@ -347,6 +347,7 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 		try {
 			const tgMessage = ctx.tediCross.message;
 
+
 			// Wait for the Discord bot to become ready
 			await ctx.TediCross.dcBot.ready;
 
@@ -356,11 +357,10 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 				bridge,
 				tgMessage.message_id
 			);
-			//console.log("t2d edit getCorresponding: " + dcMessageId);
 
 			// Get the messages from Discord
-			const dcMessage = await fetchDiscordChannel(ctx.TediCross.dcBot, bridge).then(channel =>
-				channel.messages.fetch(dcMessageId)
+			const dcMessage = await fetchDiscordChannel(ctx.TediCross.dcBot, bridge, tgMessage.message_thread_id).then(
+				channel => channel.messages.fetch(dcMessageId)
 			);
 
 			R.forEach(async (prepared: any) => {
