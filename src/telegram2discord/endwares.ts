@@ -256,37 +256,104 @@ export const relayMessage = (ctx: TediCrossContext) => {
 
 			const messageText = prepared.header + "\n" + prepared.text;
 
-			// NOTE: using EMBED when over 2000 symbols length
-
 			const sendObject: DiscordMessage = {};
-			if (messageText.length > 2000 || prepared.hasLinks) {
-				const text = prepared.text.length > 4096 ? prepared.text.substring(0, 4090) + "..." : prepared.text;
-				const embed = new EmbedBuilder().setTitle(prepared.header).setDescription(text);
-				sendObject.embeds = [embed];
-			} else {
-				sendObject.content = messageText;
-			}
 
-			if (!R.isNil(prepared.file)) {
-				sendObject.files = prepared.files || [prepared.file];
-			}
+			const useEmbeds =
+				(messageText.length > 2000 && prepared.bridge.discord.useEmbeds !== "never") || prepared.hasLinks;
 
-			// console.log(`messageToReply: ${messageToReply}`);
-			// console.log(`replyId: ${replyId}`);
-
-			try {
-				if (replyId === "0" || replyId === undefined || messageToReply === undefined) {
-					dcMessage = await channel.send(sendObject);
-				} else {
-					dcMessage = await messageToReply.reply(sendObject);
+			if (useEmbeds) {
+				const text = prepared.text.length > 4096 ? prepared.text.substring(0, 4090) + "..." : prepared.text || ' ';
+				let embeds: EmbedBuilder[] = [];
+				const photoEmbeds: EmbedBuilder[] = [];
+				// build text embed
+				embeds.push(new EmbedBuilder().setTitle(prepared.header).setDescription(text));
+				// process attached files
+				if (!R.isNil(prepared.file)) {
+					const files = prepared.files || [prepared.file];
+					let resFiles = [];
+					let tempPhotoUrl: string = "";
+					for (const file of files) {
+						// only photo attachments can be used as embeds
+						if (file.description === "photo") {
+							tempPhotoUrl = file.attachment;
+							photoEmbeds.push(new EmbedBuilder().setImage(tempPhotoUrl));
+						} else {
+							resFiles.push(file);
+						}
+					}
+					// if only 1 photo - set it into Embed
+					if (photoEmbeds.length === 1) {
+						embeds[0].setImage(tempPhotoUrl);
+					} else {
+						// if useEmbeds = always - add photos as embeds one by one
+						if (prepared.bridge.discord.useEmbeds !== "auto") {
+							embeds = embeds.concat(photoEmbeds);
+						} else {
+							resFiles = files;
+						}
+					}
+					if (resFiles.length) {
+						sendObject.files = resFiles;
+					}
 				}
-			} catch (err: any) {
-				if (err.message === "Request entity too large") {
-					dcMessage = await channel.send(
-						`***${prepared.senderName}** on Telegram sent a file, but it was too large for Discord. If you want it, ask them to send it some other way*`
+
+				sendObject.embeds = embeds;
+
+				// trying to send prepared message
+				try {
+					if (replyId === "0" || replyId === undefined || messageToReply === undefined) {
+						dcMessage = await channel.send(sendObject);
+					} else {
+						dcMessage = await messageToReply.reply(sendObject);
+					}
+				} catch (err: any) {
+					if (err.message === "Request entity too large") {
+						dcMessage = await channel.send(
+							`***${prepared.senderName}** on Telegram sent a file, but it was too large for Discord. If you want it, ask them to send it some other way*`
+						);
+					} else {
+						throw err;
+					}
+				}
+			} else {
+				// old text split version when user don't want to use embeds
+				let chunks = R.splitEvery(2000, messageText);
+				if (!R.isNil(prepared.file)) {
+					try {
+						if (replyId === "0" || replyId === undefined || messageToReply === undefined) {
+							dcMessage = await channel.send({
+								content: R.head(chunks),
+								files: prepared.files || [prepared.file]
+							});
+						} else {
+							dcMessage = await messageToReply.reply({
+								content: R.head(chunks),
+								files: prepared.files || [prepared.file]
+							});
+						}
+						chunks = R.tail(chunks);
+					} catch (err: any) {
+						if (err.message === "Request entity too large") {
+							dcMessage = await channel.send(
+								`***${prepared.senderName}** on Telegram sent a file, but it was too large for Discord. If you want it, ask them to send it some other way*`
+							);
+						} else {
+							throw err;
+						}
+					}
+				}
+				if (replyId === "0" || replyId === undefined || messageToReply === undefined) {
+					dcMessage = await R.reduce(
+						(p, chunk) => p.then(() => channel.send(chunk)),
+						Promise.resolve(dcMessage),
+						chunks
 					);
 				} else {
-					throw err;
+					dcMessage = await R.reduce(
+						(p, chunk) => p.then(() => messageToReply.reply(chunk)),
+						Promise.resolve(dcMessage),
+						chunks
+					);
 				}
 			}
 
@@ -346,7 +413,6 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 	const edit = async (ctx: TediCrossContext, bridge: any) => {
 		try {
 			const tgMessage = ctx.tediCross.message;
-
 
 			// Wait for the Discord bot to become ready
 			await ctx.TediCross.dcBot.ready;

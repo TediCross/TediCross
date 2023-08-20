@@ -31,7 +31,7 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 	let hasLinks = false;
 
 	// Markdown links to put on the message
-	// const markdownLinks = [];
+	const markdownLinks = [];
 
 	// Make sure messages without entities don't crash the thing
 	if (!Array.isArray(entities)) {
@@ -93,14 +93,17 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 			}
 			case "text_link": {
 				// Markdown style link. 'part' is the text, 'e.url' is the URL
-				substitute = "[" + part + "](" + e.url + ")";
-				hasLinks = true;
-				// Discord appears to not be able to handle this type of links. Make the substitution an object which can be found and properly substituted later
-				// markdownLinks.unshift(e.url);
-				// substitute = {
-				// 	type: "mdlink",
-				// 	text: part
-				// };
+				if (["auto", "always"].includes(bridge.discord.useEmbeds)) {
+					substitute = "[" + part + "](" + e.url + ")";
+					hasLinks = true;
+				} else {
+					// Discord appears to not be able to handle this type of links. Make the substitution an object which can be found and properly substituted later
+					markdownLinks.unshift(e.url);
+					substitute = {
+						type: "mdlink",
+						text: part
+					};
+				}
 				break;
 			}
 			case "bold": {
@@ -169,22 +172,26 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 		}
 	}
 
+	if (bridge.discord.useEmbeds === "always") hasLinks = true;
+
 	// Put the markdown links on the end, if there are any
-	// if (!R.isEmpty(markdownLinks)) {
-	// 	substitutedText.push("\n\n");
-	// 	for (let i = 0; i < markdownLinks.length; i++) {
-	// 		// Find out where the corresponding text is
-	// 		const index = substitutedText.findIndex((e: any) => e instanceof Object && e.type === "mdlink");
-	// 		const obj = substitutedText[index];
-	//
-	// 		// Replace the object with the proper text and reference
-	// 		//@ts-ignore
-	// 		substitutedText[index] = `${obj.text}[${i + 1}]`;
-	//
-	// 		// Push the link to the end
-	// 		substitutedText.push(`[${i + 1}]: ${markdownLinks[i]}\n`);
-	// 	}
-	// }
+	if (!hasLinks) {
+		if (!R.isEmpty(markdownLinks)) {
+			substitutedText.push("\n\n");
+			for (let i = 0; i < markdownLinks.length; i++) {
+				// Find out where the corresponding text is
+				const index = substitutedText.findIndex((e: any) => e instanceof Object && e.type === "mdlink");
+				const obj = substitutedText[index];
+
+				// Replace the object with the proper text and reference
+				//@ts-ignore
+				substitutedText[index] = `${obj.text}[${i + 1}]`;
+
+				// Push the link to the end
+				substitutedText.push(`[${i + 1}]: ${markdownLinks[i]}\n`);
+			}
+		}
+	}
 
 	// Return the converted string
 	return [substitutedText.join(""), hasLinks];

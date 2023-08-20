@@ -517,6 +517,9 @@ function addFileLink(ctx: TediCrossContext, next: () => void) {
 			if (!R.isNil(ctx.tediCross.file)) {
 				return ctx.telegram.getFileLink(ctx.tediCross.file.id).then(fileLink => {
 					ctx.tediCross.file.link = fileLink.href;
+					if (ctx.tediCross.file.type === "photo") {
+						ctx.tediCross.file.name = fileLink.href.split("/").pop() || ctx.tediCross.file.name;
+					}
 				});
 			}
 		})
@@ -675,7 +678,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				R.compose(R.isNil, R.prop("file")),
 				R.always(undefined),
 				(tc: TediCrossContext["TediCross"]["tc"]) =>
-					new Discord.AttachmentBuilder(tc.file.link, { name: tc.file.name })
+					new Discord.AttachmentBuilder(tc.file.link, { name: tc.file.name, description: tc.file.type })
 			)(tc);
 
 			// Make the text to send
