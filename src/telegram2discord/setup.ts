@@ -130,6 +130,8 @@ export function setup(
 			tgBot.use(middlewares.addBridgesToContext);
 			tgBot.use(middlewares.informThisIsPrivateBot);
 			tgBot.use(middlewares.removeD2TBridges);
+			//@ts-ignore telegram expacts a second parameter
+			//tgBot.command(middlewares.removeBridgesIgnoringCommands);
 			tgBot.on("new_chat_members", middlewares.removeBridgesIgnoringJoinMessages);
 			tgBot.on("left_chat_member", middlewares.removeBridgesIgnoringLeaveMessages);
 			tgBot.on("new_chat_members", newChatMembers);
@@ -148,7 +150,6 @@ export function setup(
 
 			// Don't crash on errors
 			tgBot.catch((err: any) => {
-				console.log(err);
 				// The docs says timeout errors should always be rethrown
 				// @ts-ignore TODO: Telefraf does not exprt the TimoutError, alternative implementation needed
 				if (err instanceof telegraf.TimeoutError) {
