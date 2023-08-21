@@ -102,7 +102,7 @@ As mentioned in the step-by-step installation guide, there is a settings file. H
 	* `discord.relayLeaveMessages`: Whether to relay messages to Telegram about people leaving the Discord chat
 	* `discord.sendUsernames`: Whether to send the sender's name with the messages to Telegram
 	* `discord.crossDeleteOnTelegram`: Whether to also delete the corresponding message on Telegram when one is deleted in Discord
-    * `discord.useEmbeds`: Whether to use embeds for current bridge. Can be `always`, `never`, `auto`. Defaults to `false`
+        * `discord.useEmbeds`: Whether to use embeds for current bridge. Can be `always`, `never`, `auto`. Defaults to `false`
 	* `threadMap`: An array containing all threads mapping for each bridge
     	* `telegram`: Telegram thread ID. See step 13 on how to acquire it
     	* `discord`: Discord thread ID. See step 13 on how to acquire it
