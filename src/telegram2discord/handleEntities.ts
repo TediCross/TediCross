@@ -27,35 +27,18 @@ const findFn = (prop: string, regexp: RegExp) => R.compose(R.not, R.isEmpty, R.m
  */
 export async function handleEntities(text: string, entities: MessageEntity[], dcBot: Client, bridge: Bridge) {
 	// Don't mess up the original
-	const substitutedText = text !== undefined ? text.split("") : [""];
 	let hasLinks = false;
 
-	// Markdown links to put on the message
-	const markdownLinks = [];
+	// NOTE new version
+	const tagsArray: string[] = [];
+	let skipIndex: number[] = [];
+	for (const e of entities) {
+		const beginIndex = e.offset;
+		const part = text.substring(beginIndex, e.offset + e.length);
+		const endIndex = e.offset + part.trim().length;
+		const prefix = tagsArray[beginIndex] || "";
+		const suffix = tagsArray[endIndex] || "";
 
-	// Make sure messages without entities don't crash the thing
-	if (!Array.isArray(entities)) {
-		entities = [];
-	}
-
-	// map for tracking overlapping entities
-	const offsetMap: Set<number> = new Set();
-	// Iterate over the entities backwards, to not fuck up the offset
-	for (let i = entities.length - 1; i >= 0; i--) {
-		// Select the entity object
-		const e = entities[i];
-
-		// NOTE: trying to skip overlapping entities
-		// TODO: need to check whole intersection length not only beginning...
-		if (offsetMap.has(e.offset)) continue;
-		offsetMap.add(e.offset);
-		// Extract the entity part
-		const part = text.substring(e.offset, e.offset + e.length);
-
-		// The string to substitute
-		let substitute = part as string | Record<string, string>;
-
-		// Do something based on entity type
 		switch (e.type) {
 			case "mention":
 			case "text_mention": {
@@ -70,10 +53,17 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 					const dcRole = channel.guild.roles.cache.find(findFn("name", mentionable));
 
 					if (!R.isNil(dcUser)) {
-						substitute = `<@${dcUser.id}>`;
+						tagsArray[beginIndex] = `${prefix}<@${dcUser.id}>`;
 					} else if (!R.isNil(dcRole)) {
-						substitute = `<@&${dcRole.id}>`;
-					} // else handled by the default substitute value
+						tagsArray[beginIndex] = `${prefix}<@&${dcRole.id}>`;
+					} else {
+						tagsArray[beginIndex] = `${part}`;
+					}
+					skipIndex = skipIndex.concat(
+						Array(e.length)
+							.fill(1)
+							.map((element, index) => index + beginIndex)
+					);
 				} catch (err: any) {
 					console.error(
 						`Could not process a mention for Discord channel ${bridge.discord.channelId} on bridge ${bridge.name}: ${err.message}`
@@ -83,57 +73,58 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 			}
 			case "code": {
 				// Inline code. Add backticks
-				substitute = "`" + part + "`";
+				tagsArray[beginIndex] = prefix + "`";
+				tagsArray[endIndex] = "`" + suffix;
 				break;
 			}
 			case "pre": {
 				// Code block. Add triple backticks
-				substitute = "```\n" + part + "\n```";
+				tagsArray[beginIndex] = prefix + "```\n";
+				tagsArray[endIndex] = "\n```" + suffix;
 				break;
 			}
 			case "text_link": {
-				// Markdown style link. 'part' is the text, 'e.url' is the URL
-				if (["auto", "always"].includes(bridge.discord.useEmbeds)) {
-					substitute = "[" + part + "](" + e.url + ")";
-					hasLinks = true;
-				} else {
-					// Discord appears to not be able to handle this type of links. Make the substitution an object which can be found and properly substituted later
-					markdownLinks.unshift(e.url);
-					substitute = {
-						type: "mdlink",
-						text: part
-					};
-				}
+				tagsArray[beginIndex] = prefix + "[";
+				tagsArray[endIndex] = `](<${e.url}>)` + suffix;
+				hasLinks = bridge.discord.useEmbeds !== "never";
 				break;
 			}
 			case "bold": {
 				// Bold text
-				substitute = "**" + part + "**";
+				tagsArray[beginIndex] = prefix + "**";
+				tagsArray[endIndex] = "**" + suffix;
 				break;
 			}
 			case "italic": {
 				// Italic text
 				const reg = /(\r\n|\r|\n)$/i;
-				if (reg.test(part)) {
-					substitute = "*" + part.substring(0, part.length - 1) + "*\n";
-				} else {
-					substitute = "*" + part + "*";
+				// parse italic only if no other tags were there
+				if (!prefix) {
+					tagsArray[beginIndex] = prefix + "*";
+					if (reg.test(part)) {
+						tagsArray[endIndex - 1] = "*";
+					} else {
+						tagsArray[endIndex] = "*" + suffix;
+					}
 				}
 				break;
 			}
 			case "strikethrough": {
 				// strikethrough text
-				substitute = "~~" + part + "~~";
+				tagsArray[beginIndex] = prefix + "~~";
+				tagsArray[endIndex] = "~~" + suffix;
 				break;
 			}
 			case "underline": {
 				// Underlined text
-				substitute = "__" + part + "__";
+				tagsArray[beginIndex] = prefix + "__";
+				tagsArray[endIndex] = "__" + suffix;
 				break;
 			}
 			case "spoiler": {
 				// Spoiler text
-				substitute = "||" + part + "||";
+				tagsArray[beginIndex] = prefix + "||";
+				tagsArray[endIndex] = "||" + suffix;
 				break;
 			}
 			case "hashtag": {
@@ -148,8 +139,15 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 
 					// Make Discord recognize it as a channel mention
 					if (!R.isNil(mentionedChannel)) {
-						substitute = `<#${mentionedChannel.id}>`;
+						tagsArray[beginIndex] = prefix + `<#${mentionedChannel.id}>`;
+					} else {
+						tagsArray[beginIndex] = `${part}`;
 					}
+					skipIndex = skipIndex.concat(
+						Array(e.length)
+							.fill(1)
+							.map((element, index) => index + beginIndex)
+					);
 				} catch (err: any) {
 					console.error(
 						`Could not process a hashtag for Discord channel ${bridge.discord.channelId} on bridge ${bridge.name}: ${err.message}`
@@ -165,34 +163,18 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 				break;
 			}
 		}
-
-		// Do the substitution if there is a change
-		if (substitute !== part) {
-			substitutedText.splice(e.offset, e.length, substitute as string);
-		}
 	}
 
 	if (bridge.discord.useEmbeds === "always") hasLinks = true;
 
-	// Put the markdown links on the end, if there are any
-	if (!hasLinks) {
-		if (!R.isEmpty(markdownLinks)) {
-			substitutedText.push("\n\n");
-			for (let i = 0; i < markdownLinks.length; i++) {
-				// Find out where the corresponding text is
-				const index = substitutedText.findIndex((e: any) => e instanceof Object && e.type === "mdlink");
-				const obj = substitutedText[index];
-
-				// Replace the object with the proper text and reference
-				//@ts-ignore
-				substitutedText[index] = `${obj.text}[${i + 1}]`;
-
-				// Push the link to the end
-				substitutedText.push(`[${i + 1}]: ${markdownLinks[i]}\n`);
-			}
-		}
+	// add tags to source text
+	const finalTextArray: string[] = [];
+	const length = tagsArray.length > text.length ? tagsArray.length : text.length;
+	for (let i = 0; i < length; i++) {
+		const repText = skipIndex.includes(i) ? "" : text[i] || "";
+		finalTextArray[i] = `${tagsArray[i] || ""}${repText}`;
 	}
 
-	// Return the converted string
-	return [substitutedText.join(""), hasLinks];
+	// Return the converted/combined string
+	return [finalTextArray.join(""), hasLinks];
 }
