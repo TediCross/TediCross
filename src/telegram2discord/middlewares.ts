@@ -156,7 +156,6 @@ function addTediCrossObj(ctx: TediCrossContext, next: () => void) {
  */
 function addMessageObj(ctx: TediCrossContext, next: () => void) {
 	// Put it on the context
-
 	// bypass pinned message notification
 	if (
 		(ctx as any).update.message &&
@@ -192,7 +191,7 @@ function addMessageId(ctx: TediCrossContext, next: () => void) {
 
 		next();
 	} else {
-		// console.error("Unsupported telegram message type");
+		console.error("Unsupported telegram message type");
 	}
 }
 
@@ -207,6 +206,7 @@ function addMessageId(ctx: TediCrossContext, next: () => void) {
  */
 function addBridgesToContext(ctx: TediCrossContext, next: () => void) {
 	ctx.tediCross.bridges = ctx.TediCross.bridgeMap.fromTelegramChatId(ctx.tediCross.message.chat.id);
+
 	next();
 }
 
@@ -226,6 +226,7 @@ function removeD2TBridges(ctx: TediCrossContext, next: () => void) {
 	next();
 }
 
+// THIS BREAKS THE BOT
 /**
  * Removes bridges with the `relayCommands` flag set to false from the bridge list
  *
@@ -429,7 +430,6 @@ function addForwardFrom(ctx: TediCrossContext, next: () => void) {
  */
 function addTextObj(ctx: TediCrossContext, next: () => void) {
 	const text = createTextObjFromMessage(ctx, ctx.tediCross.message as any);
-
 	if (!R.isNil(text)) {
 		ctx.tediCross.text = text;
 	}
@@ -517,6 +517,9 @@ function addFileLink(ctx: TediCrossContext, next: () => void) {
 			if (!R.isNil(ctx.tediCross.file)) {
 				return ctx.telegram.getFileLink(ctx.tediCross.file.id).then(fileLink => {
 					ctx.tediCross.file.link = fileLink.href;
+					if (ctx.tediCross.file.type === "photo") {
+						ctx.tediCross.file.name = fileLink.href.split("/").pop() || ctx.tediCross.file.name;
+					}
 				});
 			}
 		})
@@ -675,18 +678,24 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				R.compose(R.isNil, R.prop("file")),
 				R.always(undefined),
 				(tc: TediCrossContext["TediCross"]["tc"]) =>
-					new Discord.AttachmentBuilder(tc.file.link, { name: tc.file.name })
+					new Discord.AttachmentBuilder(tc.file.link, { name: tc.file.name, description: tc.file.type })
 			)(tc);
 
 			// Make the text to send
 			const [text, hasLinks] = await (async () => {
-				let [text, hasLinks] = await handleEntities(tc.text.raw, tc.text.entities, ctx.TediCross.dcBot, bridge);
+				const [text, hasLinks] = await handleEntities(
+					tc.text.raw,
+					tc.text.entities,
+					ctx.TediCross.dcBot,
+					bridge
+				);
+				let editableText = text;
 
 				if (!R.isNil(replyQuote) && !tc.hasActualReference) {
-					text = replyQuote + "\n" + text;
+					editableText = replyQuote + "\n" + editableText;
 				}
 
-				return [text, hasLinks];
+				return [editableText, hasLinks];
 			})();
 
 			return {

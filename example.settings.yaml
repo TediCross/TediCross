@@ -23,7 +23,8 @@ bridges:
   - name: First bridge
     direction: both
     threadMap: # Remove this and (telegram/discord pairs below if not planing to use Threads )
-      - telegram: TELEGRAM_THREAD_ID  # Threads have positive IDs
+      - name: First thread # optional naming for thread mapping
+        telegram: TELEGRAM_THREAD_ID  # Threads have positive IDs
         discord: 'DISCORD_THREAD_ID' # Discord thread IDs looks like other channel IDs
       - telegram: TELEGRAM_THREAD_ID  # Threads have positive IDs
         discord: 'DISCORD_THREAD_ID' # Discord thread IDs looks like other channel IDs
@@ -32,7 +33,6 @@ bridges:
       relayJoinMessages: true
       relayLeaveMessages: true
       sendUsernames: true
-      relayCommands: true
       crossDeleteOnDiscord: true
     discord:
       channelId: 'DISCORD_CHANNEL_ID' # This ID must be wrapped in single quotes. Example: '244791815503347712'
@@ -40,6 +40,7 @@ bridges:
       relayLeaveMessages: true
       sendUsernames: true
       crossDeleteOnTelegram: true
+      useEmbeds: 'auto' # always / never / auto
 debug: false
 messageTimeoutAmount: 24
 messageTimeoutUnit: 'hours' # This string must be a valid Moment time format. Example: seconds, minutes, hours, days, weeks, months, years

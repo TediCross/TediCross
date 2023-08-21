@@ -4,6 +4,7 @@ export interface BridgeSettingsDiscordProperties {
 	relayJoinMessages: boolean;
 	relayLeaveMessages: boolean;
 	crossDeleteOnTelegram: boolean;
+	useEmbeds: string;
 	serverId?: string;
 }
 
@@ -14,6 +15,7 @@ export class BridgeSettingsDiscord {
 	public relayJoinMessages: boolean;
 	public relayLeaveMessages: boolean;
 	public crossDeleteOnTelegram: boolean;
+	public useEmbeds: string;
 
 	/**
 	 * Creates a new BridgeSettingsDiscord object
@@ -42,6 +44,9 @@ export class BridgeSettingsDiscord {
 
 		/** Whether or not to delete messages on Telegram when a message is deleted on Discord */
 		this.crossDeleteOnTelegram = settings.crossDeleteOnTelegram;
+
+		/** Whether to use Embeds when posting on Discord */
+		this.useEmbeds = settings.useEmbeds;
 	}
 
 	/**

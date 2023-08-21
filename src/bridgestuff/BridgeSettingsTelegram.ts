@@ -1,7 +1,7 @@
 export interface BridgeSettingsTelegramProperties {
 	chatId: number;
 	sendUsernames: boolean;
-	relayCommands: boolean;
+	//relayCommands: boolean;
 	relayJoinMessages: boolean;
 	relayLeaveMessages: boolean;
 	crossDeleteOnDiscord: boolean;
@@ -15,7 +15,7 @@ export class BridgeSettingsTelegram {
 	public relayJoinMessages: boolean;
 	public relayLeaveMessages: boolean;
 	public crossDeleteOnDiscord: boolean;
-	public relayCommands: boolean;
+	//public relayCommands: boolean;
 
 	/**
 	 * Creates a new BridgeSettingsTelegram object
@@ -42,7 +42,7 @@ export class BridgeSettingsTelegram {
 		this.sendUsernames = settings.sendUsernames;
 
 		/** Whether or not to relay messages starting with "/" (commands) */
-		this.relayCommands = settings.relayCommands;
+		//this.relayCommands = settings.relayCommands;
 
 		/** Whether or not to delete messages when they are edited to be a single dot */
 		this.crossDeleteOnDiscord = settings.crossDeleteOnDiscord;
@@ -72,9 +72,9 @@ export class BridgeSettingsTelegram {
 		}
 
 		// Check that relayCommands is a boolean
-		if (Boolean(settings.relayCommands) !== settings.relayCommands) {
+		/*if (Boolean(settings.relayCommands) !== settings.relayCommands) {
 			throw new Error("`settings.relayCommands` must be a boolean");
-		}
+		}*/
 
 		// Check that crossDeleteOnDiscord is a boolean
 		if (Boolean(settings.crossDeleteOnDiscord) !== settings.crossDeleteOnDiscord) {

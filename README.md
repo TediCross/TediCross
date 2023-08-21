@@ -95,13 +95,14 @@ As mentioned in the step-by-step installation guide, there is a settings file. H
 	* `telegram.relayJoinMessages`: Whether to relay messages to Discord about people joining the Telegram chat
 	* `telegram.relayLeaveMessages`: Whether to relay messages to Discord about people leaving the Telegram chat
 	* `telegram.sendUsernames`: Whether to send the sender's name with the messages to Discord
-	* `telegram.relayCommands`: If set to `false`, messages starting with a `/` are not relayed to Discord
+	<!--* `telegram.relayCommands`: If set to `false`, messages starting with a `/` are not relayed to Discord-->
 	* `telegram.crossDeleteOnDiscord`: Whether to also delete the corresponding message on Discord when one is deleted on Telegram. **NOTE**: See FAQ about deleting messages.
 	* `discord.channelId`: ID of the channel the Discord end of the bridge is in. See step 11 on how to acquire it
 	* `discord.relayJoinMessages`: Whether to relay messages to Telegram about people joining the Discord chat
 	* `discord.relayLeaveMessages`: Whether to relay messages to Telegram about people leaving the Discord chat
 	* `discord.sendUsernames`: Whether to send the sender's name with the messages to Telegram
 	* `discord.crossDeleteOnTelegram`: Whether to also delete the corresponding message on Telegram when one is deleted in Discord
+        * `discord.useEmbeds`: Whether to use embeds for current bridge. Can be `always`, `never`, `auto`. Defaults to `false`
 	* `threadMap`: An array containing all threads mapping for each bridge
     	* `telegram`: Telegram thread ID. See step 13 on how to acquire it
     	* `discord`: Discord thread ID. See step 13 on how to acquire it

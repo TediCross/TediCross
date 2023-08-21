@@ -131,7 +131,7 @@ export function setup(
 			tgBot.use(middlewares.informThisIsPrivateBot);
 			tgBot.use(middlewares.removeD2TBridges);
 			//@ts-ignore telegram expacts a second parameter
-			tgBot.command(middlewares.removeBridgesIgnoringCommands);
+			//tgBot.command(middlewares.removeBridgesIgnoringCommands);
 			tgBot.on("new_chat_members", middlewares.removeBridgesIgnoringJoinMessages);
 			tgBot.on("left_chat_member", middlewares.removeBridgesIgnoringLeaveMessages);
 			tgBot.on("new_chat_members", newChatMembers);

@@ -191,12 +191,12 @@ export class Settings {
 		const settings = R.clone(rawSettings);
 
 		// 2019-11-08: Turn `ignoreCommands` into `relayCommands`, as `ignoreCommands` accidently did the opposite of what it was supposed to do
-		for (const bridge of settings.bridges) {
+		/*for (const bridge of settings.bridges) {
 			if (R.isNil(bridge.telegram.relayCommands)) {
 				bridge.telegram.relayCommands = bridge.telegram.ignoreCommands!;
 			}
 			delete bridge.telegram.ignoreCommands;
-		}
+		}*/
 
 		// 2019-11-08: Remove the `serverId` setting from the discord part of the bridges
 		for (const bridge of settings.bridges) {

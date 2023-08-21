@@ -7,6 +7,7 @@ interface Settings {
 	suppressThisIsPrivateBotMessage: boolean;
 	enableCustomStatus: boolean;
 	customStatusMessage: string;
+	useEmbeds: string;
 }
 
 /*****************************
@@ -27,6 +28,7 @@ export class DiscordSettings {
 	suppressThisIsPrivateBotMessage: boolean;
 	enableCustomStatus: boolean;
 	customStatusMessage: string;
+	useEmbeds: string;
 
 	/**
 	 * Creates a new DiscordSettings object
@@ -62,6 +64,9 @@ export class DiscordSettings {
 
 		/** The playing status message */
 		this.customStatusMessage = settings.customStatusMessage;
+
+		/** Whether to use embeds */
+		this.useEmbeds = settings.useEmbeds;
 	}
 
 	/** The bot token to use */
@@ -126,6 +131,11 @@ export class DiscordSettings {
 		if (typeof settings.customStatusMessage !== "string") {
 			throw new Error("`settings.customStatusMessage` must be a string");
 		}
+
+		// Check that the useEmbeds is a string
+		if (typeof settings.useEmbeds !== "string") {
+			throw new Error("`settings.useEmbeds` must be a string");
+		}
 	}
 
 	/** Constant telling the Discord token should be gotten from the environment */
@@ -141,7 +151,8 @@ export class DiscordSettings {
 			useNickname: false,
 			suppressThisIsPrivateBotMessage: false,
 			enableCustomStatus: false,
-			customStatusMessage: "TediCross"
+			customStatusMessage: "TediCross",
+			useEmbeds: "auto"
 		};
 	}
 }
