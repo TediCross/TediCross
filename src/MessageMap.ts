@@ -97,7 +97,7 @@ export class MessageMap {
 				toIds = await this._persistentMap.getCorresponding(direction, bridge, fromId);
 				// console.log("getCorresponding Return");
 				// console.log(toIds);
-				return toIds
+				return toIds;
 			}
 		} catch (err) {
 			// Unknown message ID. Don't do anything
@@ -127,7 +127,7 @@ export class MessageMap {
 				return fromId;
 			} else {
 				let fromId: string[] = [];
-				let key = await this._persistentMap.getCorrespondingReverse(bridge, toId);
+				const key = await this._persistentMap.getCorrespondingReverse(bridge, toId);
 				// console.log("getCorrespondingReverse Return");
 				// console.log(fromId);
 				if (key !== "0" && typeof key === "string") {
@@ -155,11 +155,14 @@ export class MessageMap {
 
 // Recursive Timeout to handle delays larger than the maximum value of 32-bit signed integers
 function safeTimeout(onTimeout: Function, delay: number) {
-	setTimeout(() => {
-		if (delay > MAX_32_BIT) {
-			return safeTimeout(onTimeout, delay - MAX_32_BIT);
-		} else {
-			onTimeout();
-		}
-	}, Math.min(MAX_32_BIT, delay));
+	setTimeout(
+		() => {
+			if (delay > MAX_32_BIT) {
+				return safeTimeout(onTimeout, delay - MAX_32_BIT);
+			} else {
+				onTimeout();
+			}
+		},
+		Math.min(MAX_32_BIT, delay)
+	);
 }

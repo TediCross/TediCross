@@ -33,6 +33,7 @@ export class Logger extends console.Console {
 	 *
 	 * @returns A function which works just like the given method, but also prints extra data
 	 */
+	// eslint-disable-next-line no-unused-vars, class-methods-use-this
 	_wrapper(method: (...args: any[]) => void, tag: string) {
 		return (...args: any[]) => {
 			// Create the stamp

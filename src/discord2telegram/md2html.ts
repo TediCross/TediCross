@@ -87,16 +87,18 @@ const spoilerRule = {
 };
 
 const rules = _.extend({}, simpleMarkdown.defaultRules, {
-	spoiler: spoilerRule
-});
+	// Ignore some rules which only creates trouble
+	list: Object.assign({}, simpleMarkdown.defaultRules.list, {
+		// order: Number.POSITIVE_INFINITY,
+		match: () => null
+	}),
 
-// Ignore some rules which only creates trouble
-["list", "heading"].forEach(type => {
-	//@ts-ignore TODO: As per the documentation the defaultRules are only allowed to be read, not written, check for alternative way.
-	simpleMarkdown.defaultRules[type] = {
-		order: Number.POSITIVE_INFINITY,
-		match: () => null // Never match anything in order to ignore this rule
-	};
+	heading: Object.assign({}, simpleMarkdown.defaultRules.heading, {
+		// order: Number.POSITIVE_INFINITY,
+		match: () => null
+	}),
+
+	spoiler: spoilerRule
 });
 
 const rawBuiltParser = simpleMarkdown.parserFor(rules);
@@ -133,6 +135,7 @@ export function md2html(text: string, settings: TelegramSettings) {
 		.map(rootNode => {
 			// Do some node preprocessing
 			let content = rootNode; // Default to just keeping the node
+
 			if (rootNode.type === "paragraph") {
 				// Remove the outer paragraph, if one exists
 				content = rootNode.content;
@@ -148,6 +151,8 @@ export function md2html(text: string, settings: TelegramSettings) {
 				return html + "\n";
 			} else if (node.type === "hr") {
 				return html + "---";
+			} else if (node.type === "link") {
+				return html + `<a href='${node.target}'>${extractText(node)}</a>`;
 			}
 
 			// Turn the nodes into HTML
