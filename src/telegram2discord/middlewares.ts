@@ -156,7 +156,6 @@ function addTediCrossObj(ctx: TediCrossContext, next: () => void) {
  */
 function addMessageObj(ctx: TediCrossContext, next: () => void) {
 	// Put it on the context
-
 	// bypass pinned message notification
 	if (
 		(ctx as any).update.message &&
@@ -192,7 +191,7 @@ function addMessageId(ctx: TediCrossContext, next: () => void) {
 
 		next();
 	} else {
-		// console.error("Unsupported telegram message type");
+		console.error("Unsupported telegram message type");
 	}
 }
 
@@ -207,6 +206,7 @@ function addMessageId(ctx: TediCrossContext, next: () => void) {
  */
 function addBridgesToContext(ctx: TediCrossContext, next: () => void) {
 	ctx.tediCross.bridges = ctx.TediCross.bridgeMap.fromTelegramChatId(ctx.tediCross.message.chat.id);
+
 	next();
 }
 
@@ -226,6 +226,7 @@ function removeD2TBridges(ctx: TediCrossContext, next: () => void) {
 	next();
 }
 
+// THIS BREAKS THE BOT
 /**
  * Removes bridges with the `relayCommands` flag set to false from the bridge list
  *
@@ -293,8 +294,8 @@ function informThisIsPrivateBot(ctx: TediCrossContext, next: () => void) {
 				if (!ctx.TediCross.settings.telegram.suppressThisIsPrivateBotMessage) {
 					ctx.reply(
 						"This is an instance of a [TediCross](https://github.com/TediCross/TediCross) bot, " +
-						"bridging a chat in Telegram with one in Discord. " +
-						"If you wish to use TediCross yourself, please download and create an instance.",
+							"bridging a chat in Telegram with one in Discord. " +
+							"If you wish to use TediCross yourself, please download and create an instance.",
 						{ parse_mode: "Markdown" }
 					)
 						.then(msg =>
@@ -347,8 +348,8 @@ function addReplyObj(ctx: TediCrossContext, next: () => void) {
 		? ctx.tediCross.message?.message_thread_id !== ctx.tediCross.message?.reply_to_message?.message_id
 			? ctx.tediCross.message?.reply_to_message
 			: ctx.tediCross.message?.reply_to_message?.message_thread_id
-				? undefined
-				: ctx.tediCross.message?.reply_to_message
+			? undefined
+			: ctx.tediCross.message?.reply_to_message
 		: ctx.tediCross.message?.reply_to_message;
 
 	// console.log(`repliedToMessage: ${repliedToMessage}`);
@@ -429,7 +430,6 @@ function addForwardFrom(ctx: TediCrossContext, next: () => void) {
  */
 function addTextObj(ctx: TediCrossContext, next: () => void) {
 	const text = createTextObjFromMessage(ctx, ctx.tediCross.message as any);
-
 	if (!R.isNil(text)) {
 		ctx.tediCross.text = text;
 	}
@@ -560,8 +560,8 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				? ctx.tediCross.message?.message_thread_id !== ctx.tediCross.message?.reply_to_message?.message_id
 					? ctx.tediCross.message?.reply_to_message
 					: ctx.tediCross.message?.reply_to_message?.message_thread_id
-						? undefined
-						: ctx.tediCross.message?.reply_to_message
+					? undefined
+					: ctx.tediCross.message?.reply_to_message
 				: ctx.tediCross.message?.reply_to_message;
 
 			if (typeof messageReference !== "undefined") {
@@ -613,19 +613,19 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				const repliedToName = R.isNil(tc.replyTo)
 					? null
 					: await R.ifElse(
-						R.prop("isReplyToTediCross") as any,
-						R.compose(
-							(username: string) => makeDiscordMention(username, ctx.TediCross.dcBot, bridge),
-							R.prop("dcUsername") as any
-						),
-						R.compose(
-							R.partial(makeDisplayName, [
-								ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername
-							]),
-							//@ts-ignore
-							R.prop("originalFrom")
-						)
-					)(tc.replyTo);
+							R.prop("isReplyToTediCross") as any,
+							R.compose(
+								(username: string) => makeDiscordMention(username, ctx.TediCross.dcBot, bridge),
+								R.prop("dcUsername") as any
+							),
+							R.compose(
+								R.partial(makeDisplayName, [
+									ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername
+								]),
+								//@ts-ignore
+								R.prop("originalFrom")
+							)
+					  )(tc.replyTo);
 				// Build the header
 				let header: string;
 				if (bridge.telegram.sendUsernames) {
@@ -683,13 +683,19 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 
 			// Make the text to send
 			const [text, hasLinks] = await (async () => {
-				let [text, hasLinks] = await handleEntities(tc.text.raw, tc.text.entities, ctx.TediCross.dcBot, bridge);
+				const [text, hasLinks] = await handleEntities(
+					tc.text.raw,
+					tc.text.entities,
+					ctx.TediCross.dcBot,
+					bridge
+				);
+				let editableText = text;
 
 				if (!R.isNil(replyQuote) && !tc.hasActualReference) {
-					text = replyQuote + "\n" + text;
+					editableText = replyQuote + "\n" + editableText;
 				}
 
-				return [text, hasLinks];
+				return [editableText, hasLinks];
 			})();
 
 			return {

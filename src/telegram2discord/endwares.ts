@@ -172,7 +172,7 @@ export const leftChatMember = createMessageHandler((ctx: TediCrossContext, bridg
 });
 
 const parseMediaGroup = (ctx: TediCrossContext, byTimer: boolean = false) => {
-	// ctx.TediCross.logger.info(ctx.tediCross.message.media_group_id, byTimer);
+	//ctx.TediCross.logger.info(ctx.tediCross.message.media_group_id, byTimer);
 
 	const groupIdMap = ctx.TediCross.groupIdMap;
 	const groupId = ctx.tediCross.message.media_group_id;
@@ -182,7 +182,7 @@ const parseMediaGroup = (ctx: TediCrossContext, byTimer: boolean = false) => {
 			const ctxArray = groupIdMap.get(groupId);
 			groupIdMap.delete(groupId);
 			if (ctxArray) {
-				// ctx.TediCross.logger.info(`Array Length: ${ctxArray.length}`);
+				//ctx.TediCross.logger.info(`Array Length: ${ctxArray.length}`);
 				const comboCtx: TediCrossContext = ctxArray[0];
 				comboCtx.tediCross.hasMediaGroup = true;
 				const prepared = comboCtx.tediCross.prepared[0];
@@ -204,12 +204,12 @@ const parseMediaGroup = (ctx: TediCrossContext, byTimer: boolean = false) => {
 					}
 				}
 
-				// ctx.TediCross.logger.info(`Files Array Length: ${prepared.files.length}`);
+				//ctx.TediCross.logger.info(`Files Array Length: ${prepared.files.length}`);
 
 				relayMessage(comboCtx);
 			}
 		} else {
-			// ctx.TediCross.logger.info(`No groupId: ${groupId}`);
+			//ctx.TediCross.logger.info(`No groupId: ${groupId}`);
 			return;
 		}
 	} else {
@@ -255,14 +255,14 @@ export const relayMessage = (ctx: TediCrossContext) => {
 			const replyId = prepared.replyId;
 
 			const messageText = prepared.header + "\n" + prepared.text;
-
 			const sendObject: DiscordMessage = {};
 
 			const useEmbeds =
 				(messageText.length > 2000 && prepared.bridge.discord.useEmbeds !== "never") || prepared.hasLinks;
 
 			if (useEmbeds) {
-				const text = prepared.text.length > 4096 ? prepared.text.substring(0, 4090) + "..." : prepared.text || ' ';
+				const text =
+					prepared.text.length > 4096 ? prepared.text.substring(0, 4090) + "..." : prepared.text || " ";
 				let embeds: EmbedBuilder[] = [];
 				const photoEmbeds: EmbedBuilder[] = [];
 				// build text embed

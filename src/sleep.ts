@@ -20,4 +20,3 @@ export const sleep = util.promisify(setTimeout);
  * @returns Promise resolving after one minute
  */
 export const sleepOneMinute = R.partial(sleep, [moment.duration(1, "minute").asMilliseconds()]);
-
