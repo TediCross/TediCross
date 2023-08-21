@@ -26,7 +26,7 @@
     "@typescript-eslint/parser": "^6.4.0",
     "discord.js": "^14.13.0",
     "eslint": "^8.47.0",
-    "eslint-config-prettier": "^8.10.0",
+    "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
     "js-yaml": "^4.1.0",
     "mime": "^3.0.0",
