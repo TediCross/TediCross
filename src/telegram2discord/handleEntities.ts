@@ -32,12 +32,14 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 	// NOTE new version
 	const tagsArray: string[] = [];
 	let skipIndex: number[] = [];
+	let firstLink = true;
+	const regExpCaret = /(\r\n|\r|\n)$/i;
 	for (const e of entities) {
 		const beginIndex = e.offset;
 		const part = text.substring(beginIndex, e.offset + e.length);
 		const endIndex = e.offset + part.trim().length;
 		const prefix = tagsArray[beginIndex] || "";
-		const suffix = tagsArray[endIndex] || "";
+		let suffix = tagsArray[endIndex] || "";
 
 		switch (e.type) {
 			case "mention":
@@ -84,8 +86,26 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 				break;
 			}
 			case "text_link": {
-				tagsArray[beginIndex] = prefix + "[";
-				tagsArray[endIndex] = `](<${e.url}>)` + suffix;
+				if (part.trim() === e.url.trim()) {
+					skipIndex = skipIndex.concat(
+						Array(e.length)
+							.fill(1)
+							.map((element, index) => index + beginIndex)
+					);
+					tagsArray[beginIndex] = prefix + "[link";
+					if (regExpCaret.test(part)) {
+						suffix += "\n";
+					}
+				} else {
+					tagsArray[beginIndex] = prefix + "[";
+				}
+
+				if (firstLink) {
+					tagsArray[endIndex] = `](${e.url})` + suffix;
+					firstLink = false;
+				} else {
+					tagsArray[endIndex] = `](<${e.url}>)` + suffix;
+				}
 				hasLinks = bridge.discord.useEmbeds !== "never";
 				break;
 			}
@@ -97,11 +117,10 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 			}
 			case "italic": {
 				// Italic text
-				const reg = /(\r\n|\r|\n)$/i;
 				// parse italic only if no other tags were there
 				if (!prefix) {
 					tagsArray[beginIndex] = prefix + "*";
-					if (reg.test(part)) {
+					if (regExpCaret.test(part)) {
 						tagsArray[endIndex - 1] = "*";
 					} else {
 						tagsArray[endIndex] = "*" + suffix;
