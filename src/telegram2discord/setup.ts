@@ -7,9 +7,9 @@ import { Client } from "discord.js";
 import { MessageMap } from "../MessageMap";
 import { BridgeMap } from "../bridgestuff/BridgeMap";
 import { Settings } from "../settings/Settings";
-import * as telegraf from "telegraf";
 import {
 	chatinfo,
+	channelChatInfo,
 	threadinfo,
 	handleEdits,
 	leftChatMember,
@@ -192,9 +192,9 @@ export function setup(
 			tgBot.catch((err: any) => {
 				// The docs says timeout errors should always be rethrown
 				// @ts-ignore TODO: Telefraf does not exprt the TimoutError, alternative implementation needed
-				if (err instanceof telegraf.TimeoutError) {
-					throw err;
-				}
+				// if (err instanceof telegraf.TimeoutError) {
+				// 	throw err;
+				// }
 
 				// Log other errors, but don't do anything with them
 				console.error(err);

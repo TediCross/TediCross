@@ -104,6 +104,28 @@ export const chatinfo = (ctx: Context) => {
 		.catch(ignoreAlreadyDeletedError as any);
 };
 
+export const channelChatInfo = (ctx: Context, next: () => void) => {
+	if ((ctx as any).update?.channel_post) {
+		if ((ctx as any).update.channel_post.text?.indexOf("/chatinfo") === 0) {
+			ctx.reply(`chatID: ${(ctx as any).update.channel_post.chat.id}`)
+				// Wait some time
+				.then(sleepOneMinute)
+				// Delete the info and the command
+				.then(message =>
+					Promise.all([
+						// Delete the info
+						deleteMessage(ctx, message),
+						// Delete the command
+						ctx.deleteMessage()
+					])
+				)
+				.catch(ignoreAlreadyDeletedError as any);
+			return;
+		}
+	}
+	next();
+};
+
 /**
  * Replies to a command with info about the thread
  *
@@ -112,7 +134,7 @@ export const chatinfo = (ctx: Context) => {
 export const threadinfo = (ctx: Context) => {
 	// Reply with the info
 	if (ctx.message?.message_thread_id) {
-		ctx.reply(`chatID: ${ctx.message.chat.id}\nthreadID: ${ctx.message.message_thread_id}`)
+		ctx.reply(`chatID: ${ctx.message.chat?.id}\nthreadID: ${ctx.message.message_thread_id}`)
 			// Wait some time
 			.then(sleepOneMinute)
 			// Delete the info and the command
