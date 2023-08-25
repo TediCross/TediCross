@@ -315,7 +315,11 @@ export const relayMessage = (ctx: TediCrossContext) => {
 				let embeds: EmbedBuilder[] = [];
 				const photoEmbeds: EmbedBuilder[] = [];
 				// build text embed
-				embeds.push(new EmbedBuilder().setTitle(prepared.header).setDescription(text));
+				const embed = new EmbedBuilder().setDescription(text);
+				if (prepared.header) {
+					embed.setTitle(prepared.header);
+				}
+				embeds.push(embed);
 				// process attached files
 				if (!R.isNil(prepared.file)) {
 					const files = prepared.files || [prepared.file];
@@ -414,6 +418,7 @@ export const relayMessage = (ctx: TediCrossContext) => {
 				dcMessage?.id
 			);
 		} catch (err: any) {
+			console.log(err);
 			ctx.TediCross.logger.error(
 				`Could not relay a message to Discord on bridge ${prepared.bridge.name}: ${err.message}`
 			);
@@ -485,7 +490,10 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 				const sendObject: DiscordMessage = {};
 				if (messageText.length > 2000 || prepared.hasLinks) {
 					const text = prepared.text.length > 4096 ? prepared.text.substring(0, 4090) + "..." : prepared.text;
-					const embed = new EmbedBuilder().setTitle(prepared.header).setDescription(text);
+					const embed = new EmbedBuilder().setDescription(text);
+					if (prepared.header) {
+						embed.setTitle(prepared.header);
+					}
 					sendObject.embeds = [embed];
 				} else {
 					sendObject.content = messageText;
