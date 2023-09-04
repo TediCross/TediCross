@@ -9,7 +9,7 @@ telegram:
   removeNewlineSpaces: true
   suppressFileTooBigMessages: false
   suppressThisIsPrivateBotMessage: true
-  token: 6054623024:AAFEGqH72toC2O7bs66U8kGeZE93ghlSsOw
+  token: <TELEGRAM_BOT_TOKEN>
 discord:
   skipOldMessages: true
   useNickname: true
@@ -19,7 +19,7 @@ discord:
   enableCustomStatus: true
   customStatusMessage: TediCross
   useEmbeds: auto
-  token: ${DISCORD_BOT_TOKEN}
+  token: <DISCORD_BOT_TOKEN>
 debug: true
 messageTimeoutAmount: 240000
 messageTimeoutUnit: hours
