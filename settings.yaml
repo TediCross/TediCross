@@ -1,0 +1,147 @@
+telegram:
+  useFirstNameInsteadOfUsername: false
+  colonAfterSenderName: true
+  skipOldMessages: true
+  sendEmojiWithStickers: true
+  useCustomEmojiFilter: true
+  replaceAtWithHash: true
+  replaceExcessiveSpaces: true
+  removeNewlineSpaces: true
+  suppressFileTooBigMessages: false
+  suppressThisIsPrivateBotMessage: true
+  token: <TELEGRAM_BOT_TOKEN>
+discord:
+  skipOldMessages: true
+  useNickname: true
+  replyLength: 100000
+  maxReplyLines: 5353
+  suppressThisIsPrivateBotMessage: true
+  enableCustomStatus: true
+  customStatusMessage: TediCross
+  useEmbeds: auto
+  token: <DISCORD_BOT_TOKEN>
+debug: true
+messageTimeoutAmount: 240000
+messageTimeoutUnit: hours
+persistentMessageMap: false
+bridges:
+  - name: qa
+    direction: both
+    telegram:
+      chatId: -1001945963926
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnDiscord: true
+    discord:
+      channelId: '1145780208679530506'
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnTelegram: true
+      useEmbeds: auto
+  - name: dps
+    direction: both
+    telegram:
+      chatId: -1001822734535
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnDiscord: true
+    discord:
+      channelId: '1145786400948633750'
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnTelegram: true
+      useEmbeds: auto
+  - name: dev
+    direction: both
+    telegram:
+      chatId: -1001970916571
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnDiscord: true
+    discord:
+      channelId: '1145786104017072208'
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnTelegram: true
+      useEmbeds: auto
+  - name: backend
+    direction: both
+    telegram:
+      chatId: -750214386
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnDiscord: true
+    discord:
+      channelId: '1145776615083749376'
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnTelegram: true
+      useEmbeds: auto
+  - name: ba
+    direction: both
+    telegram:
+      chatId: -836795544
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnDiscord: true
+    discord:
+      channelId: '1145776449232572416'
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnTelegram: true
+      useEmbeds: auto
+  - name: support
+    direction: both
+    telegram:
+      chatId: -405731247
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnDiscord: true
+    discord:
+      channelId: '1145786190797230131'
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnTelegram: true
+      useEmbeds: auto
+  - name: infra
+    direction: both
+    telegram:
+      chatId: -1001983120604
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnDiscord: true
+    discord:
+      channelId: '1145786450567233567'
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnTelegram: true
+      useEmbeds: auto
+  - name: service
+    direction: both
+    telegram:
+      chatId: -833570821
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnDiscord: true
+    discord:
+      channelId: '1145786015617912852'
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: true
+      crossDeleteOnTelegram: true
+      useEmbeds: auto
