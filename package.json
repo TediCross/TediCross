@@ -40,7 +40,7 @@
     "simple-markdown": "^0.7.3",
     "sqlite": "^5.0.1",
     "sqlite3": "^5.1.6",
-    "telegraf": "^4.12.2",
+    "telegraf": "^4.13.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2",
     "underscore": "^1.13.6",
