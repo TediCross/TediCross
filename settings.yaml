@@ -19,7 +19,7 @@ discord:
   enableCustomStatus: true
   customStatusMessage: TediCross
   useEmbeds: auto
-  token: MTE0NTcwMDUyNDQ3ODQ1MTc0NA.GIV1XB.uIVKM2_DliQd-O5YA9PaCej-0zNup4tCLRb6mw
+  token: ${DISCORD_BOT_TOKEN}
 debug: true
 messageTimeoutAmount: 240000
 messageTimeoutUnit: hours
