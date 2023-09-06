@@ -192,12 +192,9 @@ export function setup(
 			tgBot.catch((err: any) => {
 				// The docs says timeout errors should always be rethrown
 				// @ts-ignore TODO: Telefraf does not exprt the TimoutError, alternative implementation needed
-				// if (err instanceof telegraf.TimeoutError) {
-				// 	throw err;
-				// }
 
 				// Log other errors, but don't do anything with them
-				console.error(err);
+				logger.error(err);
 			});
 		})
 		// Start getting updates
