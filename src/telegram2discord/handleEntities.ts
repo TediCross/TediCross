@@ -35,10 +35,10 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 	let firstLink = true;
 	const regExpCaret = /(\r\n|\r|\n)$/i;
 	for (const e of entities) {
-		const beginIndex = e.offset;
+		let beginIndex = e.offset;
 		const part = text.substring(beginIndex, e.offset + e.length);
-		const endIndex = e.offset + part.trim().length;
-		const prefix = tagsArray[beginIndex] || "";
+		let endIndex = e.offset + part.trim().length;
+		let prefix = tagsArray[beginIndex] || "";
 		let suffix = tagsArray[endIndex] || "";
 
 		switch (e.type) {
@@ -55,11 +55,11 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 					const dcRole = channel.guild.roles.cache.find(findFn("name", mentionable));
 
 					if (!R.isNil(dcUser)) {
-						tagsArray[beginIndex] = `${prefix}<@${dcUser.id}>`;
+						tagsArray[beginIndex + 1] = `${prefix}<@${dcUser.id}>`;
 					} else if (!R.isNil(dcRole)) {
-						tagsArray[beginIndex] = `${prefix}<@&${dcRole.id}>`;
+						tagsArray[beginIndex + 1] = `${prefix}<@&${dcRole.id}>`;
 					} else {
-						tagsArray[beginIndex] = `${part}`;
+						tagsArray[beginIndex + 1] = `${part}`;
 					}
 					skipIndex = skipIndex.concat(
 						Array(e.length)
@@ -86,6 +86,12 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 				break;
 			}
 			case "text_link": {
+				// hard fix
+				if (part.indexOf(" ") === 0) {
+					beginIndex++;
+					endIndex++;
+					prefix = "";
+				}
 				if (part.trim() === e.url.trim()) {
 					skipIndex = skipIndex.concat(
 						Array(e.length)
@@ -101,10 +107,10 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 				}
 
 				if (firstLink) {
-					tagsArray[endIndex] = `](${e.url})` + suffix;
+					tagsArray[endIndex] = `](${e.url.trim()})` + suffix;
 					firstLink = false;
 				} else {
-					tagsArray[endIndex] = `](<${e.url}>)` + suffix;
+					tagsArray[endIndex] = `](<${e.url.trim()}>)` + suffix;
 				}
 				hasLinks = bridge.discord.useEmbeds !== "never";
 				break;

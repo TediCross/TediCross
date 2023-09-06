@@ -485,33 +485,50 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 			R.forEach(async (prepared: any) => {
 				// Discord doesn't handle messages longer than 2000 characters. Take only the first 2000
 				const messageText = prepared.header + "\n" + prepared.text; //  R.slice(0, 2000,
-
 				const sendObject: DiscordMessage = {};
-				if (messageText.length > 2000 || prepared.hasLinks) {
-					const text = prepared.text.length > 4096 ? prepared.text.substring(0, 4090) + "..." : prepared.text;
+
+				const useEmbeds =
+					((messageText.length > 2000 && prepared.bridge.discord.useEmbeds !== "never") ||
+						prepared.hasLinks) &&
+					!R.isNil(prepared.file);
+
+				if (useEmbeds) {
+					const text =
+						prepared.text.length > 4096 ? prepared.text.substring(0, 4090) + "..." : prepared.text || " ";
+					const embeds: EmbedBuilder[] = [];
+					// build text embed
 					const embed = new EmbedBuilder().setDescription(text);
 					if (prepared.header) {
 						embed.setTitle(prepared.header);
 					}
-					sendObject.embeds = [embed];
+					embeds.push(embed);
+
+					sendObject.embeds = embeds;
+
+					// trying to send prepared message
+					try {
+						if (typeof dcMessage.edit !== "function") {
+							ctx.TediCross.logger.error("dcMessage.edit is not a function");
+						} else {
+							await dcMessage.edit(sendObject as MessageEditOptions);
+						}
+					} catch (err: any) {
+						ctx.TediCross.logger.error(err);
+					}
 				} else {
+					// old text split version when user don't want to use embeds
 					sendObject.content = messageText;
-				}
 
-				if (!R.isNil(prepared.file)) {
-					sendObject.files = prepared.files || [prepared.file];
-				}
-
-				// Send them in serial, with the attachment first, if there is one
-				if (typeof dcMessage.edit !== "function") {
-					ctx.TediCross.logger.error("dcMessage.edit is not a function");
-				} else {
-					await dcMessage.edit(sendObject as MessageEditOptions);
-					// 	{
-					// 	content: messageText,
-					// 	attachment: prepared.attachment
+					// if (!R.isNil(prepared.file)) {
+					// 	sendObject.files = prepared.files || [prepared.file];
 					// }
-					// as MessageEditOptions);
+
+					// Send them in serial, with the attachment first, if there is one
+					if (typeof dcMessage.edit !== "function") {
+						ctx.TediCross.logger.error("dcMessage.edit is not a function");
+					} else {
+						await dcMessage.edit(sendObject as MessageEditOptions);
+					}
 				}
 			})(ctx.tediCross.prepared);
 		} catch (err: any) {
