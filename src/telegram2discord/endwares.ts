@@ -418,9 +418,8 @@ export const relayMessage = (ctx: TediCrossContext) => {
 				dcMessage?.id
 			);
 		} catch (err: any) {
-			console.log(err);
 			ctx.TediCross.logger.error(
-				`Could not relay a message to Discord on bridge ${prepared.bridge.name}: ${err.message}`
+				`Could not relay a message to Discord on bridge ${prepared.bridge.name}: ${err}`
 			);
 		}
 	})(ctx.tediCross.prepared);
