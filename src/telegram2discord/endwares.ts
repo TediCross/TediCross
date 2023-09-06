@@ -489,8 +489,8 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 
 				const useEmbeds =
 					((messageText.length > 2000 && prepared.bridge.discord.useEmbeds !== "never") ||
-						prepared.hasLinks) &&
-					!R.isNil(prepared.file);
+						prepared.hasLinks);
+
 
 				if (useEmbeds) {
 					const text =
@@ -503,6 +503,24 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 					}
 					embeds.push(embed);
 
+					const photoEmbeds: any[] = [];
+
+					if (!R.isNil(prepared.file)) {
+						const files = prepared.files || [prepared.file];
+						let tempPhotoUrl: string = "";
+						for (const file of files) {
+							// only photo attachments can be used as embeds
+							if (file.description === "photo") {
+								tempPhotoUrl = file.attachment;
+								photoEmbeds.push(new EmbedBuilder().setImage(tempPhotoUrl));
+							}
+						}
+						// if only 1 photo - set it into Embed
+						if (photoEmbeds.length === 1) {
+							embeds[0].setImage(tempPhotoUrl);
+						}
+					}
+
 					sendObject.embeds = embeds;
 
 					// trying to send prepared message
@@ -510,7 +528,7 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 						if (typeof dcMessage.edit !== "function") {
 							ctx.TediCross.logger.error("dcMessage.edit is not a function");
 						} else {
-							await dcMessage.edit(sendObject as MessageEditOptions);
+							await dcMessage.edit(sendObject);
 						}
 					} catch (err: any) {
 						ctx.TediCross.logger.error(err);
