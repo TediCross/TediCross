@@ -488,9 +488,7 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 				const sendObject: DiscordMessage = {};
 
 				const useEmbeds =
-					((messageText.length > 2000 && prepared.bridge.discord.useEmbeds !== "never") ||
-						prepared.hasLinks);
-
+					(messageText.length > 2000 && prepared.bridge.discord.useEmbeds !== "never") || prepared.hasLinks;
 
 				if (useEmbeds) {
 					const text =

@@ -33,6 +33,7 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 	const tagsArray: string[] = [];
 	let skipIndex: number[] = [];
 	let firstLink = true;
+	let onlyOneLink = false;
 	const regExpCaret = /(\r\n|\r|\n)$/i;
 	for (const e of entities) {
 		let beginIndex = e.offset;
@@ -85,6 +86,7 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 				tagsArray[endIndex] = "\n```" + suffix;
 				break;
 			}
+			case "url":
 			case "text_link": {
 				// hard fix
 				if (part.indexOf(" ") === 0) {
@@ -92,7 +94,10 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 					endIndex++;
 					prefix = "";
 				}
-				if (part.trim() === e.url.trim()) {
+
+				const urlStr = ((e as any).url || part).trim();
+
+				if (part.trim() === urlStr) {
 					skipIndex = skipIndex.concat(
 						Array(e.length)
 							.fill(1)
@@ -107,10 +112,12 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 				}
 
 				if (firstLink) {
-					tagsArray[endIndex] = `](${e.url.trim()})` + suffix;
+					tagsArray[endIndex] = `](${urlStr})` + suffix;
 					firstLink = false;
+					onlyOneLink = true;
 				} else {
-					tagsArray[endIndex] = `](<${e.url.trim()}>)` + suffix;
+					tagsArray[endIndex] = `](<${urlStr}>)` + suffix;
+					onlyOneLink = false;
 				}
 				hasLinks = bridge.discord.useEmbeds !== "never";
 				break;
@@ -180,7 +187,6 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 				}
 				break;
 			}
-			case "url":
 			case "bot_command":
 			case "email":
 			default: {
@@ -189,8 +195,14 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 			}
 		}
 	}
+	// If  there is only one link, then we don't want to use Embeds - to let Discord generate a preview
+	if (onlyOneLink) {
+		hasLinks = false;
+	}
 
-	if (bridge.discord.useEmbeds === "always") hasLinks = true;
+	if (bridge.discord.useEmbeds === "always") {
+		hasLinks = true;
+	}
 
 	// add tags to source text
 	const finalTextArray: string[] = [];
