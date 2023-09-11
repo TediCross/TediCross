@@ -4,6 +4,7 @@ export interface BridgeSettingsDiscordProperties {
 	relayJoinMessages: boolean;
 	relayLeaveMessages: boolean;
 	crossDeleteOnTelegram: boolean;
+	disableWebPreviewOnTelegram?: boolean;
 	useEmbeds: string;
 	serverId?: string;
 }
@@ -15,6 +16,7 @@ export class BridgeSettingsDiscord {
 	public relayJoinMessages: boolean;
 	public relayLeaveMessages: boolean;
 	public crossDeleteOnTelegram: boolean;
+	public disableWebPreviewOnTelegram: undefined | boolean;
 	public useEmbeds: string;
 
 	/**
@@ -44,6 +46,9 @@ export class BridgeSettingsDiscord {
 
 		/** Whether or not to delete messages on Telegram when a message is deleted on Discord */
 		this.crossDeleteOnTelegram = settings.crossDeleteOnTelegram;
+
+		/** Whether to enable web preview relaying to Telegram */
+		this.disableWebPreviewOnTelegram = settings.disableWebPreviewOnTelegram;
 
 		/** Whether to use Embeds when posting on Discord */
 		this.useEmbeds = settings.useEmbeds;

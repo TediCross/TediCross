@@ -40,6 +40,7 @@ bridges:
       relayLeaveMessages: true
       sendUsernames: true
       crossDeleteOnTelegram: true
+      disableWebPreviewOnTelegram: false
       useEmbeds: 'auto' # always / never / auto
 debug: false
 messageTimeoutAmount: 24
