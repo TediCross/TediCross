@@ -104,14 +104,15 @@ export function setup(
 
 			// Set the commands
 			tgBot.telegram.setMyCommands(myCommands, { scope: { type: "default" } }).then(() => {
-				tgBot.telegram.getMyCommands().then((commands: BotCommand[]) => {
-					logger.info("Telegram commands:", commands);
-					if (commands.length !== 2) {
-						logger.warn(
-							`Telegram: Expected 2 commands, got ${commands.length}. Did you change the commands?`
-						);
-					}
-				});
+				// wait 5 seconds to make sure the commands are set
+				setTimeout(() => {
+					tgBot.telegram.getMyCommands().then((commands: BotCommand[]) => {
+						logger.info("Telegram commands:", commands);
+						if (commands.length < 2) {
+							throw new Error("Telegram: Expected 2 commands, got " + commands.length);
+						}
+					});
+				}, 5000);
 			});
 
 			// Set keeping track of where the "This is an instance of TediCross..." has been sent the last minute
