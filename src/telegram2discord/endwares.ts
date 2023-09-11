@@ -56,7 +56,34 @@ const createMessageHandler = R.curry((func, ctx) => {
  *************************/
 
 /**
- * Replies to a message with info about the chat
+ * Replies to a message with info about the chat for channels.
+ *
+ * @param ctx	The Telegraf context
+ */
+export const channelChatInfo = (ctx: Context, next: () => void) => {
+	if ((ctx as any).update?.channel_post) {
+		if ((ctx as any).update.channel_post.text?.indexOf("/chatinfo") === 0) {
+			ctx.reply(`chatID: ${(ctx as any).update.channel_post.chat.id}`)
+				// Wait some time
+				.then(sleepOneMinute)
+				// Delete the info and the command
+				.then(message =>
+					Promise.all([
+						// Delete the info
+						deleteMessage(ctx, message),
+						// Delete the command
+						ctx.deleteMessage()
+					])
+				)
+				.catch(ignoreAlreadyDeletedError as any);
+			return;
+		}
+	}
+	next();
+};
+
+/**
+ * Replies to a command with info about the chat
  *
  * @param ctx	The Telegraf context
  */
@@ -78,7 +105,7 @@ export const chatinfo = (ctx: Context) => {
 };
 
 /**
- * Replies to a message with info about the thread
+ * Replies to a command with info about the thread
  *
  * @param ctx	The Telegraf context
  */

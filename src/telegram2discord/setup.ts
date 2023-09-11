@@ -15,7 +15,8 @@ import {
 	leftChatMember,
 	newChatMembers,
 	relayMessage,
-	TediCrossContext
+	TediCrossContext,
+	channelChatInfo
 } from "./endwares";
 import { BotCommand } from "telegraf/types";
 
@@ -135,6 +136,7 @@ export function setup(
 			// Apply middlewares and endwares
 			tgBot.command("chatinfo", chatinfo);
 			tgBot.command("threadinfo", threadinfo);
+			tgBot.use(channelChatInfo as any);
 			tgBot.use(middlewares.addTediCrossObj);
 			tgBot.use(middlewares.addMessageObj);
 			tgBot.use(middlewares.addMessageId);
