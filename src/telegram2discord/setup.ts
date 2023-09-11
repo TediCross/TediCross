@@ -17,6 +17,7 @@ import {
 	relayMessage,
 	TediCrossContext
 } from "./endwares";
+import { BotCommand } from "telegraf/types";
 
 /***********
  * Helpers *
@@ -90,7 +91,7 @@ export function setup(
 			// Log the bot's info
 			logger.info(`Telegram: ${me.username} (${me.id})`);
 
-			const commands = [
+			const myCommands: BotCommand[] = [
 				{
 					command: "chatinfo",
 					description: "Get info about the chat"
@@ -102,7 +103,16 @@ export function setup(
 			];
 
 			// Set the commands
-			tgBot.telegram.setMyCommands(commands, { scope: { type: "all_chat_administrators" } });
+			tgBot.telegram.setMyCommands(myCommands, { scope: { type: "default" } }).then(() => {
+				tgBot.telegram.getMyCommands().then((commands: BotCommand[]) => {
+					logger.info("Telegram commands:", commands);
+					if (commands.length !== 2) {
+						logger.warn(
+							`Telegram: Expected 2 commands, got ${commands.length}. Did you change the commands?`
+						);
+					}
+				});
+			});
 
 			// Set keeping track of where the "This is an instance of TediCross..." has been sent the last minute
 			const antiInfoSpamSet = new Set();
