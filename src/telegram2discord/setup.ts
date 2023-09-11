@@ -18,7 +18,7 @@ import {
 	TediCrossContext,
 	channelChatInfo
 } from "./endwares";
-import { BotCommand } from "telegraf/types";
+import { BotCommand, ChatAdministratorRights } from "telegraf/types";
 
 /***********
  * Helpers *
@@ -114,6 +114,33 @@ export function setup(
 						}
 					});
 				}, 5000);
+			});
+
+			const defaultPermissions: ChatAdministratorRights = {
+				can_manage_chat: true,
+				can_delete_messages: true,
+				can_change_info: true,
+				can_invite_users: true,
+				can_post_messages: true,
+				can_edit_messages: true,
+				can_pin_messages: true,
+				can_manage_topics: true,
+				is_anonymous: false,
+				can_manage_video_chats: false,
+				can_restrict_members: false,
+				can_promote_members: false
+			};
+
+			// Set default admin permissions for groups and super groups
+			tgBot.telegram.setMyDefaultAdministratorRights({
+				rights: defaultPermissions,
+				forChannels: false
+			});
+
+			// Set default admin permissions for channel
+			tgBot.telegram.setMyDefaultAdministratorRights({
+				rights: defaultPermissions,
+				forChannels: true
 			});
 
 			// Set keeping track of where the "This is an instance of TediCross..." has been sent the last minute
