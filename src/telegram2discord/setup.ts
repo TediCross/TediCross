@@ -15,8 +15,7 @@ import {
 	leftChatMember,
 	newChatMembers,
 	relayMessage,
-	TediCrossContext,
-	channelChatInfo
+	TediCrossContext
 } from "./endwares";
 import { BotCommand, ChatAdministratorRights } from "telegraf/types";
 
