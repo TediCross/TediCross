@@ -247,6 +247,7 @@ export function setup(
 						const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, textToSend, {
 							reply_to_message_id: +replyId,
 							parse_mode: "HTML",
+							disable_web_page_preview: bridge.discord.disableWebPreviewOnTelegram,
 							message_thread_id: bridge.tgThread
 						});
 						messageMap.insert(
@@ -373,7 +374,7 @@ export function setup(
 						await tgBot.telegram.sendMessage(bridge.telegram.chatId, text, {
 							reply_to_message_id: +replyId,
 							parse_mode: "HTML",
-							disable_web_page_preview: true,
+							disable_web_page_preview: bridge.discord.disableWebPreviewOnTelegram,
 							message_thread_id: bridge.tgThread
 						});
 						// }

@@ -56,7 +56,34 @@ const createMessageHandler = R.curry((func, ctx) => {
  *************************/
 
 /**
- * Replies to a message with info about the chat
+ * Replies to a message with info about the chat for channels.
+ *
+ * @param ctx	The Telegraf context
+ */
+export const channelChatInfo = (ctx: Context, next: () => void) => {
+	if ((ctx as any).update?.channel_post) {
+		if ((ctx as any).update.channel_post.text?.indexOf("/chatinfo") === 0) {
+			ctx.reply(`chatID: ${(ctx as any).update.channel_post.chat.id}`)
+				// Wait some time
+				.then(sleepOneMinute)
+				// Delete the info and the command
+				.then(message =>
+					Promise.all([
+						// Delete the info
+						deleteMessage(ctx, message),
+						// Delete the command
+						ctx.deleteMessage()
+					])
+				)
+				.catch(ignoreAlreadyDeletedError as any);
+			return;
+		}
+	}
+	next();
+};
+
+/**
+ * Replies to a command with info about the chat
  *
  * @param ctx	The Telegraf context
  */
@@ -78,14 +105,14 @@ export const chatinfo = (ctx: Context) => {
 };
 
 /**
- * Replies to a message with info about the thread
+ * Replies to a command with info about the thread
  *
  * @param ctx	The Telegraf context
  */
 export const threadinfo = (ctx: Context) => {
 	// Reply with the info
 	if (ctx.message?.message_thread_id) {
-		ctx.reply(`chatID: ${ctx.message.chat.id}\nthreadID: ${ctx.message.message_thread_id}`)
+		ctx.reply(`chatID: ${ctx.message.chat?.id}\nthreadID: ${ctx.message.message_thread_id}`)
 			// Wait some time
 			.then(sleepOneMinute)
 			// Delete the info and the command
@@ -266,7 +293,11 @@ export const relayMessage = (ctx: TediCrossContext) => {
 				let embeds: EmbedBuilder[] = [];
 				const photoEmbeds: EmbedBuilder[] = [];
 				// build text embed
-				embeds.push(new EmbedBuilder().setTitle(prepared.header).setDescription(text));
+				const embed = new EmbedBuilder().setDescription(text);
+				if (prepared.header) {
+					embed.setTitle(prepared.header);
+				}
+				embeds.push(embed);
 				// process attached files
 				if (!R.isNil(prepared.file)) {
 					const files = prepared.files || [prepared.file];
@@ -366,7 +397,7 @@ export const relayMessage = (ctx: TediCrossContext) => {
 			);
 		} catch (err: any) {
 			ctx.TediCross.logger.error(
-				`Could not relay a message to Discord on bridge ${prepared.bridge.name}: ${err.message}`
+				`Could not relay a message to Discord on bridge ${prepared.bridge.name}: ${err}`
 			);
 		}
 	})(ctx.tediCross.prepared);
@@ -432,30 +463,66 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 			R.forEach(async (prepared: any) => {
 				// Discord doesn't handle messages longer than 2000 characters. Take only the first 2000
 				const messageText = prepared.header + "\n" + prepared.text; //  R.slice(0, 2000,
-
 				const sendObject: DiscordMessage = {};
-				if (messageText.length > 2000 || prepared.hasLinks) {
-					const text = prepared.text.length > 4096 ? prepared.text.substring(0, 4090) + "..." : prepared.text;
-					const embed = new EmbedBuilder().setTitle(prepared.header).setDescription(text);
-					sendObject.embeds = [embed];
+
+				const useEmbeds =
+					(messageText.length > 2000 && prepared.bridge.discord.useEmbeds !== "never") || prepared.hasLinks;
+
+				if (useEmbeds) {
+					const text =
+						prepared.text.length > 4096 ? prepared.text.substring(0, 4090) + "..." : prepared.text || " ";
+					const embeds: EmbedBuilder[] = [];
+					// build text embed
+					const embed = new EmbedBuilder().setDescription(text);
+					if (prepared.header) {
+						embed.setTitle(prepared.header);
+					}
+					embeds.push(embed);
+
+					const photoEmbeds: any[] = [];
+
+					if (!R.isNil(prepared.file)) {
+						const files = prepared.files || [prepared.file];
+						let tempPhotoUrl: string = "";
+						for (const file of files) {
+							// only photo attachments can be used as embeds
+							if (file.description === "photo") {
+								tempPhotoUrl = file.attachment;
+								photoEmbeds.push(new EmbedBuilder().setImage(tempPhotoUrl));
+							}
+						}
+						// if only 1 photo - set it into Embed
+						if (photoEmbeds.length === 1) {
+							embeds[0].setImage(tempPhotoUrl);
+						}
+					}
+
+					sendObject.embeds = embeds;
+
+					// trying to send prepared message
+					try {
+						if (typeof dcMessage.edit !== "function") {
+							ctx.TediCross.logger.error("dcMessage.edit is not a function");
+						} else {
+							await dcMessage.edit(sendObject);
+						}
+					} catch (err: any) {
+						ctx.TediCross.logger.error(err);
+					}
 				} else {
+					// old text split version when user don't want to use embeds
 					sendObject.content = messageText;
-				}
 
-				if (!R.isNil(prepared.file)) {
-					sendObject.files = prepared.files || [prepared.file];
-				}
-
-				// Send them in serial, with the attachment first, if there is one
-				if (typeof dcMessage.edit !== "function") {
-					ctx.TediCross.logger.error("dcMessage.edit is not a function");
-				} else {
-					await dcMessage.edit(sendObject as MessageEditOptions);
-					// 	{
-					// 	content: messageText,
-					// 	attachment: prepared.attachment
+					// if (!R.isNil(prepared.file)) {
+					// 	sendObject.files = prepared.files || [prepared.file];
 					// }
-					// as MessageEditOptions);
+
+					// Send them in serial, with the attachment first, if there is one
+					if (typeof dcMessage.edit !== "function") {
+						ctx.TediCross.logger.error("dcMessage.edit is not a function");
+					} else {
+						await dcMessage.edit(sendObject as MessageEditOptions);
+					}
 				}
 			})(ctx.tediCross.prepared);
 		} catch (err: any) {

@@ -32,12 +32,15 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 	// NOTE new version
 	const tagsArray: string[] = [];
 	let skipIndex: number[] = [];
+	let firstLink = true;
+	let onlyOneLink = false;
+	const regExpCaret = /(\r\n|\r|\n)$/i;
 	for (const e of entities) {
-		const beginIndex = e.offset;
+		let beginIndex = e.offset;
 		const part = text.substring(beginIndex, e.offset + e.length);
-		const endIndex = e.offset + part.trim().length;
-		const prefix = tagsArray[beginIndex] || "";
-		const suffix = tagsArray[endIndex] || "";
+		let endIndex = e.offset + part.trim().length;
+		let prefix = tagsArray[beginIndex] || "";
+		let suffix = tagsArray[endIndex] || "";
 
 		switch (e.type) {
 			case "mention":
@@ -53,11 +56,11 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 					const dcRole = channel.guild.roles.cache.find(findFn("name", mentionable));
 
 					if (!R.isNil(dcUser)) {
-						tagsArray[beginIndex] = `${prefix}<@${dcUser.id}>`;
+						tagsArray[beginIndex + 1] = `${prefix}<@${dcUser.id}>`;
 					} else if (!R.isNil(dcRole)) {
-						tagsArray[beginIndex] = `${prefix}<@&${dcRole.id}>`;
+						tagsArray[beginIndex + 1] = `${prefix}<@&${dcRole.id}>`;
 					} else {
-						tagsArray[beginIndex] = `${part}`;
+						tagsArray[beginIndex + 1] = `${part}`;
 					}
 					skipIndex = skipIndex.concat(
 						Array(e.length)
@@ -83,9 +86,39 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 				tagsArray[endIndex] = "\n```" + suffix;
 				break;
 			}
+			case "url":
 			case "text_link": {
-				tagsArray[beginIndex] = prefix + "[";
-				tagsArray[endIndex] = `](<${e.url}>)` + suffix;
+				// hard fix
+				if (part.indexOf(" ") === 0) {
+					beginIndex++;
+					endIndex++;
+					prefix = "";
+				}
+
+				const urlStr = ((e as any).url || part).trim();
+
+				if (part.trim() === urlStr) {
+					skipIndex = skipIndex.concat(
+						Array(e.length)
+							.fill(1)
+							.map((element, index) => index + beginIndex)
+					);
+					tagsArray[beginIndex] = prefix + "[link";
+					if (regExpCaret.test(part)) {
+						suffix += "\n";
+					}
+				} else {
+					tagsArray[beginIndex] = prefix + "[";
+				}
+
+				if (firstLink) {
+					tagsArray[endIndex] = `](${urlStr})` + suffix;
+					firstLink = false;
+					onlyOneLink = true;
+				} else {
+					tagsArray[endIndex] = `](<${urlStr}>)` + suffix;
+					onlyOneLink = false;
+				}
 				hasLinks = bridge.discord.useEmbeds !== "never";
 				break;
 			}
@@ -97,11 +130,10 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 			}
 			case "italic": {
 				// Italic text
-				const reg = /(\r\n|\r|\n)$/i;
 				// parse italic only if no other tags were there
 				if (!prefix) {
 					tagsArray[beginIndex] = prefix + "*";
-					if (reg.test(part)) {
+					if (regExpCaret.test(part)) {
 						tagsArray[endIndex - 1] = "*";
 					} else {
 						tagsArray[endIndex] = "*" + suffix;
@@ -155,7 +187,6 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 				}
 				break;
 			}
-			case "url":
 			case "bot_command":
 			case "email":
 			default: {
@@ -164,8 +195,14 @@ export async function handleEntities(text: string, entities: MessageEntity[], dc
 			}
 		}
 	}
+	// If  there is only one link, then we don't want to use Embeds - to let Discord generate a preview
+	if (onlyOneLink) {
+		hasLinks = false;
+	}
 
-	if (bridge.discord.useEmbeds === "always") hasLinks = true;
+	if (bridge.discord.useEmbeds === "always") {
+		hasLinks = true;
+	}
 
 	// add tags to source text
 	const finalTextArray: string[] = [];

@@ -7,7 +7,6 @@ import { Client } from "discord.js";
 import { MessageMap } from "../MessageMap";
 import { BridgeMap } from "../bridgestuff/BridgeMap";
 import { Settings } from "../settings/Settings";
-import * as telegraf from "telegraf";
 import {
 	chatinfo,
 	threadinfo,
@@ -15,8 +14,10 @@ import {
 	leftChatMember,
 	newChatMembers,
 	relayMessage,
-	TediCrossContext
+	TediCrossContext,
+	channelChatInfo
 } from "./endwares";
+import { BotCommand, ChatAdministratorRights } from "telegraf/types";
 
 /***********
  * Helpers *
@@ -90,7 +91,7 @@ export function setup(
 			// Log the bot's info
 			logger.info(`Telegram: ${me.username} (${me.id})`);
 
-			const commands = [
+			const myCommands: BotCommand[] = [
 				{
 					command: "chatinfo",
 					description: "Get info about the chat"
@@ -102,7 +103,44 @@ export function setup(
 			];
 
 			// Set the commands
-			tgBot.telegram.setMyCommands(commands, { scope: { type: "all_chat_administrators" } });
+			tgBot.telegram.setMyCommands(myCommands, { scope: { type: "default" } }).then(() => {
+				// wait 5 seconds to make sure the commands are set
+				setTimeout(() => {
+					tgBot.telegram.getMyCommands().then((commands: BotCommand[]) => {
+						logger.info("Telegram commands:", commands);
+						if (commands.length < 2) {
+							throw new Error("Telegram: Expected 2 commands, got " + commands.length);
+						}
+					});
+				}, 5000);
+			});
+
+			const defaultPermissions: ChatAdministratorRights = {
+				can_manage_chat: true,
+				can_delete_messages: true,
+				can_change_info: true,
+				can_invite_users: true,
+				can_post_messages: true,
+				can_edit_messages: true,
+				can_pin_messages: true,
+				can_manage_topics: true,
+				is_anonymous: false,
+				can_manage_video_chats: false,
+				can_restrict_members: false,
+				can_promote_members: false
+			};
+
+			// Set default admin permissions for groups and super groups
+			tgBot.telegram.setMyDefaultAdministratorRights({
+				rights: defaultPermissions,
+				forChannels: false
+			});
+
+			// Set default admin permissions for channel
+			tgBot.telegram.setMyDefaultAdministratorRights({
+				rights: defaultPermissions,
+				forChannels: true
+			});
 
 			// Set keeping track of where the "This is an instance of TediCross..." has been sent the last minute
 			const antiInfoSpamSet = new Set();
@@ -124,6 +162,7 @@ export function setup(
 			// Apply middlewares and endwares
 			tgBot.command("chatinfo", chatinfo);
 			tgBot.command("threadinfo", threadinfo);
+			tgBot.use(channelChatInfo as any);
 			tgBot.use(middlewares.addTediCrossObj);
 			tgBot.use(middlewares.addMessageObj);
 			tgBot.use(middlewares.addMessageId);
@@ -152,12 +191,9 @@ export function setup(
 			tgBot.catch((err: any) => {
 				// The docs says timeout errors should always be rethrown
 				// @ts-ignore TODO: Telefraf does not exprt the TimoutError, alternative implementation needed
-				if (err instanceof telegraf.TimeoutError) {
-					throw err;
-				}
 
 				// Log other errors, but don't do anything with them
-				console.error(err);
+				logger.error(err);
 			});
 		})
 		// Start getting updates

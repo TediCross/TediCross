@@ -152,6 +152,7 @@ export class DiscordSettings {
 			suppressThisIsPrivateBotMessage: false,
 			enableCustomStatus: false,
 			customStatusMessage: "TediCross",
+			disableWebPreviewOnTelegram: false,
 			useEmbeds: "auto"
 		};
 	}
