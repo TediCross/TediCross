@@ -103,10 +103,10 @@ As mentioned in the step-by-step installation guide, there is a settings file. H
 	* `discord.sendUsernames`: Whether to send the sender's name with the messages to Telegram
 	* `discord.crossDeleteOnTelegram`: Whether to also delete the corresponding message on Telegram when one is deleted in Discord
 	* `discord.disableWebPreviewOnTelegram`: Whether to disable links preview when relaying to Telegram
-    * `discord.useEmbeds`: Whether to use embeds for current bridge. Can be `always`, `never`, `auto`. Defaults to `false`
+	* `discord.useEmbeds`: Whether to use embeds for current bridge. Can be `always`, `never`, `auto`. Defaults to `false`
 	* `threadMap`: An array containing all threads mapping for each bridge
-    	* `telegram`: Telegram thread ID. See step 13 on how to acquire it
-    	* `discord`: Discord thread ID. See step 13 on how to acquire it
+		* `telegram`: Telegram thread ID. See step 13 on how to acquire it
+		* `discord`: Discord thread ID. See step 13 on how to acquire it
 
 The available settings will occasionally change. The bot takes care of this automatically
 
