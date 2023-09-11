@@ -9,13 +9,13 @@ import { BridgeMap } from "../bridgestuff/BridgeMap";
 import { Settings } from "../settings/Settings";
 import {
 	chatinfo,
-	channelChatInfo,
 	threadinfo,
 	handleEdits,
 	leftChatMember,
 	newChatMembers,
 	relayMessage,
-	TediCrossContext
+	TediCrossContext,
+	channelChatInfo
 } from "./endwares";
 import { BotCommand, ChatAdministratorRights } from "telegraf/types";
 
