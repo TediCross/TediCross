@@ -22,7 +22,7 @@
     "@types/semver": "^7.5.1",
     "@types/underscore": "^1.11.9",
     "@types/yargs": "^17.0.24",
-    "@typescript-eslint/eslint-plugin": "^6.6.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
     "@typescript-eslint/parser": "^6.6.0",
     "cli-highlight": "^2.1.11",
     "discord.js": "^14.13.0",
