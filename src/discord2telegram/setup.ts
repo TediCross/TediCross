@@ -281,9 +281,12 @@ export function setup(
 							case "video":
 								videos.push(mediaFile as InputMediaVideo);
 								break;
-							case "photo":
+							case "photo": {
+								const hasSpoiler = attachment.name.indexOf("SPOILER_") === 0;
+								if (hasSpoiler) (mediaFile as InputMediaPhoto).has_spoiler = true;
 								images.push(mediaFile as InputMediaPhoto);
 								break;
+							}
 							case "audio":
 								audios.push(mediaFile as InputMediaAudio);
 								break;
@@ -339,6 +342,7 @@ export function setup(
 									break;
 								case "photo":
 									await tgBot.telegram.sendPhoto(bridge.telegram.chatId, oneArray[0].media, {
+										has_spoiler: oneArray[0].has_spoiler,
 										reply_to_message_id: +replyId,
 										message_thread_id: bridge.tgThread
 									});

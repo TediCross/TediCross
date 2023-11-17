@@ -201,6 +201,10 @@ export class Settings {
 		// 2019-11-08: Remove the `serverId` setting from the discord part of the bridges
 		for (const bridge of settings.bridges) {
 			delete bridge.discord.serverId;
+			if (bridge.threadMap) {
+				bridge.topicBridges = bridge.threadMap;
+				delete bridge.threadMap;
+			}
 		}
 
 		// 2020-02-09: Removed the `displayTelegramReplies` option from Discord

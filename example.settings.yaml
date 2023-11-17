@@ -22,7 +22,7 @@ discord:
 bridges:
   - name: First bridge
     direction: both
-    threadMap: # Remove this and (telegram/discord pairs below if not planing to use Threads )
+    topicBridges: # Remove this and (telegram/discord pairs below if not planing to use Threads )
       - name: First thread # optional naming for thread mapping
         telegram: TELEGRAM_THREAD_ID  # Threads have positive IDs
         discord: 'DISCORD_THREAD_ID' # Discord thread IDs looks like other channel IDs

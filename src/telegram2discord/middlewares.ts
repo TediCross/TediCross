@@ -466,10 +466,11 @@ function addFileObj(ctx: TediCrossContext, next: () => void) {
 	} else if (!R.isNil(message.photo)) {
 		// Photo. It has an array of photos of different sizes. Use the last and biggest
 		const photo = R.last(message.photo) as any;
+		const prefix = message.has_media_spoiler === true ? "SPOILER_" : "";
 		ctx.tediCross.file = {
 			type: "photo",
 			id: photo.file_id,
-			name: "photo.jpg" // Telegram will convert it to a jpg no matter which format is originally sent
+			name: `${prefix}photo.jpg` // Telegram will convert it to a jpg no matter which format is originally sent
 		};
 	} else if (!R.isNil(message.sticker)) {
 		// Sticker
@@ -518,7 +519,9 @@ function addFileLink(ctx: TediCrossContext, next: () => void) {
 				return ctx.telegram.getFileLink(ctx.tediCross.file.id).then(fileLink => {
 					ctx.tediCross.file.link = fileLink.href;
 					if (ctx.tediCross.file.type === "photo") {
-						ctx.tediCross.file.name = fileLink.href.split("/").pop() || ctx.tediCross.file.name;
+						const prefix = ctx.tediCross.file.name?.indexOf("SPOILER_") === 0 ? "SPOILER_" : "";
+						const str = fileLink.href.split("/").pop() || ctx.tediCross.file.name;
+						ctx.tediCross.file.name = `${prefix}${str}`;
 					}
 				});
 			}

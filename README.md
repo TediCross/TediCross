@@ -43,7 +43,7 @@ Setting up the bot requires basic knowledge of the command line, which is bash o
    - If you want to bridge a Telegram group or channel, remember that the ID is negative. Include the `-` when entering it into the settings file
    - It is important that the Discord  channel ID is wrapped with single quotes when entered into the settings file. `'244791815503347712'`, not `244791815503347712`
  12. Restart TediCross. You stop it by pressing CTRL + C in the terminal it is running in
- 13. To turn on threads support (EXPERIMENTAL) just add `threadMap` section under particular `Bridge`. Write `/threadinfo` in telegram and discord threads to get corresponding IDs.
+ 13. To turn on threads support (EXPERIMENTAL) just add `topicBridges` section under particular `Bridge`. Write `/threadinfo` in telegram and discord threads to get corresponding IDs. !NOTE: previously this param was named `threadMap`. Old configs with that name still valid.
 
 Done! You now have a nice bridge between a Telegram chat and a Discord channel
 
@@ -104,7 +104,7 @@ As mentioned in the step-by-step installation guide, there is a settings file. H
 	* `discord.crossDeleteOnTelegram`: Whether to also delete the corresponding message on Telegram when one is deleted in Discord
 	* `discord.disableWebPreviewOnTelegram`: Whether to disable links preview when relaying to Telegram
 	* `discord.useEmbeds`: Whether to use embeds for current bridge. Can be `always`, `never`, `auto`. Defaults to `false`
-	* `threadMap`: An array containing all threads mapping for each bridge
+	* `topicBridges`: An array containing all threads mapping for each bridge
 		* `telegram`: Telegram thread ID. See step 13 on how to acquire it
 		* `discord`: Discord thread ID. See step 13 on how to acquire it
 
