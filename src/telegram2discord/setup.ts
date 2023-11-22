@@ -27,6 +27,7 @@ import { BotCommand, ChatAdministratorRights } from "telegraf/types";
  * Clears old messages on a tgBot, making sure there are no updates in the queue
  *
  * @param tgBot	The Telegram bot to clear messages on
+ * @param offset	The Telegram messages offset
  *
  * @returns Promise resolving to nothing when the clearing is done
  */
@@ -80,6 +81,11 @@ export function setup(
 	bridgeMap: BridgeMap,
 	settings: Settings
 ) {
+	settings.on("bridgeUpdate", newBridgeMap => {
+		// console.log("Got bridgeUpdate event in TG bot");
+		tgBot.context.TediCross.bridgeMap = newBridgeMap;
+	});
+
 	//@ts-ignore
 	tgBot.ready = Promise.all([
 		// Get info about the bot
@@ -131,16 +137,20 @@ export function setup(
 			};
 
 			// Set default admin permissions for groups and super groups
-			tgBot.telegram.setMyDefaultAdministratorRights({
-				rights: defaultPermissions,
-				forChannels: false
-			});
+			tgBot.telegram
+				.setMyDefaultAdministratorRights({
+					rights: defaultPermissions,
+					forChannels: false
+				})
+				.then();
 
 			// Set default admin permissions for channel
-			tgBot.telegram.setMyDefaultAdministratorRights({
-				rights: defaultPermissions,
-				forChannels: true
-			});
+			tgBot.telegram
+				.setMyDefaultAdministratorRights({
+					rights: defaultPermissions,
+					forChannels: true
+				})
+				.then();
 
 			// Set keeping track of where the "This is an instance of TediCross..." has been sent the last minute
 			const antiInfoSpamSet = new Set();

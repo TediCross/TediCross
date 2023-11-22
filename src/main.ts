@@ -4,8 +4,6 @@ import yargs from "yargs";
 import path from "path";
 import { Logger } from "./Logger";
 import { MessageMap } from "./MessageMap";
-import { Bridge, BridgeProperties } from "./bridgestuff/Bridge";
-import { BridgeMap } from "./bridgestuff/BridgeMap";
 import { Settings } from "./settings/Settings";
 import jsYaml from "js-yaml";
 import fs from "fs";
@@ -50,21 +48,20 @@ const args = yargs
 const settingsPath = args.config;
 const rawSettingsObj = jsYaml.load(fs.readFileSync(settingsPath, "utf-8"));
 const settings = Settings.fromObj(rawSettingsObj);
+settings.setPath(settingsPath);
 
 // Initialize logger
 const logger = new Logger(settings.debug);
 
 // Write the settings back to the settings file if they have been modified
 const newRawSettingsObj = settings.toObj();
-if (R.not(R.equals(rawSettingsObj, newRawSettingsObj))) {
-	// Turn it into notepad friendly YAML
-	//TODO: Replaced safeDump with dump. It needs to be verified
-	const yaml = jsYaml.dump(newRawSettingsObj).replace(/\n/g, "\r\n");
 
-	try {
-		fs.writeFileSync(settingsPath, yaml);
-	} catch (err: any) {
-		if (err.code === "EACCES") {
+if (R.not(R.equals(rawSettingsObj, newRawSettingsObj))) {
+	// Using toFile method
+	const res = settings.toFile(settingsPath, newRawSettingsObj);
+
+	if (res.error) {
+		if (res.error.code === "EACCES") {
 			// The settings file is not writable. Give a warning
 			logger.warn(
 				"Changes to TediCross' settings have been introduced. Your settings file it not writable, so it could not be automatically updated. TediCross will still work, with the modified settings, but you will see this warning until you update your settings file"
@@ -73,7 +70,7 @@ if (R.not(R.equals(rawSettingsObj, newRawSettingsObj))) {
 			// Write the settings to temp instead
 			const tmpPath = path.join(os.tmpdir(), "tedicross-settings.yaml");
 			try {
-				fs.writeFileSync(tmpPath, yaml);
+				fs.writeFileSync(tmpPath, res.yaml);
 				logger.info(
 					`The new settings file has instead been written to '${tmpPath}'. Copy it to its proper location to get rid of the warning`
 				);
@@ -109,7 +106,7 @@ const dcBot = new DiscordClient({
 const messageMap = new MessageMap(settings, logger, args.dataDir);
 
 // Create the bridge map
-const bridgeMap = new BridgeMap(settings.bridges.map((bridgeSettings: BridgeProperties) => new Bridge(bridgeSettings)));
+const bridgeMap = settings.getBridgeMap();
 
 /*********************
  * Set up the bridge *
