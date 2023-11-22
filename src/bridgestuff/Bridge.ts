@@ -9,6 +9,7 @@ export interface BridgeProperties {
 	discord: BridgeSettingsDiscordProperties;
 	direction: "both" | "d2t" | "t2d";
 	topicBridges: any[] | undefined;
+	topicBridgesAutoCreate: boolean;
 	tgThread: number | undefined;
 }
 
@@ -23,6 +24,7 @@ export class Bridge {
 	public telegram: BridgeSettingsTelegramProperties;
 	public discord: BridgeSettingsDiscordProperties;
 	public topicBridges: any[] | undefined;
+	public topicBridgesAutoCreate: boolean;
 	public threadMap: any[] | undefined;
 	public tgThread: number | undefined;
 	/**
@@ -53,6 +55,9 @@ export class Bridge {
 
 		/** Settings for the Threads mapping */
 		this.topicBridges = settings.topicBridges;
+
+		/** Settings for the auto create Threads mapping */
+		this.topicBridgesAutoCreate = settings.topicBridgesAutoCreate || false;
 	}
 
 	/**

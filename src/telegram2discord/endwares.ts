@@ -271,6 +271,7 @@ export const relayMessage = (ctx: TediCrossContext) => {
 			await ctx.TediCross.dcBot.ready;
 
 			// Get the channel to send to
+
 			const channel = await fetchDiscordChannel(
 				ctx.TediCross.dcBot,
 				prepared.bridge,

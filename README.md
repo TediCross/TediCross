@@ -44,6 +44,7 @@ Setting up the bot requires basic knowledge of the command line, which is bash o
    - It is important that the Discord  channel ID is wrapped with single quotes when entered into the settings file. `'244791815503347712'`, not `244791815503347712`
  12. Restart TediCross. You stop it by pressing CTRL + C in the terminal it is running in
  13. To turn on threads support (EXPERIMENTAL) just add `topicBridges` section under particular `Bridge`. Write `/threadinfo` in telegram and discord threads to get corresponding IDs. !NOTE: previously this param was named `threadMap`. Old configs with that name still valid.
+ 14. Auto mapping of threads (EXPERIMENTAL). Boolean option `topicBridgesAutoCreate` under particular `Bridge`. It's `false` by default. If it's `true` bot will create topic/thread on one side of the bridge when unmapped topic appears on another side. **NOTE** if you delete mapped topic on one of the sides of the bridge - bot will recreate it automatically on the other side - so you will need to delete topic on both sides.
 
 Done! You now have a nice bridge between a Telegram chat and a Discord channel
 

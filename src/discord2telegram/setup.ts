@@ -80,7 +80,7 @@ function makeJoinLeaveFunc(logger: Logger, verb: "joined" | "left", bridgeMap: B
  * @param dcBot The Discord bot
  * @param tgBot The Telegram bot
  * @param messageMap Map between IDs of messages
- * @param bridgeMap Map of the bridges to use
+ * @param extBridgeMap Map of the bridges to use
  * @param settings Settings to use
  * @param datadirPath Path to the directory to put data files in
  */
@@ -89,10 +89,11 @@ export function setup(
 	dcBot: Client,
 	tgBot: Telegraf,
 	messageMap: MessageMap,
-	bridgeMap: BridgeMap,
+	extBridgeMap: BridgeMap,
 	settings: Settings,
 	datadirPath: string
 ) {
+	let bridgeMap = extBridgeMap;
 	// Create the map of latest message IDs and bridges
 	const latestDiscordMessageIds = new LatestDiscordMessageIds(
 		logger,
@@ -181,12 +182,26 @@ export function setup(
 		)(message) as string;
 
 		// Check if the message is from the correct chat
-		const bridges = bridgeMap.fromDiscordChannelId(Number(message.channel.id));
+		let bridges = bridgeMap.fromDiscordChannelId(Number(message.channel.id));
+
+		if (R.isEmpty(bridges)) {
+			if (message.channel.type === 11) {
+				bridges = bridgeMap.fromDiscordChannelId(Number(message.channel.parentId));
+			}
+		}
+
 		if (!R.isEmpty(bridges)) {
-			for (const bridge of bridges) {
+			for (let bridge of bridges) {
 				// Ignore it if this is a telegram-to-discord bridge
 				if (bridge.direction === Bridge.DIRECTION_TELEGRAM_TO_DISCORD) {
 					continue;
+				}
+
+				// check for thread/topic mapping
+				if (bridge.topicBridgesAutoCreate) {
+					const res = await autoCreateTopic(bridge, message);
+					if (res.skip) continue;
+					if (res.bridge) bridge = res.bridge;
 				}
 
 				// This is now the latest message for this bridge
@@ -393,6 +408,7 @@ export function setup(
 		) {
 			// Check if it is the correct server
 			// The message is from the wrong chat. Inform the sender that this is a private bot, if they have not been informed the last minute
+
 			if (!antiInfoSpamSet.has(message.channel.id)) {
 				antiInfoSpamSet.add(message.channel.id);
 
@@ -455,6 +471,43 @@ export function setup(
 			}
 		});
 	});
+
+	async function autoCreateTopic(bridge: Bridge, message: Message) {
+		if (bridge.topicBridges) {
+			if (!bridge.tgThread) {
+				// create new topic on Telegram Side
+				let topicName: string;
+				let topicId: string;
+				if (message.type === 18) {
+					topicName = message.content;
+					topicId = message.reference?.channelId || "";
+				} else {
+					topicName = (message.channel as TextChannel).name;
+					topicId = (message.channel as TextChannel).id;
+				}
+				const tgTopic = await tgBot.telegram.createForumTopic(bridge.telegram.chatId, topicName);
+
+				// console.dir(message);
+
+				const newTopic = {
+					telegram: tgTopic.message_thread_id,
+					discord: topicId,
+					name: topicName
+				};
+				bridge.topicBridges.push(newTopic);
+				console.log("Created new Topic from DS");
+				settings.updateBridge(bridge);
+				bridge.tgThread = newTopic.telegram;
+
+				if (message.type === 18) {
+					return { bridge, skip: true };
+				} else {
+					return { bridge, skip: false };
+				}
+			}
+		}
+		return { bridge: null, skip: false };
+	}
 
 	// Listen for deleted messages
 	function onMessageDelete(message: Message): void {
@@ -602,4 +655,8 @@ export function setup(
 		//@ts-ignore
 		dcBot.ready = relayOldMessages(logger, dcBot, latestDiscordMessageIds, bridgeMap);
 	}
+
+	settings.on("bridgeUpdate", newBridgeMap => {
+		bridgeMap = newBridgeMap;
+	});
 }
