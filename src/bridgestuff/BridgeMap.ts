@@ -27,8 +27,8 @@ export class BridgeMap {
 			const d = this._discordToBridge.get(Number(bridge.discord.channelId)) || [];
 			const t = this._telegramToBridge.get(bridge.telegram.chatId) || [];
 			this._discordToBridge.set(Number(bridge.discord.channelId), [...d, bridge]);
-			if (bridge.threadMap) {
-				for (const trMap of bridge.threadMap) {
+			if (bridge.topicBridges) {
+				for (const trMap of bridge.topicBridges) {
 					const upBridge = {
 						...bridge,
 						tgThread: trMap.telegram

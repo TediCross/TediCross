@@ -11,6 +11,7 @@ import { TelegramSettings } from "../settings/TelegramSettings";
  *
  * @param embed The embed to process
  * @param senderName Name of the sender of the embed
+ * @param settings TelegramSettings object
  *
  * @returns A string ready to send to Telegram
  */

@@ -156,6 +156,7 @@ function addTediCrossObj(ctx: TediCrossContext, next: () => void) {
  */
 function addMessageObj(ctx: TediCrossContext, next: () => void) {
 	// Put it on the context
+	// console.dir((ctx as any).update.message);
 	// bypass pinned message notification
 	if (
 		(ctx as any).update.message &&
@@ -466,10 +467,11 @@ function addFileObj(ctx: TediCrossContext, next: () => void) {
 	} else if (!R.isNil(message.photo)) {
 		// Photo. It has an array of photos of different sizes. Use the last and biggest
 		const photo = R.last(message.photo) as any;
+		const prefix = message.has_media_spoiler === true ? "SPOILER_" : "";
 		ctx.tediCross.file = {
 			type: "photo",
 			id: photo.file_id,
-			name: "photo.jpg" // Telegram will convert it to a jpg no matter which format is originally sent
+			name: `${prefix}photo.jpg` // Telegram will convert it to a jpg no matter which format is originally sent
 		};
 	} else if (!R.isNil(message.sticker)) {
 		// Sticker
@@ -518,12 +520,14 @@ function addFileLink(ctx: TediCrossContext, next: () => void) {
 				return ctx.telegram.getFileLink(ctx.tediCross.file.id).then(fileLink => {
 					ctx.tediCross.file.link = fileLink.href;
 					if (ctx.tediCross.file.type === "photo") {
-						ctx.tediCross.file.name = fileLink.href.split("/").pop() || ctx.tediCross.file.name;
+						const prefix = ctx.tediCross.file.name?.indexOf("SPOILER_") === 0 ? "SPOILER_" : "";
+						const str = fileLink.href.split("/").pop() || ctx.tediCross.file.name;
+						ctx.tediCross.file.name = `${prefix}${str}`;
 					}
 				});
 			}
 		})
-		.then(next)
+		.then()
 		.then(R.always(undefined))
 		.catch(err => {
 			if (ctx.TediCross.settings.telegram.suppressFileTooBigMessages) {
@@ -533,9 +537,8 @@ function addFileLink(ctx: TediCrossContext, next: () => void) {
 					parse_mode: "HTML"
 				}).then();
 			}
-
-			next();
-		});
+		})
+		.finally(next);
 }
 
 async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
@@ -547,12 +550,24 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 			// Wait for the Discord bot to become ready
 			await ctx.TediCross.dcBot.ready;
 
+			const bridgeLength = bridge.topicBridges?.length;
+
+			// console.dir(ctx.tediCross.message);
+
 			// Get the channel to send to
 			const channel = await fetchDiscordChannel(
 				ctx.TediCross.dcBot,
 				bridge,
-				ctx.tediCross.message?.message_thread_id
+				ctx.tediCross.message?.message_thread_id,
+				ctx.tediCross.message?.reply_to_message?.forum_topic_created?.name,
+				ctx.tediCross.message?.text
 			);
+
+			// save settings if needed
+			if (bridgeLength !== bridge.topicBridges?.length) {
+				console.log(`Created new Topic from TG`);
+				ctx.TediCross.settings.updateBridge(bridge);
+			}
 
 			// Check if the message is a reply and get the id of that message on Discord
 			let replyId = "0";

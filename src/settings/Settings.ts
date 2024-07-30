@@ -1,10 +1,12 @@
 import fs from "fs";
 import R from "ramda";
-import { Bridge } from "../bridgestuff/Bridge";
+import { Bridge, BridgeProperties } from "../bridgestuff/Bridge";
 import { TelegramSettings } from "./TelegramSettings";
 import { DiscordSettings } from "./DiscordSettings";
 import jsYaml from "js-yaml";
 import moment from "moment";
+import EventEmitter from "events";
+import { BridgeMap } from "../bridgestuff/BridgeMap";
 
 interface SettingProperties {
 	telegram: TelegramSettings;
@@ -24,7 +26,7 @@ interface SettingProperties {
 /**
  * Settings class for TediCross
  */
-export class Settings {
+export class Settings extends EventEmitter {
 	debug: boolean;
 	messageTimeoutAmount: number;
 	messageTimeoutUnit: moment.unitOfTime.DurationConstructor;
@@ -32,6 +34,7 @@ export class Settings {
 	discord: DiscordSettings;
 	telegram: TelegramSettings;
 	bridges: Bridge[];
+	settingsPath?: string;
 
 	/**
 	 * Creates a new settings object
@@ -48,6 +51,7 @@ export class Settings {
 	 * @throws If the raw settings object does not validate
 	 */
 	constructor(settings: SettingProperties) {
+		super();
 		// Make sure the settings are valid
 		Settings.validate(settings);
 
@@ -71,22 +75,59 @@ export class Settings {
 
 		/** The config for the bridges */
 		this.bridges = settings.bridges;
+
+		this.settingsPath = "./";
+	}
+
+	updateBridge(bridge: Bridge) {
+		// console.dir(bridge);
+		this.bridges.forEach(oldBridge => {
+			if (
+				oldBridge.telegram.chatId === bridge.telegram.chatId &&
+				oldBridge.discord.channelId === bridge.discord.channelId
+			) {
+				oldBridge.topicBridges = bridge.topicBridges;
+			}
+		});
+		this.toFile(this.settingsPath as string);
+		const bridgeMap = this.getBridgeMap();
+		this.emit("bridgeUpdate", bridgeMap);
+	}
+
+	getBridgeMap(): BridgeMap {
+		return new BridgeMap(this.bridges.map((bridgeSettings: BridgeProperties) => new Bridge(bridgeSettings)));
+	}
+
+	setPath(path: string) {
+		this.settingsPath = path;
 	}
 
 	/**
 	 * Saves the settings to file
 	 *
 	 * @param filepath Filepath to save to. Absolute path is recommended
+	 * @param saveObject External settings
 	 */
-	toFile(filepath: string) {
-		// The raw object is not suitable for YAML-ification. A few `toJSON()` methods will not be triggered that way. Go via JSON
-		const objectToSave = JSON.parse(JSON.stringify(this));
+	toFile(filepath: string, saveObject?: any) {
+		const objectToSave = saveObject || JSON.parse(JSON.stringify(this));
+
+		// don't export path
+		delete objectToSave.settingsPath;
 
 		// Convert the object to quite human-readable YAML and write it to the file
-		//TODO replaced safeDump with dump. The old method is deprecated. Check if it still works
 		const yaml = jsYaml.dump(objectToSave);
 		const notepadFriendlyYaml = yaml.replace(/\n/g, "\r\n");
-		fs.writeFileSync(filepath, notepadFriendlyYaml);
+
+		let error: any;
+		try {
+			// The raw object is not suitable for YAML-ification. A few `toJSON()` methods will not be triggered that way. Go via JSON
+			fs.writeFileSync(filepath, notepadFriendlyYaml);
+		} catch (err: any) {
+			error = err;
+			console.error(`Error occurred while writing settings to file: ${err}`);
+		}
+
+		return { yaml: notepadFriendlyYaml, error };
 	}
 
 	/**
@@ -96,7 +137,9 @@ export class Settings {
 	 */
 	toObj(): object {
 		// Hacky way to turn this into a plain object...
-		return JSON.parse(JSON.stringify(this));
+		const obj = JSON.parse(JSON.stringify(this));
+		delete obj.settingsPath;
+		return obj;
 	}
 
 	/**
@@ -201,6 +244,10 @@ export class Settings {
 		// 2019-11-08: Remove the `serverId` setting from the discord part of the bridges
 		for (const bridge of settings.bridges) {
 			delete bridge.discord.serverId;
+			if (bridge.threadMap) {
+				bridge.topicBridges = bridge.threadMap;
+				delete bridge.threadMap;
+			}
 		}
 
 		// 2020-02-09: Removed the `displayTelegramReplies` option from Discord
