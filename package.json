@@ -43,7 +43,7 @@
     "sqlite3": "5.1.7",
     "telegraf": "4.16.3",
     "ts-node": "10.9.2",
-    "typescript": "5.6.2",
+    "typescript": "5.7.2",
     "underscore": "1.13.7",
     "yargs": "17.7.2"
   }
