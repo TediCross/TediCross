@@ -8,7 +8,7 @@ COPY . .
 
 RUN npm install --omit=dev
 
-VOLUME /opt/TediCross/data/
+
 
 ENTRYPOINT ["/usr/local/bin/npm"]
 CMD ["start", "--", "-c", "data/settings.yaml"]
