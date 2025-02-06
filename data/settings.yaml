@@ -9,12 +9,12 @@ discord:
 bridges:
   - name: "Noticias"  # Puedes cambiar este nombre
     direction: both  # Puede ser "both", "tgToDc" o "dcToTg"
-    relayJoinMessages: false  # ✅ Evita errores con mensajes de unión de usuarios en Telegram y Discord
-    relayLeaveMessages: false  # ✅ Evita errores con mensajes de salida de usuarios en Telegram y Discord
-    sendUsernames: false  # ✅ Se asegura de que no haya errores con los nombres de usuario
     telegram:
       chat_id: "-1002479265586"  # ID del grupo general
       topic_id: 5373251851074415873  # ID del tópico específico (si lo tienes)
+      relayJoinMessages: false  # ✅ Evita errores con mensajes de unión en Telegram
+      relayLeaveMessages: false  # ✅ Evita errores con mensajes de salida en Telegram
+      sendUsernames: false  # ✅ Se asegura de que no haya errores con los nombres de usuario
     discord:
       channel_id: "1332314270318460969"
       relayJoinMessages: false  # ✅ Evita errores en Discord
