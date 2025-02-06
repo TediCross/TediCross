@@ -10,6 +10,7 @@ bridges:
   - name: "Noticias"  # Puedes cambiar este nombre según el tópico
     direction: both  # Puede ser "both", "tgToDc" o "dcToTg"
     relayJoinMessages: false  # Evita errores con mensajes de entrada/salida de usuarios
+    relayLeaveMessages: false  # También desactiva mensajes de salida de usuarios
     telegram:
       chat_id: "5373251851074415873"
     discord:
