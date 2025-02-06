@@ -5,7 +5,9 @@ discord:
   token: "e833746b950a0dc6a00f388f821fa74c9e0beaf2822e75aacc340ccada4883ba"
   channel_id: "1332314270318460969"  # Reemplázalo con el ID del canal en Discord
 bridges:
-  - telegram:
+- name: "Noticias"  # Puedes cambiar este nombre según el tópico
+    direction: both  # Puede ser "both", "tgToDc" o "dcToTg"
+    telegram:
       chat_id: 5373251851074415873
     discord:
       channel_id: 1332314270318460969
