@@ -1,6 +1,5 @@
 telegram:
   token: "7647165710:AAEZZDijJwWIuM3CkHyiXwYcVI0qUi8GcOY"
-  chat_id: "-1002479265586:5373251851074415873"  # Asegúrate de que el ID de Telegram esté en formato correcto
 
 discord:
   token: "e833746b950a0dc6a00f388f821fa74c9e0beaf2822e75aacc340ccada4883ba"
@@ -12,6 +11,7 @@ bridges:
     relayJoinMessages: false  # ✅ Ahora está en la posición correcta y en booleano
     relayLeaveMessages: false  # ✅ Se agrega por seguridad
     telegram:
-      chat_id: "-1002479265586:5373251851074415873"  # Reemplázalo con el ID correcto
+      chat_id: "-1002479265586"  # ID del grupo general
+      topic_id: 5373251851074415873  # ID del tópico específico (nuevo campo)
     discord:
       channel_id: "1332314270318460969"
