@@ -10,7 +10,8 @@ bridges:
     direction: both  # Puede ser "both", "tgToDc" o "dcToTg"
     telegram:
       chat_id: "-1002479265586"  # ID del grupo general
-      topic_id: 5373251851074415873  # ID del tópico específico
+      topic_id: 5373251851074415873 # ID del tópico específico
+      sendUsernames: true
       relayJoinMessages: false  # ✅ Ahora está en el lugar correcto dentro de "telegram"
       relayLeaveMessages: false  # ✅ También en el lugar correcto
     discord:
