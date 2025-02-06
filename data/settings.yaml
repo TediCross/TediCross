@@ -1,5 +1,6 @@
 telegram:
   token: "7647165710:AAEZZDijJwWIuM3CkHyiXwYcVI0qUi8GcOY"
+  chat_id: "-1002479265586"  # ID del grupo general
 
 discord:
   token: "e833746b950a0dc6a00f388f821fa74c9e0beaf2822e75aacc340ccada4883ba"
@@ -8,11 +9,13 @@ discord:
 bridges:
   - name: "Noticias"  # Puedes cambiar este nombre
     direction: both  # Puede ser "both", "tgToDc" o "dcToTg"
+    relayJoinMessages: false  # ✅ Evita errores con mensajes de unión de usuarios en Telegram y Discord
+    relayLeaveMessages: false  # ✅ Evita errores con mensajes de salida de usuarios en Telegram y Discord
+    sendUsernames: false  # ✅ Se asegura de que no haya errores con los nombres de usuario
     telegram:
       chat_id: "-1002479265586"  # ID del grupo general
-      topic_id: 5373251851074415873 # ID del tópico específico
-      sendUsernames: true
-      relayJoinMessages: false  # ✅ Ahora está en el lugar correcto dentro de "telegram"
-      relayLeaveMessages: false  # ✅ También en el lugar correcto
+      topic_id: 5373251851074415873  # ID del tópico específico (si lo tienes)
     discord:
       channel_id: "1332314270318460969"
+      relayJoinMessages: false  # ✅ Evita errores en Discord
+      relayLeaveMessages: false  # ✅ Evita errores en Discord
