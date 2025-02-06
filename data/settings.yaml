@@ -1,17 +1,17 @@
 telegram:
   token: "7647165710:AAEZZDijJwWIuM3CkHyiXwYcVI0qUi8GcOY"
-  chat_id: "5373251851074415873"  # Reemplázalo con el ID de tu grupo en Telegram
+  chat_id: "-1002479265586:5373251851074415873"  # Asegúrate de que el ID de Telegram esté en formato correcto
 
 discord:
   token: "e833746b950a0dc6a00f388f821fa74c9e0beaf2822e75aacc340ccada4883ba"
-  channel_id: "1332314270318460969"  # Reemplázalo con el ID del canal en Discord
+  channel_id: "1332314270318460969"  # ID del canal en Discord
 
 bridges:
-  - name: "Noticias"  # Puedes cambiar este nombre según el tópico
+  - name: "Noticias"  # Puedes cambiar este nombre
     direction: both  # Puede ser "both", "tgToDc" o "dcToTg"
-    relayJoinMessages: false  # Evita errores con mensajes de entrada/salida de usuarios
-    relayLeaveMessages: false  # También desactiva mensajes de salida de usuarios
+    relayJoinMessages: false  # ✅ Ahora está en la posición correcta y en booleano
+    relayLeaveMessages: false  # ✅ Se agrega por seguridad
     telegram:
-      chat_id: "5373251851074415873"
+      chat_id: "-1002479265586:5373251851074415873"  # Reemplázalo con el ID correcto
     discord:
       channel_id: "1332314270318460969"
