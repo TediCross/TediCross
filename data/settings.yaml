@@ -1,23 +1,45 @@
 telegram:
   token: "7647165710:AAEZZDijJwWIuM3CkHyiXwYcVI0qUi8GcOY"
+  useFirstNameInsteadOfUsername: false
+  colonAfterSenderName: false
+  skipOldMessages: true
+  sendEmojiWithStickers: true
+  useCustomEmojiFilter: false
+  replaceAtWithHash: false
+  replaceExcessiveSpaces: false
+  removeNewlineSpaces: false
+  suppressFileTooBigMessages: false
+  suppressThisIsPrivateBotMessage: false
 
 discord:
   token: "e833746b950a0dc6a00f388f821fa74c9e0beaf2822e75aacc340ccada4883ba"
+  useNickname: false
+  skipOldMessages: true
+  replyLength: 100
+  maxReplyLines: 2
+  suppressThisIsPrivateBotMessage: false
+  enableCustomStatus: false
+  customStatusMessage: "TediCross"
 
 bridges:
   - name: "Noticias"
-    direction: both  # Puede ser "both", "tgToDc" o "dcToTg"
+    direction: both
     telegram:
-      chat_id: "-1002479265586"  # ID del grupo general
-      topic_id: 5373251851074415873  # ID del tópico específico (si lo tienes)
-      relayJoinMessages: false  # Evita errores con mensajes de unión en Telegram
-      relayLeaveMessages: false  # Evita errores con mensajes de salida en Telegram
-      sendUsernames: false  # Evita errores en Telegram con nombres de usuario
-      crossDeleteOnDiscord: false  # Evita errores de eliminación cruzada
+      chatId: "-1002479265586"  # ID del grupo general
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: false
+      crossDeleteOnDiscord: false
     discord:
-      channel_id: "1332314270318460969"
-      relayJoinMessages: false  # Evita errores en Discord
-      relayLeaveMessages: false  # Evita errores en Discord
-      sendUsernames: false  # Evita errores en Discord con nombres de usuario
-      crossDeleteOnTelegram: false  # Evita errores de eliminación cruzada
-      replyLength: 200  # ✅ Nuevo: Evita el error actual (debe ser un número mayor a 0)
+      channelId: "1332314270318460969"
+      relayJoinMessages: false
+      relayLeaveMessages: false
+      sendUsernames: false
+      crossDeleteOnTelegram: false
+      disableWebPreviewOnTelegram: false
+      useEmbeds: "auto"
+
+debug: false
+messageTimeoutAmount: 24
+messageTimeoutUnit: "hours"
+persistentMessageMap: false
