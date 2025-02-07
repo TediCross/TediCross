@@ -1,5 +1,5 @@
 telegram:
-  token: "7647165710:AAFwqaA6U-7yL4HFUtWI3CRjHGaBcVE_CCc"
+  token: "${TELEGRAM_BOT_TOKEN}"
   useFirstNameInsteadOfUsername: false
   colonAfterSenderName: false
   skipOldMessages: true
