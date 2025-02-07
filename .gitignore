@@ -54,3 +54,5 @@ yarn.lock
 
 .vscode/
 /todo.txt
+
+data/settings.yaml
