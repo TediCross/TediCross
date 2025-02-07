@@ -13,10 +13,11 @@ bridges:
       relayJoinMessages: false  # Evita errores con mensajes de unión en Telegram
       relayLeaveMessages: false  # Evita errores con mensajes de salida en Telegram
       sendUsernames: false  # Evita errores en Telegram con nombres de usuario
-      crossDeleteOnDiscord: false  # ✅ Añadido para evitar futuros errores
+      crossDeleteOnDiscord: false  # Evita errores de eliminación cruzada
     discord:
       channel_id: "1332314270318460969"
       relayJoinMessages: false  # Evita errores en Discord
       relayLeaveMessages: false  # Evita errores en Discord
       sendUsernames: false  # Evita errores en Discord con nombres de usuario
-      crossDeleteOnTelegram: false  # ✅ Evita el error que mencionaste ahora
+      crossDeleteOnTelegram: false  # Evita errores de eliminación cruzada
+      replyLength: 200  # ✅ Nuevo: Evita el error actual (debe ser un número mayor a 0)
