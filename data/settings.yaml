@@ -12,7 +12,7 @@ telegram:
   suppressThisIsPrivateBotMessage: false
 
 discord:
-  token: "${DISCORD_TOKEN}"
+  token: "${DISCORD_BOT_TOKEN}"
   useNickname: false
   skipOldMessages: true
   replyLength: 100
