@@ -12,7 +12,7 @@ telegram:
   suppressThisIsPrivateBotMessage: false
 
 discord:
-  token: "e833746b950a0dc6a00f388f821fa74c9e0beaf2822e75aacc340ccada4883ba"
+  token: "MTMzNjUyODYxNzg5NDU3NjE2OQ.GgLUC5.AF70VoP_ItMax9fKcS4AuKDSvimcFdrb_VArdo"
   useNickname: false
   skipOldMessages: true
   replyLength: 100
