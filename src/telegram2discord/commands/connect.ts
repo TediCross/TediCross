@@ -5,6 +5,7 @@ import { writeFileSync } from "fs";
 import path from "path";
 import jsYaml from "js-yaml";
 import { registerCallbackHandler } from "./callbacks";
+import { Message } from "telegraf/typings/core/types/typegram";
 
 // Store user states (which step they're on in the connection process)
 const userStates = new Map<
@@ -15,6 +16,7 @@ const userStates = new Map<
 		telegramChatName?: string;
 		discordChannelId?: string;
 		discordChannelName?: string;
+		originalMessageId?: number;
 	}
 >();
 
@@ -27,7 +29,7 @@ export async function connect(ctx: TediCrossContext) {
 		return;
 	}
 
-	const userId = ctx.from.id;
+	const userId = ctx.from?.id;
 	const logger = ctx.TediCross.logger;
 
 	try {
@@ -37,15 +39,83 @@ export async function connect(ctx: TediCrossContext) {
 			return;
 		}
 
+		// Initialize state for this user
+		let userState = { step: "select_telegram_channel" } as {
+			step: string;
+			telegramChatId?: number;
+			telegramChatName?: string;
+			discordChannelId?: string;
+			discordChannelName?: string;
+			originalMessageId?: number;
+		};
+
+		// Check if command is being used in a group/channel
 		if (ctx.chat.type !== "private") {
-			await ctx.reply(
-				"This command is only available in direct messages to the bot. Please message me directly."
-			);
-			return;
+			// Check if user is an admin in this chat
+			try {
+				const admins = await ctx.telegram.getChatAdministrators(ctx.chat.id);
+				const isAdmin = admins.some((admin: any) => admin.user.id === userId);
+
+				if (!isAdmin) {
+					await ctx.reply("You need to be an admin in this chat to connect it.");
+					return;
+				}
+
+				// Get chat details
+				const chat = await ctx.telegram.getChat(ctx.chat.id);
+				const chatTitle = (chat.type !== 'private'
+					? chat.title
+					: (chat as any).username || `Chat: ${ctx.chat.id}`);
+				// Use the current chat directly
+				logger.info(`Using current chat for connection: ${ctx.chat.id} (${chatTitle})`);
+
+				// Skip to Discord channel selection
+				userState = {
+					step: "select_discord_channel",
+					telegramChatId: ctx.chat.id,
+					telegramChatName: chatTitle
+				};
+
+				userStates.set(userId, userState);
+
+				// Get available Discord channels and show them
+				const discordChannels = await getAvailableDiscordChannels(ctx.TediCross.dcBot);
+
+				if (discordChannels.length === 0) {
+					await ctx.reply("No Discord channels found. Make sure the bot has access to channels.");
+					userStates.delete(userId);
+					return;
+				}
+
+				// Create inline keyboard with Discord channels
+				const keyboard = discordChannels.map(channel => [
+					{
+						text: channel.name,
+						callback_data: `dc_channel:${channel.id}`
+					}
+				]);
+
+				// Store the original message for later reference
+				const sentMessage = (await ctx.reply(
+					`Using this Telegram chat for connection.\nNow select a Discord channel:`,
+					{ reply_markup: { inline_keyboard: keyboard } }
+				)) as Message.TextMessage;
+
+				// Store the message ID in user state for later reference
+				userState.originalMessageId = sentMessage.message_id;
+				userStates.set(userId, userState);
+
+				return;
+			} catch (error) {
+				logger.error(`Error checking admin status: ${error}`);
+				await ctx.reply("Error checking permissions. Try again or contact the bot administrator.");
+				return;
+			}
 		}
 
+		// If we're in a private chat, proceed with the original flow
 		// Initialize or reset user state
-		userStates.set(userId, { step: "select_telegram_channel" });
+		userStates.set(userId, userState);
 
 		// Get available Telegram channels where the bot is a member
 		const telegramChannels = await getAvailableTelegramChannels(ctx);
@@ -79,6 +149,7 @@ async function getAvailableTelegramChannels(ctx: TediCrossContext) {
 	// Define proper type for channels array
 	const channels: { id: number; title?: string; type?: string }[] = [];
 	const userId = ctx.from?.id;
+	const logger = ctx.TediCross.logger;
 
 	if (!userId) {
 		return [];
@@ -140,6 +211,9 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 		return;
 	}
 
+	// Track whether we're in the original chat or private message
+	const isInOriginalChat = userState.telegramChatId && ctx.chat?.id !== userId;
+
 	try {
 		// Handle Telegram channel selection
 		if (data.startsWith("tg_channel:")) {
@@ -184,10 +258,21 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 				await ctx.answerCbQuery();
 
 				try {
-					await ctx.editMessageText(
-						`Selected Telegram channel: ${userState.telegramChatName}\nNow select a Discord channel:`,
-						{ reply_markup: { inline_keyboard: keyboard } }
-					);
+					// Edit the message if we have a message to edit
+					if (userState.originalMessageId) {
+						await ctx.telegram.editMessageText(
+							ctx.chat?.id,
+							userState.originalMessageId,
+							undefined,
+							`Selected Telegram channel: ${userState.telegramChatName}\nNow select a Discord channel:`,
+							{ reply_markup: { inline_keyboard: keyboard } }
+						);
+					} else {
+						await ctx.editMessageText(
+							`Selected Telegram channel: ${userState.telegramChatName}\nNow select a Discord channel:`,
+							{ reply_markup: { inline_keyboard: keyboard } }
+						);
+					}
 				} catch (editError: any) {
 					logger.error(`Error editing message: ${editError.message}`);
 					// Try sending a new message instead
@@ -230,10 +315,21 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 				await ctx.answerCbQuery();
 
 				try {
-					await ctx.editMessageText(
-						`Bridge Configuration:\nTelegram: ${userState.telegramChatName}\nDiscord: ${userState.discordChannelName}\n\nConfirm connection?`,
-						{ reply_markup: { inline_keyboard: keyboard } }
-					);
+					// Edit the message if we have a message to edit
+					if (userState.originalMessageId) {
+						await ctx.telegram.editMessageText(
+							ctx.chat?.id,
+							userState.originalMessageId,
+							undefined,
+							`Bridge Configuration:\nTelegram: ${userState.telegramChatName}\nDiscord: ${userState.discordChannelName}\n\nConfirm connection?`,
+							{ reply_markup: { inline_keyboard: keyboard } }
+						);
+					} else {
+						await ctx.editMessageText(
+							`Bridge Configuration:\nTelegram: ${userState.telegramChatName}\nDiscord: ${userState.discordChannelName}\n\nConfirm connection?`,
+							{ reply_markup: { inline_keyboard: keyboard } }
+						);
+					}
 				} catch (editError: any) {
 					logger.error(`Error editing message: ${editError.message}`);
 					// Try sending a new message instead
@@ -280,10 +376,28 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 				if (bridgeResult.success) {
 					logger.info(`Bridge created successfully`);
 					try {
-						await ctx.editMessageText(
-							`Bridge created successfully! Telegram channel "${userState.telegramChatName}" is now connected to Discord channel "${userState.discordChannelName}"`,
-							{ reply_markup: { inline_keyboard: [] } }
-						);
+						const successMessage = `Bridge created successfully! Telegram channel "${userState.telegramChatName}" is now connected to Discord channel "${userState.discordChannelName}"`;
+
+						// Edit the message if we have a message to edit
+						if (userState.originalMessageId) {
+							await ctx.telegram.editMessageText(
+								ctx.chat?.id,
+								userState.originalMessageId,
+								undefined,
+								successMessage,
+								{ reply_markup: { inline_keyboard: [] } }
+							);
+
+							// If we're in a group/channel, send an additional confirmation message
+							if (isInOriginalChat) {
+								await ctx.telegram.sendMessage(
+									userState.telegramChatId,
+									`✅ This channel is now connected to Discord channel "${userState.discordChannelName}".`
+								);
+							}
+						} else {
+							await ctx.editMessageText(successMessage, { reply_markup: { inline_keyboard: [] } });
+						}
 					} catch (editError: any) {
 						logger.error(`Error editing message: ${editError.message}`);
 						// Try sending a new message instead
@@ -297,9 +411,20 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 				} else {
 					logger.warn(`Failed to create bridge: ${bridgeResult.message}`);
 					try {
-						await ctx.editMessageText(`Failed to create bridge: ${bridgeResult.message}`, {
-							reply_markup: { inline_keyboard: [] }
-						});
+						const errorMessage = `Failed to create bridge: ${bridgeResult.message}`;
+
+						// Edit the message if we have a message to edit
+						if (userState.originalMessageId) {
+							await ctx.telegram.editMessageText(
+								ctx.chat?.id,
+								userState.originalMessageId,
+								undefined,
+								errorMessage,
+								{ reply_markup: { inline_keyboard: [] } }
+							);
+						} else {
+							await ctx.editMessageText(errorMessage, { reply_markup: { inline_keyboard: [] } });
+						}
 					} catch (editError: any) {
 						logger.error(`Error editing message: ${editError.message}`);
 						// Try sending a new message instead
@@ -321,7 +446,20 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 			await ctx.answerCbQuery();
 
 			try {
-				await ctx.editMessageText("Bridge creation cancelled.", { reply_markup: { inline_keyboard: [] } });
+				const cancelMessage = "Bridge creation cancelled.";
+
+				// Edit the message if we have a message to edit
+				if (userState.originalMessageId) {
+					await ctx.telegram.editMessageText(
+						ctx.chat?.id,
+						userState.originalMessageId,
+						undefined,
+						cancelMessage,
+						{ reply_markup: { inline_keyboard: [] } }
+					);
+				} else {
+					await ctx.editMessageText(cancelMessage, { reply_markup: { inline_keyboard: [] } });
+				}
 			} catch (editError: any) {
 				logger.error(`Error editing message: ${editError.message}`);
 				// Try sending a new message instead

@@ -113,8 +113,15 @@ export function setup(
 				}
 			];
 
-			// Set the commands
-			tgBot.telegram.setMyCommands(myCommands, { scope: { type: "default" } }).then(() => {
+			// Set the commands for all scopes: default, groups, and channels
+			Promise.all([
+				// Default scope (private chats)
+				tgBot.telegram.setMyCommands(myCommands, { scope: { type: "default" } }),
+				// Group chats
+				tgBot.telegram.setMyCommands(myCommands, { scope: { type: "all_group_chats" } }),
+				// Channel chats
+				tgBot.telegram.setMyCommands(myCommands, { scope: { type: "all_chat_administrators" } })
+			]).then(() => {
 				// wait 5 seconds to make sure the commands are set
 				setTimeout(() => {
 					tgBot.telegram.getMyCommands().then((commands: BotCommand[]) => {
@@ -197,10 +204,10 @@ export function setup(
 			tgBot.use(channelChatInfo as any);
 			tgBot.use(middlewares.addTediCrossObj);
 			tgBot.use(middlewares.addMessageObj);
-			tgBot.use(middlewares.addMessageId);
-			tgBot.use(middlewares.addBridgesToContext);
+			tgBot.use(skipCallbackQueries(middlewares.addMessageId));
+			tgBot.use(skipCallbackQueries(middlewares.addBridgesToContext));
 			tgBot.use(middlewares.informThisIsPrivateBot);
-			tgBot.use(middlewares.removeD2TBridges);
+			tgBot.use(skipCallbackQueries(middlewares.removeD2TBridges));
 
 			//@ts-ignore telegram expacts a second parameter
 			//tgBot.command(middlewares.removeBridgesIgnoringCommands);
