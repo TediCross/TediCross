@@ -62,10 +62,49 @@ export async function remove(ctx: TediCrossContext) {
 			return;
 		}
 
+		// Get Telegram chat names for each bridge
+		const bridgesWithNames = await Promise.all(
+			adminBridges.map(async (bridge) => {
+				try {
+					// Get Telegram chat name
+					const telegramChat = await ctx.telegram.getChat(bridge.telegram.chatId);
+					const telegramChatName = 'title' in telegramChat
+						? telegramChat.title as string
+						: ('username' in telegramChat
+							? `@${telegramChat.username as string}`
+							: `Chat ${bridge.telegram.chatId}`);
+
+					// Get Discord channel name
+					let discordChannelName = `#${bridge.discord.channelId}`;
+					try {
+						const discordChannel = await ctx.TediCross.dcBot.channels.fetch(bridge.discord.channelId);
+						if (discordChannel && discordChannel.name) {
+							discordChannelName = `#${discordChannel.name}`;
+						}
+					} catch (err) {
+						logger.warn(`Could not fetch Discord channel name for channel ID ${bridge.discord.channelId}`);
+					}
+
+					return {
+						...bridge,
+						telegramChatName,
+						discordChannelName
+					};
+				} catch (err: any) {
+					logger.warn(`Could not fetch names for bridge ${bridge.name}: ${err?.message || "Unknown error"}`);
+					return {
+						...bridge,
+						telegramChatName: `Chat ${bridge.telegram.chatId}`,
+						discordChannelName: `#${bridge.discord.channelId}`
+					};
+				}
+			})
+		);
+
 		// Create inline keyboard with bridges user can manage
-		const keyboard = adminBridges.map(bridge => [
+		const keyboard = bridgesWithNames.map(bridge => [
 			{
-				text: `${bridge.name} (${bridge.telegram.chatId} to Discord #${bridge.discord.channelId})`,
+				text: `${bridge.name} (${bridge.telegramChatName} to ${bridge.discordChannelName})`,
 				callback_data: `remove_bridge:${bridge.name}`
 			}
 		]);
