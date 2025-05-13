@@ -1,0 +1,472 @@
+import { TediCrossContext } from "../endwares";
+import { Client as DiscordClient, ChannelType, TextChannel } from "discord.js";
+import { Settings } from "../../settings/Settings";
+import { writeFileSync } from "fs";
+import path from "path";
+import jsYaml from "js-yaml";
+import { registerCallbackHandler } from "./callbacks";
+
+// Store user states (which step they're on in the connection process)
+const userStates = new Map<
+	number,
+	{
+		step: string;
+		telegramChatId?: number;
+		telegramChatName?: string;
+		discordChannelId?: string;
+		discordChannelName?: string;
+	}
+>();
+
+/**
+ * Command to connect Telegram and Discord channels
+ */
+export async function connect(ctx: TediCrossContext) {
+	if (!ctx.from) {
+		await ctx.reply("Error: Could not identify user.");
+		return;
+	}
+
+	const userId = ctx.from.id;
+	const logger = ctx.TediCross.logger;
+
+	try {
+		// Check if command is being used in private chat
+		if (!ctx.chat) {
+			await ctx.reply("Error: Could not identify chat.");
+			return;
+		}
+
+		if (ctx.chat.type !== "private") {
+			await ctx.reply(
+				"This command is only available in direct messages to the bot. Please message me directly."
+			);
+			return;
+		}
+
+		// Initialize or reset user state
+		userStates.set(userId, { step: "select_telegram_channel" });
+
+		// Get available Telegram channels where the bot is a member
+		const telegramChannels = await getAvailableTelegramChannels(ctx);
+
+		if (telegramChannels.length === 0) {
+			await ctx.reply("No Telegram channels found. Please add this bot to a channel first.");
+			userStates.delete(userId);
+			return;
+		}
+
+		// Create inline keyboard with available Telegram channels
+		const keyboard = telegramChannels.map(channel => [
+			{
+				text: (channel as any).title || `Chat: ${channel.id}`,
+				callback_data: `tg_channel:${channel.id}`
+			}
+		]);
+
+		await ctx.reply("Select a Telegram channel to connect:", { reply_markup: { inline_keyboard: keyboard } });
+	} catch (err: any) {
+		logger.error(`Error in connect command: ${err?.message || "Unknown error"}`);
+		await ctx.reply("An error occurred while fetching channels.");
+		userStates.delete(userId);
+	}
+}
+
+/**
+ * Get available Telegram channels where the bot is a member
+ */
+async function getAvailableTelegramChannels(ctx: TediCrossContext) {
+	// Define proper type for channels array
+	const channels: { id: number; title?: string; type?: string }[] = [];
+	const userId = ctx.from?.id;
+
+	if (!userId) {
+		return [];
+	}
+
+	try {
+		// Get all chats where the bot is a member
+		// This approach gets chats from the settings
+		for (const bridge of ctx.TediCross.settings.bridges) {
+			try {
+				const chatId = bridge.telegram.chatId;
+				const chat = await ctx.telegram.getChat(chatId);
+
+				// Check if user is an admin in this chat
+				const admins = await ctx.telegram.getChatAdministrators(chatId);
+				const isAdmin = admins.some((admin: any) => admin.user.id === userId);
+
+				if (isAdmin) {
+					// Only add if not already in the list
+					if (!channels.some(c => c.id === chat.id)) {
+						channels.push(chat);
+					}
+				}
+			} catch (error) {
+				// Skip chats where we can't get info or user is not admin
+				continue;
+			}
+		}
+	} catch (error) {
+		// Return whatever we have if there are errors
+	}
+
+	return channels;
+}
+
+/**
+ * Process callback queries for channel selection
+ */
+export async function processConnectCallback(ctx: TediCrossContext) {
+	if (!ctx.callbackQuery) return;
+
+	// Telegraf has different types of callback queries, we need to check if it's a data query
+	const callbackQuery = ctx.callbackQuery as any;
+	if (!callbackQuery.data) return;
+
+	const data = callbackQuery.data as string;
+	const userId = callbackQuery.from.id;
+	const userState = userStates.get(userId);
+	const dcBot = ctx.TediCross.dcBot;
+	const logger = ctx.TediCross.logger;
+	const settings = ctx.TediCross.settings;
+
+	// Debug logging
+	logger.info(`Processing callback: ${data}`);
+	logger.debug(`Current user state: ${JSON.stringify(userState)}`);
+
+	if (!userState) {
+		await ctx.answerCbQuery("Session expired. Please start over with /connect");
+		return;
+	}
+
+	try {
+		// Handle Telegram channel selection
+		if (data.startsWith("tg_channel:")) {
+			logger.info(`Processing Telegram channel selection: ${data}`);
+			const telegramChatId = Number(data.split(":")[1]);
+
+			try {
+				const telegramChat = await ctx.telegram.getChat(telegramChatId);
+				logger.debug(`Retrieved telegram chat: ${JSON.stringify(telegramChat)}`);
+
+				// Update user state
+				userState.telegramChatId = telegramChatId;
+				userState.telegramChatName = (telegramChat as any).title || `Chat: ${telegramChatId}`;
+				userState.step = "select_discord_channel";
+
+				// Get available Discord channels
+				const discordChannels = await getAvailableDiscordChannels(dcBot);
+				logger.info(`Found ${discordChannels.length} Discord channels`);
+
+				if (discordChannels.length === 0) {
+					await ctx.answerCbQuery();
+					await ctx
+						.editMessageText("No Discord channels found. Make sure the bot has access to channels.", {
+							reply_markup: { inline_keyboard: [] }
+						})
+						.catch(error => {
+							logger.error(`Error editing message text: ${error.message}`);
+						});
+					userStates.delete(userId);
+					return;
+				}
+
+				// Create inline keyboard with Discord channels
+				const keyboard = discordChannels.map(channel => [
+					{
+						text: channel.name,
+						callback_data: `dc_channel:${channel.id}`
+					}
+				]);
+
+				// Always answer the callback query first
+				await ctx.answerCbQuery();
+
+				try {
+					await ctx.editMessageText(
+						`Selected Telegram channel: ${userState.telegramChatName}\nNow select a Discord channel:`,
+						{ reply_markup: { inline_keyboard: keyboard } }
+					);
+				} catch (editError: any) {
+					logger.error(`Error editing message: ${editError.message}`);
+					// Try sending a new message instead
+					await ctx.reply(
+						`Selected Telegram channel: ${userState.telegramChatName}\nNow select a Discord channel:`,
+						{ reply_markup: { inline_keyboard: keyboard } }
+					);
+				}
+			} catch (telegramError: any) {
+				logger.error(`Error getting Telegram chat: ${telegramError.message}`);
+				await ctx.answerCbQuery("Error retrieving Telegram chat information");
+			}
+		}
+		// Handle Discord channel selection
+		else if (data.startsWith("dc_channel:")) {
+			logger.info(`Processing Discord channel selection: ${data}`);
+			const discordChannelId = data.split(":")[1];
+
+			try {
+				const discordChannel = dcBot.channels.cache.get(discordChannelId);
+
+				if (!discordChannel) {
+					logger.warn(`Discord channel not found: ${discordChannelId}`);
+					await ctx.answerCbQuery("Channel not found. Please try again.");
+					return;
+				}
+
+				// Update user state
+				userState.discordChannelId = discordChannelId;
+				userState.discordChannelName = (discordChannel as any).name || discordChannelId;
+				userState.step = "confirm";
+
+				// Ask for confirmation
+				const keyboard = [
+					[{ text: "Confirm", callback_data: "connect_confirm" }],
+					[{ text: "Cancel", callback_data: "connect_cancel" }]
+				];
+
+				// Always answer the callback query first
+				await ctx.answerCbQuery();
+
+				try {
+					await ctx.editMessageText(
+						`Bridge Configuration:\nTelegram: ${userState.telegramChatName}\nDiscord: ${userState.discordChannelName}\n\nConfirm connection?`,
+						{ reply_markup: { inline_keyboard: keyboard } }
+					);
+				} catch (editError: any) {
+					logger.error(`Error editing message: ${editError.message}`);
+					// Try sending a new message instead
+					await ctx.reply(
+						`Bridge Configuration:\nTelegram: ${userState.telegramChatName}\nDiscord: ${userState.discordChannelName}\n\nConfirm connection?`,
+						{ reply_markup: { inline_keyboard: keyboard } }
+					);
+				}
+			} catch (discordError: any) {
+				logger.error(`Error processing Discord channel: ${discordError.message}`);
+				await ctx.answerCbQuery("Error retrieving Discord channel information");
+			}
+		}
+		// Handle confirmation
+		else if (data === "connect_confirm") {
+			logger.info(`Processing confirmation`);
+			if (!userState.telegramChatId || !userState.discordChannelId) {
+				logger.warn(`Missing required information for bridge creation`);
+				await ctx.answerCbQuery();
+
+				try {
+					await ctx.editMessageText("Error: Missing chat information. Please try again.", {
+						reply_markup: { inline_keyboard: [] }
+					});
+				} catch (editError: any) {
+					logger.error(`Error editing message: ${editError.message}`);
+				}
+
+				userStates.delete(userId);
+				return;
+			}
+
+			try {
+				const bridgeResult = await createNewBridge(
+					settings,
+					userState.telegramChatId,
+					userState.discordChannelId,
+					logger
+				);
+
+				// Always answer the callback query first
+				await ctx.answerCbQuery();
+
+				if (bridgeResult.success) {
+					logger.info(`Bridge created successfully`);
+					try {
+						await ctx.editMessageText(
+							`Bridge created successfully! Telegram channel "${userState.telegramChatName}" is now connected to Discord channel "${userState.discordChannelName}"`,
+							{ reply_markup: { inline_keyboard: [] } }
+						);
+					} catch (editError: any) {
+						logger.error(`Error editing message: ${editError.message}`);
+						// Try sending a new message instead
+						await ctx.reply(
+							`Bridge created successfully! Telegram channel "${userState.telegramChatName}" is now connected to Discord channel "${userState.discordChannelName}"`
+						);
+					}
+
+					// Reload bridges to apply changes immediately
+					await reloadBridges(ctx);
+				} else {
+					logger.warn(`Failed to create bridge: ${bridgeResult.message}`);
+					try {
+						await ctx.editMessageText(`Failed to create bridge: ${bridgeResult.message}`, {
+							reply_markup: { inline_keyboard: [] }
+						});
+					} catch (editError: any) {
+						logger.error(`Error editing message: ${editError.message}`);
+						// Try sending a new message instead
+						await ctx.reply(`Failed to create bridge: ${bridgeResult.message}`);
+					}
+				}
+			} catch (bridgeError: any) {
+				logger.error(`Error creating bridge: ${bridgeError.message}`);
+				await ctx.answerCbQuery("Error creating bridge");
+			}
+
+			userStates.delete(userId);
+		}
+		// Handle cancellation
+		else if (data === "connect_cancel") {
+			logger.info(`Processing cancellation`);
+
+			// Always answer the callback query first
+			await ctx.answerCbQuery();
+
+			try {
+				await ctx.editMessageText("Bridge creation cancelled.", { reply_markup: { inline_keyboard: [] } });
+			} catch (editError: any) {
+				logger.error(`Error editing message: ${editError.message}`);
+				// Try sending a new message instead
+				await ctx.reply("Bridge creation cancelled.");
+			}
+
+			userStates.delete(userId);
+		} else {
+			logger.warn(`Unknown callback query data: ${data}`);
+			await ctx.answerCbQuery("Unknown command");
+		}
+	} catch (err: any) {
+		logger.error(`Error in processConnectCallback: ${err?.message || "Unknown error"}`);
+		logger.error(err.stack);
+		try {
+			await ctx.answerCbQuery("An error occurred. Please try again.");
+		} catch (answerError: any) {
+			logger.error(`Failed to answer callback query: ${answerError.message}`);
+		}
+		userStates.delete(userId);
+	}
+}
+
+/**
+ * Get available Discord channels where the bot is a member
+ */
+async function getAvailableDiscordChannels(dcBot: DiscordClient) {
+	const channels: { id: string; name: string }[] = [];
+
+	for (const guild of dcBot.guilds.cache.values()) {
+		for (const channel of guild.channels.cache.values()) {
+			if (channel.type === ChannelType.GuildText) {
+				channels.push({
+					id: channel.id,
+					name: `${guild.name} - #${(channel as TextChannel).name}`
+				});
+			}
+		}
+	}
+
+	return channels;
+}
+
+/**
+ * Create a new bridge and save it to settings file
+ */
+async function createNewBridge(
+	settings: Settings,
+	telegramChatId: number,
+	discordChannelId: string,
+	logger: any
+): Promise<{ success: boolean; message: string }> {
+	try {
+		// Check if bridge already exists
+		const bridgeExists = settings.bridges.some(
+			bridge => bridge.telegram.chatId === telegramChatId && bridge.discord.channelId === discordChannelId
+		);
+
+		if (bridgeExists) {
+			return { success: false, message: "Bridge already exists between these channels" };
+		}
+
+		// Create new bridge
+		const newBridge: any = {
+			name: `Bridge ${Math.floor(Math.random() * 10000)}`,
+			direction: "both",
+			telegram: {
+				chatId: telegramChatId,
+				relayJoinMessages: true,
+				relayLeaveMessages: true,
+				sendUsernames: true,
+				crossDeleteOnDiscord: true
+			},
+			discord: {
+				channelId: discordChannelId,
+				relayJoinMessages: true,
+				relayLeaveMessages: true,
+				sendUsernames: true,
+				crossDeleteOnTelegram: true,
+				disableWebPreviewOnTelegram: false,
+				useEmbeds: "auto"
+			},
+			threadMap: [],
+			tgThread: undefined
+		};
+
+		// Add new bridge to settings
+		settings.bridges.push(newBridge);
+
+		// Save settings to file
+		const settingsPath = path.join(__dirname, "..", "..", "..", "settings.yaml");
+		const objectToSave = JSON.parse(JSON.stringify(settings));
+		const yaml = jsYaml.dump(objectToSave);
+		const notepadFriendlyYaml = yaml.replace(/\n/g, "\r\n");
+		writeFileSync(settingsPath, notepadFriendlyYaml);
+
+		return { success: true, message: "Bridge created successfully" };
+	} catch (err: any) {
+		logger.error(`Error creating bridge: ${err?.message || "Unknown error"}`);
+		return { success: false, message: err?.message || "Unknown error" };
+	}
+}
+
+/**
+ * Reload bridges to apply changes immediately
+ */
+async function reloadBridges(ctx: TediCrossContext) {
+	try {
+		// Get settings and bridge map
+		const settings = ctx.TediCross.settings;
+		const bridgeMap = ctx.TediCross.bridgeMap;
+
+		// Update bridge map with new bridges
+		bridgeMap.bridges = settings.bridges;
+
+		// Update maps in bridge map
+		bridgeMap._discordToBridge = new Map();
+		bridgeMap._telegramToBridge = new Map();
+
+		// Populate the maps
+		settings.bridges.forEach((bridge: any) => {
+			const d = bridgeMap._discordToBridge.get(Number(bridge.discord.channelId)) || [];
+			const t = bridgeMap._telegramToBridge.get(bridge.telegram.chatId) || [];
+			bridgeMap._discordToBridge.set(Number(bridge.discord.channelId), [...d, bridge]);
+			if (bridge.threadMap) {
+				for (const trMap of bridge.threadMap) {
+					const upBridge = {
+						...bridge,
+						tgThread: trMap.telegram
+					};
+					bridgeMap._discordToBridge.set(Number(trMap.discord), [...d, upBridge]);
+				}
+			}
+			bridgeMap._telegramToBridge.set(bridge.telegram.chatId, [...t, bridge]);
+		});
+
+		return true;
+	} catch (err: any) {
+		ctx.TediCross.logger.error(`Error reloading bridges: ${err?.message || "Unknown error"}`);
+		return false;
+	}
+}
+
+// Register connect command callback handlers
+registerCallbackHandler("tg_channel:", processConnectCallback);
+registerCallbackHandler("dc_channel:", processConnectCallback);
+registerCallbackHandler("connect_confirm", processConnectCallback);
+registerCallbackHandler("connect_cancel", processConnectCallback);

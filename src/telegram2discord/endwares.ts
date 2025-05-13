@@ -22,6 +22,8 @@ export interface TediCrossContext extends Context {
 			type: string;
 			id: string;
 			name: string;
+			size?: number;
+			mime?: string;
 			link?: string;
 		};
 		messageId: string;

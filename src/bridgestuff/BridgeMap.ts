@@ -4,8 +4,8 @@ import { Bridge } from "./Bridge";
 /** Map between chat IDs and bridges */
 export class BridgeMap {
 	public bridges: Bridge[];
-	private _discordToBridge: Map<number, Bridge[]>;
-	private _telegramToBridge: Map<number, Bridge[]>;
+	public _discordToBridge: Map<number, Bridge[]>;
+	public _telegramToBridge: Map<number, Bridge[]>;
 
 	/**
 	 * Creates a new bridge map
