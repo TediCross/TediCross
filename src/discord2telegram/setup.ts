@@ -231,30 +231,36 @@ export function setup(
 
 				// console.dir(message.attachments);
 
-				// Check if there is an ordinary text message
-				if (message.cleanContent) {
-					// Modify the message to fit Telegram
-					const processedMessage = md2html(message.cleanContent, settings.telegram);
+				// Check if there is an ordinary text message and/or embeds
+				let combinedText = "";
+				
+				// Add the sender name if configured
+				if (bridge.discord.sendUsernames) {
+					combinedText = `<b>${senderName}</b>\n`;
+				}
 
-					// Pass the message on to Telegram
+				// Add the message content if it exists
+				if (message.cleanContent) {
+					const processedMessage = md2html(message.cleanContent, settings.telegram);
+					combinedText += processedMessage;
+				}
+
+				// Process any rich embeds
+				for (const embed of message.embeds) {
+					// Ignore non-rich embeds
+					if (embed.data.type !== "rich") {
+						continue;
+					}
+
+					// Convert the embed to text and add it
+					const embedText = handleEmbed(embed, "", settings.telegram); // Pass empty sender name since we already added it
+					combinedText += embedText;
+				}
+
+				// Only send if we have content to send
+				if (combinedText.length > 0) {
 					try {
-						const textToSend = bridge.discord.sendUsernames
-							? `<b>${senderName}</b>\n${processedMessage}`
-							: processedMessage;
-						// if (replyId === "0" || replyId === undefined) {
-						// 	const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, textToSend, {
-						// 		parse_mode: "HTML"
-						// 	});
-						//
-						// 	// Make the mapping so future edits can work
-						// 	messageMap.insert(
-						// 		MessageMap.DISCORD_TO_TELEGRAM,
-						// 		bridge,
-						// 		message.id,
-						// 		tgMessage.message_id.toString()
-						// 	);
-						// } else {
-						const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, textToSend, {
+						const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, combinedText, {
 							reply_parameters: {
 								message_id: +replyId
 							},
@@ -382,34 +388,6 @@ export function setup(
 						);
 					}
 				}
-
-				// Check the message for embeds
-				for (const embed of message.embeds) {
-					// Ignore it if it is not a "rich" embed (image, link, video, ...)
-					if (embed.data.type !== "rich") {
-						continue;
-					}
-
-					// Convert it to something Telegram likes
-					const text = handleEmbed(embed, senderName, settings.telegram);
-
-					try {
-						// Send it
-						await tgBot.telegram.sendMessage(bridge.telegram.chatId, text, {
-							reply_parameters: {
-								message_id: +replyId
-							},
-							parse_mode: "HTML",
-							link_preview_options: {
-								is_disabled: bridge.discord.disableWebPreviewOnTelegram
-							},
-							message_thread_id: bridge.tgThread
-						});
-						// }
-					} catch (err) {
-						logger.error(`[${bridge.name}] Telegram did not accept an embed:`, (err as Error).toString());
-					}
-				}
 			}
 		} else if (
 			R.isNil((message.channel as TextChannel).guild) ||
@@ -464,14 +442,39 @@ export function setup(
 					(useNickname && newMessage.member ? newMessage.member.displayName : newMessage.author?.username) +
 					(settings.telegram.colonAfterSenderName ? ":" : "");
 
-				// Modify the message to fit Telegram
+				// Build the combined message with embeds
+				let combinedText = "";
+				
+				// Add the sender name if configured
+				if (bridge.discord.sendUsernames) {
+					combinedText = `<b>${senderName}</b>\n`;
+				}
+
+				// Add the message content if it exists
+				if (newMessage.cleanContent) {
 				const processedMessage = md2html(newMessage.cleanContent || "", settings.telegram);
+					combinedText += processedMessage;
+				}
+
+				// Process any rich embeds
+				for (const embed of newMessage.embeds) {
+					// Ignore non-rich embeds
+					if (embed.data.type !== "rich") {
+						continue;
+					}
+
+					// Add a separator if we already have content
+					if (combinedText.length > 0) {
+						combinedText += "\n\n―――――――――――――\n\n";
+					}
+
+					// Convert the embed to text and add it
+					const embedText = handleEmbed(embed, "", settings.telegram); // Pass empty sender name since we already added it
+					combinedText += embedText;
+				}
 
 				// Send the update to Telegram
-				const textToSend = bridge.discord.sendUsernames
-					? `<b>${senderName}</b>\n${processedMessage}`
-					: processedMessage;
-				await tgBot.telegram.editMessageText(bridge.telegram.chatId, +tgMessageId, undefined, textToSend, {
+				await tgBot.telegram.editMessageText(bridge.telegram.chatId, +tgMessageId, undefined, combinedText, {
 					parse_mode: "HTML"
 				});
 			} catch (err) {
