@@ -110,6 +110,29 @@ As mentioned in the step-by-step installation guide, there is a settings file. H
 
 The available settings will occasionally change. The bot takes care of this automatically
 
+### Adding and Managing Bridges Through Chat Commands
+
+TediCross now supports managing bridges directly through chat commands:
+
+#### Connecting New Channels
+
+Use the `/connect` command in Telegram to create a new bridge:
+
+1. Type `/connect` in your Telegram chat where the bot is present
+2. Select the Discord channel from the displayed options
+3. Confirm the bridge creation
+4. The bridge will be created and activated immediately
+
+#### Removing Bridges
+
+Use the `/remove` command in Telegram to remove an existing bridge:
+
+1. Type `/remove` directly with bot private chat
+2. Select the bridge you want to remove from the list
+3. Confirm the removal
+4. The bridge will be removed immediately
+
+
 FAQ
 ---
 
