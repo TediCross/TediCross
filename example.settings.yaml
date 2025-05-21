@@ -10,6 +10,10 @@ telegram:
   removeNewlineSpaces: false # Experimental, might break
   suppressFileTooBigMessages: false
   suppressThisIsPrivateBotMessage: false
+  emojiMap: # Map Discord custom emojis to Unicode equivalents
+    sol: "🌞"  # Solana
+    photon: "⚡"  # Photon
+    dexnotpaid: "💱"  # Generic exchange symbol
 discord:
   useNickname: false
   token: DISCORD_BOT_TOKEN_HERE # Discord bot tokens look like this: MjI3MDA1NzIvOBQ2MzAzMiMz.DRf-aw.N0MVYtDxXYPSQew4g2TPqvQve2c

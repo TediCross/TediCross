@@ -1,4 +1,5 @@
 import R from "ramda";
+import { TelegramSettings } from "../settings/TelegramSettings";
 
 /********************
  * Make the helpers *
@@ -76,4 +77,53 @@ export function replaceAtWith(input: string, replacement: string) {
 export function replaceExcessiveSpaces(input: string) {
 	const regex = /[^\S\n]{2,}/g;
 	return input.replace(regex, "");
+}
+
+/**
+ * Map of common Discord custom emoji names to their Unicode equivalents
+ */
+const emojiMap: { [key: string]: string } = {
+	'sol': '🌞',  // Solana
+	'photon': '⚡',  // Photon
+	'dexnotpaid': '💱',  // Generic exchange symbol
+	// Add more mappings as needed
+};
+
+/**
+ * Replaces Discord custom emojis with their Unicode equivalents or removes them
+ *
+ * @param input The string that needs to be processed
+ * @param settings The Telegram settings object containing the emoji map
+ *
+ * @returns Processed string
+ */
+export function replaceDiscordEmojis(input: string, settings: TelegramSettings) {
+	// First unescape the HTML entities since we're working with the processed text
+	input = input.replace(/&lt;:([^:]+):(\d+)&gt;/g, (match, emojiName) => {
+		// If we have a mapping for this emoji, use it
+		if (settings.emojiMap[emojiName]) {
+			return settings.emojiMap[emojiName];
+		}
+		// If no mapping exists, remove the custom emoji
+		return '';
+	});
+	return input;
+}
+
+function htmlCleanup(input: string, settings: TelegramSettings) {
+	// Replace Discord custom emojis first
+	input = replaceDiscordEmojis(input, settings);
+
+	if (settings.useCustomEmojiFilter) {
+		input = removeCustomEmojis(input);
+	}
+
+	if (settings.replaceAtWithHash) {
+		input = replaceAtWith(input, "#");
+	}
+
+	if (settings.replaceExcessiveSpaces) {
+		input = replaceExcessiveSpaces(input);
+	}
+	return input;
 }

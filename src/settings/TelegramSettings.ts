@@ -10,6 +10,7 @@ interface SettingProperties {
 	removeNewlineSpaces: boolean;
 	suppressFileTooBigMessages: boolean;
 	suppressThisIsPrivateBotMessage: boolean;
+	emojiMap?: { [key: string]: string };
 }
 
 /******************************
@@ -29,6 +30,7 @@ export class TelegramSettings {
 	removeNewlineSpaces: boolean;
 	suppressFileTooBigMessages: boolean;
 	suppressThisIsPrivateBotMessage: boolean;
+	emojiMap: { [key: string]: string };
 
 	/**
 	 * Creates a new TelegramSettings object
@@ -44,6 +46,7 @@ export class TelegramSettings {
 	 * @param settings.replaceExcessiveSpaces Whether or not to replace excessive spaces
 	 * @param settings.removeNewlineSpaces Whether or not to remove newline spaces
 	 * @param settings.suppressThisIsPrivateBotMessage Suppress warning in chat when no bridge configured
+	 * @param settings.emojiMap Optional map of Discord emoji names to Unicode equivalents
 	 *
 	 * @throws If the settings object does not validate
 	 */
@@ -83,6 +86,9 @@ export class TelegramSettings {
 
 		/** Whether to suppress warning in chat when no bridge configured */
 		this.suppressThisIsPrivateBotMessage = settings.suppressThisIsPrivateBotMessage;
+
+		/** Map of Discord emoji names to Unicode equivalents */
+		this.emojiMap = settings.emojiMap || {};
 	}
 
 	/** The bot token to use */
@@ -182,7 +188,8 @@ export class TelegramSettings {
 			replaceExcessiveSpaces: false,
 			removeNewlineSpaces: false,
 			suppressFileTooBigMessages: false,
-			suppressThisIsPrivateBotMessage: false
+			suppressThisIsPrivateBotMessage: false,
+			emojiMap: {}
 		};
 	}
 }
