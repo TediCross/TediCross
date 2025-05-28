@@ -104,8 +104,8 @@ export function replaceDiscordEmojis(input: string, settings: TelegramSettings) 
 		if (settings.emojiMap[emojiName]) {
 			return settings.emojiMap[emojiName];
 		}
-		// If no mapping exists, remove the custom emoji
-		return '';
+		// If no mapping exists, return original input
+		return input;
 	});
 	return input;
 }
