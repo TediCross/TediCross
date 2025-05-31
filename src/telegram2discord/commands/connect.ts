@@ -87,18 +87,11 @@ export async function connect(ctx: TediCrossContext) {
 				let connectionDescription: string;
 				if (isFromThread) {
 					// Try to get thread info if possible
-					let threadName = `Thread ${threadId}`;
-					try {
-						// For forum topics, we might be able to get more info
-						// For now, we'll use a generic name
-						threadName = `Thread ${threadId}`;
-					} catch (error) {
-						logger.warn(`Could not get thread name for thread ${threadId}: ${error}`);
-					}
+					let threadName = await getThreadName(ctx, threadId!, logger);
 					
 					userState.telegramThreadName = threadName;
 					connectionDescription = `this Telegram thread (${threadName}) in chat "${chatTitle}"`;
-					logger.info(`Connecting thread ${threadId} in chat ${ctx.chat.id} (${chatTitle})`);
+					logger.info(`Connecting thread ${threadId} (${threadName}) in chat ${ctx.chat.id} (${chatTitle})`);
 				} else {
 					connectionDescription = `this Telegram chat "${chatTitle}"`;
 					logger.info(`Connecting chat ${ctx.chat.id} (${chatTitle})`);
@@ -227,6 +220,56 @@ export async function connect(ctx: TediCrossContext) {
 		logger.error(`Error in connect command: ${err?.message || "Unknown error"}`);
 		await ctx.reply("An error occurred while fetching channels.");
 		userStates.delete(userId);
+	}
+}
+
+/**
+ * Try to get a meaningful thread name from various sources
+ */
+async function getThreadName(ctx: TediCrossContext, threadId: number, logger: any): Promise<string> {
+	try {
+		const message = ctx.message as any;
+		
+		// Method 1: Check if the current message has forum topic info
+		if (message?.forum_topic_created) {
+			const topicName = message.forum_topic_created.name;
+			if (topicName) {
+				logger.info(`Found thread name from current message: ${topicName}`);
+				return topicName;
+			}
+		}
+
+		// Method 2: Check if this is a reply to a forum topic creation message
+		if (message?.reply_to_message) {
+			if (message.reply_to_message.forum_topic_created) {
+				const topicName = message.reply_to_message.forum_topic_created.name;
+				if (topicName) {
+					logger.info(`Found thread name from replied message: ${topicName}`);
+					return topicName;
+				}
+			}
+		}
+
+		// Method 3: For existing bridges, check if we already have a name for this thread
+		const settings = ctx.TediCross.settings;
+		for (const bridge of settings.bridges) {
+			if (bridge.telegram.chatId === ctx.chat!.id && bridge.threadMap) {
+				for (const threadMapping of bridge.threadMap) {
+					if (threadMapping.telegram === threadId && threadMapping.name && !threadMapping.name.startsWith('Thread ')) {
+						logger.info(`Found existing thread name from settings: ${threadMapping.name}`);
+						return threadMapping.name;
+					}
+				}
+			}
+		}
+
+		// Fallback: Use thread ID with a note that the name can be updated
+		logger.info(`Using fallback name for thread ${threadId}`);
+		return `Thread ${threadId}`;
+		
+	} catch (error) {
+		logger.warn(`Error getting thread name for thread ${threadId}: ${error}`);
+		return `Thread ${threadId}`;
 	}
 }
 
@@ -494,6 +537,7 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 					userState.telegramChatId,
 					userState.discordChannelId,
 					userState.isThreadConnection ? userState.telegramThreadId : undefined,
+					userState.isThreadConnection ? userState.telegramThreadName : undefined,
 					logger
 				);
 
@@ -649,6 +693,7 @@ async function createNewBridge(
 	telegramChatId: number,
 	discordChannelId: string,
 	telegramThreadId: number | undefined,
+	telegramThreadName: string | undefined,
 	logger: any
 ): Promise<{ success: boolean; message: string }> {
 	try {
@@ -683,7 +728,7 @@ async function createNewBridge(
 				}
 				
 				existingBridge.threadMap.push({
-					name: `Thread ${telegramThreadId}`,
+					name: telegramThreadName || `Thread ${telegramThreadId}`,
 					telegram: telegramThreadId,
 					discord: discordChannelId
 				});
@@ -711,7 +756,7 @@ async function createNewBridge(
 						useEmbeds: "auto"
 					},
 					threadMap: [{
-						name: `Thread ${telegramThreadId}`,
+						name: telegramThreadName || `Thread ${telegramThreadId}`,
 						telegram: telegramThreadId,
 						discord: discordChannelId
 					}],
