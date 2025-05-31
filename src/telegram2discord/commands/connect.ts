@@ -14,9 +14,12 @@ const userStates = new Map<
 		step: string;
 		telegramChatId?: number;
 		telegramChatName?: string;
+		telegramThreadId?: number;
+		telegramThreadName?: string;
 		discordChannelId?: string;
 		discordChannelName?: string;
 		originalMessageId?: number;
+		isThreadConnection?: boolean;
 	}
 >();
 
@@ -39,14 +42,27 @@ export async function connect(ctx: TediCrossContext) {
 			return;
 		}
 
+		// Detect if command was invoked from a thread
+		const isFromThread = !!(ctx.message as any)?.message_thread_id;
+		const threadId = isFromThread ? (ctx.message as any).message_thread_id : undefined;
+
+		logger.info(`Connect command invoked. Chat ID: ${ctx.chat.id}, Thread ID: ${threadId || 'none'}, Is from thread: ${isFromThread}`);
+
 		// Initialize state for this user
-		let userState = { step: "select_telegram_channel" } as {
+		let userState = { 
+			step: "select_telegram_channel",
+			isThreadConnection: isFromThread,
+			telegramThreadId: threadId
+		} as {
 			step: string;
 			telegramChatId?: number;
 			telegramChatName?: string;
+			telegramThreadId?: number;
+			telegramThreadName?: string;
 			discordChannelId?: string;
 			discordChannelName?: string;
 			originalMessageId?: number;
+			isThreadConnection?: boolean;
 		};
 
 		// Check if command is being used in a group/channel
@@ -66,11 +82,34 @@ export async function connect(ctx: TediCrossContext) {
 				const chatTitle = (chat.type !== 'private'
 					? chat.title
 					: (chat as any).username || `Chat: ${ctx.chat.id}`);
+
+				// Determine what we're connecting
+				let connectionDescription: string;
+				if (isFromThread) {
+					// Try to get thread info if possible
+					let threadName = `Thread ${threadId}`;
+					try {
+						// For forum topics, we might be able to get more info
+						// For now, we'll use a generic name
+						threadName = `Thread ${threadId}`;
+					} catch (error) {
+						logger.warn(`Could not get thread name for thread ${threadId}: ${error}`);
+					}
+					
+					userState.telegramThreadName = threadName;
+					connectionDescription = `this Telegram thread (${threadName}) in chat "${chatTitle}"`;
+					logger.info(`Connecting thread ${threadId} in chat ${ctx.chat.id} (${chatTitle})`);
+				} else {
+					connectionDescription = `this Telegram chat "${chatTitle}"`;
+					logger.info(`Connecting chat ${ctx.chat.id} (${chatTitle})`);
+				}
+
 				// Use the current chat directly
 				logger.info(`Using current chat for connection: ${ctx.chat.id} (${chatTitle})`);
 
 				// Skip to Discord channel selection
 				userState = {
+					...userState,
 					step: "select_discord_channel",
 					telegramChatId: ctx.chat.id,
 					telegramChatName: chatTitle
@@ -97,7 +136,7 @@ export async function connect(ctx: TediCrossContext) {
 
 				// Store the original message for later reference
 				const sentMessage = (await ctx.reply(
-					`Using this Telegram chat for connection.\nNow select a Discord channel:`,
+					`Using ${connectionDescription} for connection.\nNow select a Discord channel:`,
 					{ reply_markup: { inline_keyboard: keyboard } }
 				)) as Message.TextMessage;
 
@@ -134,7 +173,11 @@ export async function connect(ctx: TediCrossContext) {
 			}
 		]);
 
-		await ctx.reply("Select a Telegram channel to connect:", { reply_markup: { inline_keyboard: keyboard } });
+		const promptMessage = isFromThread 
+			? "Select a Telegram channel to connect this thread to:" 
+			: "Select a Telegram channel to connect:";
+
+		await ctx.reply(promptMessage, { reply_markup: { inline_keyboard: keyboard } });
 	} catch (err: any) {
 		logger.error(`Error in connect command: ${err?.message || "Unknown error"}`);
 		await ctx.reply("An error occurred while fetching channels.");
@@ -257,6 +300,11 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 				// Always answer the callback query first
 				await ctx.answerCbQuery();
 
+				const connectionType = userState.isThreadConnection ? "thread" : "channel";
+				const selectionMessage = userState.isThreadConnection 
+					? `Selected Telegram channel: ${userState.telegramChatName} (Thread: ${userState.telegramThreadName || userState.telegramThreadId})\nNow select a Discord channel:`
+					: `Selected Telegram channel: ${userState.telegramChatName}\nNow select a Discord channel:`;
+
 				try {
 					// Edit the message if we have a message to edit
 					if (userState.originalMessageId) {
@@ -264,12 +312,12 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 							ctx.chat?.id,
 							userState.originalMessageId,
 							undefined,
-							`Selected Telegram channel: ${userState.telegramChatName}\nNow select a Discord channel:`,
+							selectionMessage,
 							{ reply_markup: { inline_keyboard: keyboard } }
 						);
 					} else {
 						await ctx.editMessageText(
-							`Selected Telegram channel: ${userState.telegramChatName}\nNow select a Discord channel:`,
+							selectionMessage,
 							{ reply_markup: { inline_keyboard: keyboard } }
 						);
 					}
@@ -277,7 +325,7 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 					logger.error(`Error editing message: ${editError.message}`);
 					// Try sending a new message instead
 					await ctx.reply(
-						`Selected Telegram channel: ${userState.telegramChatName}\nNow select a Discord channel:`,
+						selectionMessage,
 						{ reply_markup: { inline_keyboard: keyboard } }
 					);
 				}
@@ -314,6 +362,11 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 				// Always answer the callback query first
 				await ctx.answerCbQuery();
 
+				const connectionType = userState.isThreadConnection ? "Thread Bridge" : "Channel Bridge";
+				const confirmationMessage = userState.isThreadConnection
+					? `${connectionType} Configuration:\nTelegram: ${userState.telegramChatName} (Thread: ${userState.telegramThreadName || userState.telegramThreadId})\nDiscord: ${userState.discordChannelName}\n\nConfirm connection?`
+					: `${connectionType} Configuration:\nTelegram: ${userState.telegramChatName}\nDiscord: ${userState.discordChannelName}\n\nConfirm connection?`;
+
 				try {
 					// Edit the message if we have a message to edit
 					if (userState.originalMessageId) {
@@ -321,12 +374,12 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 							ctx.chat?.id,
 							userState.originalMessageId,
 							undefined,
-							`Bridge Configuration:\nTelegram: ${userState.telegramChatName}\nDiscord: ${userState.discordChannelName}\n\nConfirm connection?`,
+							confirmationMessage,
 							{ reply_markup: { inline_keyboard: keyboard } }
 						);
 					} else {
 						await ctx.editMessageText(
-							`Bridge Configuration:\nTelegram: ${userState.telegramChatName}\nDiscord: ${userState.discordChannelName}\n\nConfirm connection?`,
+							confirmationMessage,
 							{ reply_markup: { inline_keyboard: keyboard } }
 						);
 					}
@@ -334,7 +387,7 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 					logger.error(`Error editing message: ${editError.message}`);
 					// Try sending a new message instead
 					await ctx.reply(
-						`Bridge Configuration:\nTelegram: ${userState.telegramChatName}\nDiscord: ${userState.discordChannelName}\n\nConfirm connection?`,
+						confirmationMessage,
 						{ reply_markup: { inline_keyboard: keyboard } }
 					);
 				}
@@ -367,6 +420,7 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 					settings,
 					userState.telegramChatId,
 					userState.discordChannelId,
+					userState.isThreadConnection ? userState.telegramThreadId : undefined,
 					logger
 				);
 
@@ -376,7 +430,10 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 				if (bridgeResult.success) {
 					logger.info(`Bridge created successfully`);
 					try {
-						const successMessage = `Bridge created successfully! Telegram channel "${userState.telegramChatName}" is now connected to Discord channel "${userState.discordChannelName}"`;
+						const connectionType = userState.isThreadConnection ? "Thread bridge" : "Bridge";
+						const successMessage = userState.isThreadConnection
+							? `${connectionType} created successfully! Telegram thread "${userState.telegramThreadName || userState.telegramThreadId}" in channel "${userState.telegramChatName}" is now connected to Discord channel "${userState.discordChannelName}"`
+							: `${connectionType} created successfully! Telegram channel "${userState.telegramChatName}" is now connected to Discord channel "${userState.discordChannelName}"`;
 
 						// Edit the message if we have a message to edit
 						if (userState.originalMessageId) {
@@ -390,9 +447,14 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 
 							// If we're in a group/channel, send an additional confirmation message
 							if (isInOriginalChat) {
+								const chatConfirmMessage = userState.isThreadConnection
+									? `✅ This thread is now connected to Discord channel "${userState.discordChannelName}".`
+									: `✅ This channel is now connected to Discord channel "${userState.discordChannelName}".`;
+								
 								await ctx.telegram.sendMessage(
 									userState.telegramChatId,
-									`✅ This channel is now connected to Discord channel "${userState.discordChannelName}".`
+									chatConfirmMessage,
+									userState.isThreadConnection ? { message_thread_id: userState.telegramThreadId } : {}
 								);
 							}
 						} else {
@@ -401,9 +463,12 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 					} catch (editError: any) {
 						logger.error(`Error editing message: ${editError.message}`);
 						// Try sending a new message instead
-						await ctx.reply(
-							`Bridge created successfully! Telegram channel "${userState.telegramChatName}" is now connected to Discord channel "${userState.discordChannelName}"`
-						);
+						const connectionType = userState.isThreadConnection ? "Thread bridge" : "Bridge";
+						const successMessage = userState.isThreadConnection
+							? `${connectionType} created successfully! Telegram thread "${userState.telegramThreadName || userState.telegramThreadId}" in channel "${userState.telegramChatName}" is now connected to Discord channel "${userState.discordChannelName}"`
+							: `${connectionType} created successfully! Telegram channel "${userState.telegramChatName}" is now connected to Discord channel "${userState.discordChannelName}"`;
+						
+						await ctx.reply(successMessage);
 					}
 
 					// Reload bridges to apply changes immediately
@@ -510,44 +575,107 @@ async function createNewBridge(
 	settings: Settings,
 	telegramChatId: number,
 	discordChannelId: string,
+	telegramThreadId: number | undefined,
 	logger: any
 ): Promise<{ success: boolean; message: string }> {
 	try {
 		// Check if bridge already exists
-		const bridgeExists = settings.bridges.some(
-			bridge => bridge.telegram.chatId === telegramChatId && bridge.discord.channelId === discordChannelId
-		);
+		const bridgeExists = settings.bridges.some(bridge => {
+			if (telegramThreadId) {
+				// For thread connections, check if there's already a thread mapping
+				return bridge.telegram.chatId === telegramChatId && 
+					   bridge.threadMap && 
+					   bridge.threadMap.some((threadMap: any) => 
+						   threadMap.telegram === telegramThreadId && threadMap.discord === discordChannelId
+					   );
+			} else {
+				// For regular channel connections
+				return bridge.telegram.chatId === telegramChatId && bridge.discord.channelId === discordChannelId;
+			}
+		});
 
 		if (bridgeExists) {
-			return { success: false, message: "Bridge already exists between these channels" };
+			const connectionType = telegramThreadId ? "Thread bridge" : "Bridge";
+			return { success: false, message: `${connectionType} already exists between these channels` };
 		}
 
-		// Create new bridge
-		const newBridge: any = {
-			name: `Bridge ${Math.floor(Math.random() * 10000)}`,
-			direction: "both",
-			telegram: {
-				chatId: telegramChatId,
-				relayJoinMessages: true,
-				relayLeaveMessages: true,
-				sendUsernames: true,
-				crossDeleteOnDiscord: true
-			},
-			discord: {
-				channelId: discordChannelId,
-				relayJoinMessages: true,
-				relayLeaveMessages: true,
-				sendUsernames: true,
-				crossDeleteOnTelegram: true,
-				disableWebPreviewOnTelegram: false,
-				useEmbeds: "auto"
-			},
-			threadMap: [],
-			tgThread: undefined
-		};
+		if (telegramThreadId) {
+			// Handle thread connection - add to existing bridge or create new one
+			let existingBridge = settings.bridges.find(bridge => bridge.telegram.chatId === telegramChatId);
+			
+			if (existingBridge) {
+				// Add thread mapping to existing bridge
+				if (!existingBridge.threadMap) {
+					existingBridge.threadMap = [];
+				}
+				
+				existingBridge.threadMap.push({
+					name: `Thread ${telegramThreadId}`,
+					telegram: telegramThreadId,
+					discord: discordChannelId
+				});
+				
+				logger.info(`Added thread mapping to existing bridge: Telegram thread ${telegramThreadId} -> Discord channel ${discordChannelId}`);
+			} else {
+				// Create new bridge with thread mapping
+				const newBridge: any = {
+					name: `Bridge ${Math.floor(Math.random() * 10000)}`,
+					direction: "both",
+					telegram: {
+						chatId: telegramChatId,
+						relayJoinMessages: true,
+						relayLeaveMessages: true,
+						sendUsernames: true,
+						crossDeleteOnDiscord: true
+					},
+					discord: {
+						channelId: discordChannelId, // This will be the default channel, but thread will override
+						relayJoinMessages: true,
+						relayLeaveMessages: true,
+						sendUsernames: true,
+						crossDeleteOnTelegram: true,
+						disableWebPreviewOnTelegram: false,
+						useEmbeds: "auto"
+					},
+					threadMap: [{
+						name: `Thread ${telegramThreadId}`,
+						telegram: telegramThreadId,
+						discord: discordChannelId
+					}],
+					tgThread: undefined
+				};
 
-		// Add new bridge to settings
-		settings.bridges.push(newBridge);
+				settings.bridges.push(newBridge);
+				logger.info(`Created new bridge with thread mapping: Telegram thread ${telegramThreadId} -> Discord channel ${discordChannelId}`);
+			}
+		} else {
+			// Create regular bridge (existing logic)
+			const newBridge: any = {
+				name: `Bridge ${Math.floor(Math.random() * 10000)}`,
+				direction: "both",
+				telegram: {
+					chatId: telegramChatId,
+					relayJoinMessages: true,
+					relayLeaveMessages: true,
+					sendUsernames: true,
+					crossDeleteOnDiscord: true
+				},
+				discord: {
+					channelId: discordChannelId,
+					relayJoinMessages: true,
+					relayLeaveMessages: true,
+					sendUsernames: true,
+					crossDeleteOnTelegram: true,
+					disableWebPreviewOnTelegram: false,
+					useEmbeds: "auto"
+				},
+				threadMap: [],
+				tgThread: undefined
+			};
+
+			settings.bridges.push(newBridge);
+			logger.info(`Created new regular bridge: Telegram chat ${telegramChatId} -> Discord channel ${discordChannelId}`);
+		}
 
 		// Save settings to file
 		const settingsPath = path.join(__dirname, "..", "..", "..", "settings.yaml");
@@ -556,7 +684,8 @@ async function createNewBridge(
 		const notepadFriendlyYaml = yaml.replace(/\n/g, "\r\n");
 		writeFileSync(settingsPath, notepadFriendlyYaml);
 
-		return { success: true, message: "Bridge created successfully" };
+		const connectionType = telegramThreadId ? "Thread bridge" : "Bridge";
+		return { success: true, message: `${connectionType} created successfully` };
 	} catch (err: any) {
 		logger.error(`Error creating bridge: ${err?.message || "Unknown error"}`);
 		return { success: false, message: err?.message || "Unknown error" };

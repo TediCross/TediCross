@@ -114,14 +114,31 @@ The available settings will occasionally change. The bot takes care of this auto
 
 TediCross now supports managing bridges directly through chat commands:
 
-#### Connecting New Channels
+#### Connecting New Channels and Threads
 
 Use the `/connect` command in Telegram to create a new bridge:
 
+**For Channel Bridges:**
 1. Type `/connect` in your Telegram chat where the bot is present
 2. Select the Discord channel from the displayed options
 3. Confirm the bridge creation
 4. The bridge will be created and activated immediately
+
+**For Thread Bridges (NEW):**
+1. Navigate to the specific Telegram thread (topic) you want to connect
+2. Type `/connect` **within the thread**
+3. The bot will automatically detect you're in a thread and adjust the process
+4. Select the Discord channel to connect this thread to
+5. Confirm the thread bridge creation
+6. The thread bridge will be created and activated immediately
+
+**Thread Connection Features:**
+- Automatically detects if `/connect` is run from a thread vs. regular channel
+- Creates thread-specific bridges that work independently of channel bridges
+- Can add thread mappings to existing bridges or create new ones
+- Supports connecting multiple threads from the same channel to different Discord channels
+
+For detailed information about thread connections, see [THREAD_CONNECTION_GUIDE.md](THREAD_CONNECTION_GUIDE.md).
 
 #### Removing Bridges
 
