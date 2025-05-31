@@ -153,23 +153,47 @@ export async function remove(ctx: TediCrossContext) {
 			return;
 		}
 
-		// Create inline keyboard with removable items
-		const keyboard = removableItems.map(item => {
+		// Create a numbered list message
+		let listMessage = "**Available items to remove:**\n\n";
+		removableItems.forEach((item, index) => {
+			const number = index + 1;
+			if (item.type === 'bridge') {
+				listMessage += `${number}. 🌉 **Bridge: ${item.bridgeName}**\n`;
+				listMessage += `   ${item.telegramChatName} ↔ ${item.discordChannelName}\n\n`;
+			} else {
+				listMessage += `${number}. 🧵 **Thread: ${item.displayName.replace('🧵 Thread: ', '')}**\n`;
+				listMessage += `   Thread ${item.threadId} in ${item.telegramChatName} → ${item.discordChannelName}\n\n`;
+			}
+		});
+
+		listMessage += "Select the number of the item you want to remove:";
+
+		// Create inline keyboard with just numbers (much shorter)
+		const keyboard: any[][] = [];
+		let currentRow: any[] = [];
+		
+		removableItems.forEach((item, index) => {
+			const number = index + 1;
 			const itemId = item.type === 'bridge' 
 				? `bridge:${item.bridgeName}`
 				: `thread:${item.bridgeName}:${item.threadIndex}`;
 			
-			const description = item.type === 'bridge'
-				? `(${item.telegramChatName} ↔ ${item.discordChannelName})`
-				: `(Thread ${item.threadId} in ${item.telegramChatName} → ${item.discordChannelName})`;
-			
-			return [{
-				text: `${item.displayName} ${description}`,
+			currentRow.push({
+				text: `${number}`,
 				callback_data: `remove_item:${itemId}`
-			}];
+			});
+
+			// Create rows of 5 buttons each
+			if (currentRow.length === 5 || index === removableItems.length - 1) {
+				keyboard.push([...currentRow]);
+				currentRow = [];
+			}
 		});
 
-		await ctx.reply("Select a bridge or thread mapping to remove:", { reply_markup: { inline_keyboard: keyboard } });
+		await ctx.reply(listMessage, { 
+			reply_markup: { inline_keyboard: keyboard },
+			parse_mode: 'Markdown'
+		});
 	} catch (err: any) {
 		logger.error(`Error in remove command: ${err?.message || "Unknown error"}`);
 		await ctx.reply("An error occurred while fetching bridges.");

@@ -126,18 +126,40 @@ export async function connect(ctx: TediCrossContext) {
 					return;
 				}
 
-				// Create inline keyboard with Discord channels
-				const keyboard = discordChannels.map(channel => [
-					{
-						text: channel.name,
+				// Create a numbered list message for Discord channels
+				let channelListMessage = "**Available Discord channels:**\n\n";
+				discordChannels.forEach((channel, index) => {
+					const number = index + 1;
+					channelListMessage += `${number}. ${channel.name}\n`;
+				});
+
+				channelListMessage += `\nUsing ${connectionDescription} for connection.\nSelect the number of the Discord channel:`;
+
+				// Create inline keyboard with just numbers (much shorter)
+				const keyboard: any[][] = [];
+				let currentRow: any[] = [];
+				
+				discordChannels.forEach((channel, index) => {
+					const number = index + 1;
+					currentRow.push({
+						text: `${number}`,
 						callback_data: `dc_channel:${channel.id}`
+					});
+
+					// Create rows of 5 buttons each
+					if (currentRow.length === 5 || index === discordChannels.length - 1) {
+						keyboard.push([...currentRow]);
+						currentRow = [];
 					}
-				]);
+				});
 
 				// Store the original message for later reference
 				const sentMessage = (await ctx.reply(
-					`Using ${connectionDescription} for connection.\nNow select a Discord channel:`,
-					{ reply_markup: { inline_keyboard: keyboard } }
+					channelListMessage,
+					{ 
+						reply_markup: { inline_keyboard: keyboard },
+						parse_mode: 'Markdown'
+					}
 				)) as Message.TextMessage;
 
 				// Store the message ID in user state for later reference
@@ -165,19 +187,42 @@ export async function connect(ctx: TediCrossContext) {
 			return;
 		}
 
-		// Create inline keyboard with available Telegram channels
-		const keyboard = telegramChannels.map(channel => [
-			{
-				text: (channel as any).title || `Chat: ${channel.id}`,
-				callback_data: `tg_channel:${channel.id}`
-			}
-		]);
+		// Create a numbered list message for Telegram channels
+		let channelListMessage = "**Available Telegram channels:**\n\n";
+		telegramChannels.forEach((channel, index) => {
+			const number = index + 1;
+			const channelName = (channel as any).title || `Chat: ${channel.id}`;
+			channelListMessage += `${number}. ${channelName}\n`;
+		});
 
 		const promptMessage = isFromThread 
 			? "Select a Telegram channel to connect this thread to:" 
 			: "Select a Telegram channel to connect:";
 
-		await ctx.reply(promptMessage, { reply_markup: { inline_keyboard: keyboard } });
+		channelListMessage += `\n${promptMessage}`;
+
+		// Create inline keyboard with just numbers (much shorter)
+		const keyboard: any[][] = [];
+		let currentRow: any[] = [];
+		
+		telegramChannels.forEach((channel, index) => {
+			const number = index + 1;
+			currentRow.push({
+				text: `${number}`,
+				callback_data: `tg_channel:${channel.id}`
+			});
+
+			// Create rows of 5 buttons each
+			if (currentRow.length === 5 || index === telegramChannels.length - 1) {
+				keyboard.push([...currentRow]);
+				currentRow = [];
+			}
+		});
+
+		await ctx.reply(channelListMessage, { 
+			reply_markup: { inline_keyboard: keyboard },
+			parse_mode: 'Markdown'
+		});
 	} catch (err: any) {
 		logger.error(`Error in connect command: ${err?.message || "Unknown error"}`);
 		await ctx.reply("An error occurred while fetching channels.");
@@ -289,21 +334,40 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 					return;
 				}
 
-				// Create inline keyboard with Discord channels
-				const keyboard = discordChannels.map(channel => [
-					{
-						text: channel.name,
+				// Create a numbered list message for Discord channels
+				let channelListMessage = "**Available Discord channels:**\n\n";
+				discordChannels.forEach((channel, index) => {
+					const number = index + 1;
+					channelListMessage += `${number}. ${channel.name}\n`;
+				});
+
+				const connectionType = userState.isThreadConnection ? "thread" : "channel";
+				const selectionPrefix = userState.isThreadConnection 
+					? `Selected Telegram channel: ${userState.telegramChatName} (Thread: ${userState.telegramThreadName || userState.telegramThreadId})\n\n`
+					: `Selected Telegram channel: ${userState.telegramChatName}\n\n`;
+
+				channelListMessage = selectionPrefix + channelListMessage + "\nSelect the number of the Discord channel:";
+
+				// Create inline keyboard with just numbers (much shorter)
+				const keyboard: any[][] = [];
+				let currentRow: any[] = [];
+				
+				discordChannels.forEach((channel, index) => {
+					const number = index + 1;
+					currentRow.push({
+						text: `${number}`,
 						callback_data: `dc_channel:${channel.id}`
+					});
+
+					// Create rows of 5 buttons each
+					if (currentRow.length === 5 || index === discordChannels.length - 1) {
+						keyboard.push([...currentRow]);
+						currentRow = [];
 					}
-				]);
+				});
 
 				// Always answer the callback query first
 				await ctx.answerCbQuery();
-
-				const connectionType = userState.isThreadConnection ? "thread" : "channel";
-				const selectionMessage = userState.isThreadConnection 
-					? `Selected Telegram channel: ${userState.telegramChatName} (Thread: ${userState.telegramThreadName || userState.telegramThreadId})\nNow select a Discord channel:`
-					: `Selected Telegram channel: ${userState.telegramChatName}\nNow select a Discord channel:`;
 
 				try {
 					// Edit the message if we have a message to edit
@@ -312,21 +376,30 @@ export async function processConnectCallback(ctx: TediCrossContext) {
 							ctx.chat?.id,
 							userState.originalMessageId,
 							undefined,
-							selectionMessage,
-							{ reply_markup: { inline_keyboard: keyboard } }
+							channelListMessage,
+							{ 
+								reply_markup: { inline_keyboard: keyboard },
+								parse_mode: 'Markdown'
+							}
 						);
 					} else {
 						await ctx.editMessageText(
-							selectionMessage,
-							{ reply_markup: { inline_keyboard: keyboard } }
+							channelListMessage,
+							{ 
+								reply_markup: { inline_keyboard: keyboard },
+								parse_mode: 'Markdown'
+							}
 						);
 					}
 				} catch (editError: any) {
 					logger.error(`Error editing message: ${editError.message}`);
 					// Try sending a new message instead
 					await ctx.reply(
-						selectionMessage,
-						{ reply_markup: { inline_keyboard: keyboard } }
+						channelListMessage,
+						{ 
+							reply_markup: { inline_keyboard: keyboard },
+							parse_mode: 'Markdown'
+						}
 					);
 				}
 			} catch (telegramError: any) {
