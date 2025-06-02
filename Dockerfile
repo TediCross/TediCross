@@ -1,4 +1,4 @@
-FROM node:22.9-alpine3.20
+FROM node:24.1-alpine3.20
 
 RUN apk add --no-cache python3 g++ make
 
