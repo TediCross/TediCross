@@ -205,7 +205,14 @@ function addMessageId(ctx: TediCrossContext, next: () => void) {
  * @param next Function to pass control to next middleware
  */
 function addBridgesToContext(ctx: TediCrossContext, next: () => void) {
-	ctx.tediCross.bridges = ctx.TediCross.bridgeMap.fromTelegramChatId(ctx.tediCross.message.chat.id);
+	// Get the thread ID from the message if it exists
+	const threadId = ctx.tediCross.message?.message_thread_id;
+	
+	// Use the new method that properly filters bridges based on thread ID
+	ctx.tediCross.bridges = ctx.TediCross.bridgeMap.fromTelegramChatIdWithThread(
+		ctx.tediCross.message.chat.id,
+		threadId
+	);
 
 	next();
 }
@@ -270,17 +277,20 @@ function removeBridgesIgnoringLeaveMessages(ctx: TediCrossContext, next: () => v
 }
 
 /**
- * Replies to the message telling the user this is a private bot if there are no bridges on the tediCross context
+ * Replies to the message telling the user this is a private bot if there are no bridges configured for this chat
  *
  * @param ctx The Telegraf context
  * @param ctx.reply The context's reply function
  * @param next Function to pass control to next middleware
  */
 function informThisIsPrivateBot(ctx: TediCrossContext, next: () => void) {
+	// Check if there are ANY bridges for this chat (including thread-specific ones)
+	// Don't use ctx.tediCross.bridges as it's filtered for the current message
+	const allBridgesForChat = ctx.TediCross.bridgeMap.fromTelegramChatId(ctx.tediCross.message.chat.id);
+	
 	R.ifElse(
-		// If there are no bridges
-		//@ts-ignore
-		R.compose(R.isEmpty, R.path(["tediCross", "bridges"])),
+		// If there are no bridges configured for this chat at all
+		(ctx: TediCrossContext) => R.isEmpty(allBridgesForChat),
 		// Inform the user, if enough time has passed since last time
 		R.when<TediCrossContext, any>(
 			// When there is no timer for the chat in the antispam map
@@ -316,7 +326,7 @@ function informThisIsPrivateBot(ctx: TediCrossContext, next: () => void) {
 			}
 		),
 		// Otherwise go to next middleware
-		next
+		() => next()
 	)(ctx);
 }
 

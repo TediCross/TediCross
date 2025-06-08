@@ -18,6 +18,9 @@ import {
 	channelChatInfo
 } from "./endwares";
 import { BotCommand, ChatAdministratorRights } from "telegraf/types";
+import { connect } from "./commands/connect";
+import { remove } from "./commands/remove";
+import { processCallback } from "./commands/callbacks";
 
 /***********
  * Helpers *
@@ -99,17 +102,32 @@ export function setup(
 				{
 					command: "threadinfo",
 					description: "Get info about the thread"
+				},
+				{
+					command: "connect",
+					description: "Connect channels between Telegram and Discord"
+				},
+				{
+					command: "remove",
+					description: "Remove an existing bridge"
 				}
 			];
 
-			// Set the commands
-			tgBot.telegram.setMyCommands(myCommands, { scope: { type: "default" } }).then(() => {
+			// Set the commands for all scopes: default, groups, and channels
+			Promise.all([
+				// Default scope (private chats)
+				tgBot.telegram.setMyCommands(myCommands, { scope: { type: "default" } }),
+				// Group chats
+				tgBot.telegram.setMyCommands(myCommands, { scope: { type: "all_group_chats" } }),
+				// Channel chats
+				tgBot.telegram.setMyCommands(myCommands, { scope: { type: "all_chat_administrators" } })
+			]).then(() => {
 				// wait 5 seconds to make sure the commands are set
 				setTimeout(() => {
 					tgBot.telegram.getMyCommands().then((commands: BotCommand[]) => {
 						logger.info("Telegram commands:", commands);
-						if (commands.length < 2) {
-							throw new Error("Telegram: Expected 2 commands, got " + commands.length);
+						if (commands.length < 4) {
+							throw new Error("Telegram: Expected 4 commands, got " + commands.length);
 						}
 					});
 				}, 5000);
@@ -159,29 +177,66 @@ export function setup(
 				groupIdMap
 			};
 
+			const skipCallbackQueries = (middlewareFn: any) => {
+				return (ctx: any, next: () => void) => {
+					// Skip for callback queries
+					if (ctx.callbackQuery) {
+						next();
+						return;
+					}
+
+					// Skip if no message
+					// if (!ctx.tediCross || !ctx.tediCross.message) {
+					// 	next();
+					// 	return;
+					// }
+
+					// Process the middleware function
+					return middlewareFn(ctx, next);
+				};
+			};
+
 			// Apply middlewares and endwares
 			tgBot.command("chatinfo", chatinfo);
 			tgBot.command("threadinfo", threadinfo);
+			tgBot.command("connect", connect as any);
+			tgBot.command("remove", remove as any);
 			tgBot.use(channelChatInfo as any);
 			tgBot.use(middlewares.addTediCrossObj);
 			tgBot.use(middlewares.addMessageObj);
-			tgBot.use(middlewares.addMessageId);
-			tgBot.use(middlewares.addBridgesToContext);
-			tgBot.use(middlewares.informThisIsPrivateBot);
-			tgBot.use(middlewares.removeD2TBridges);
+			tgBot.use(skipCallbackQueries(middlewares.addMessageId));
+			tgBot.use(skipCallbackQueries(middlewares.addBridgesToContext));
+			tgBot.use(skipCallbackQueries(middlewares.informThisIsPrivateBot));
+			tgBot.use(skipCallbackQueries(middlewares.removeD2TBridges));
+
 			//@ts-ignore telegram expacts a second parameter
 			//tgBot.command(middlewares.removeBridgesIgnoringCommands);
 			tgBot.on("new_chat_members", middlewares.removeBridgesIgnoringJoinMessages);
 			tgBot.on("left_chat_member", middlewares.removeBridgesIgnoringLeaveMessages);
 			tgBot.on("new_chat_members", newChatMembers);
 			tgBot.on("left_chat_member", leftChatMember);
-			tgBot.use(middlewares.addFromObj);
-			tgBot.use(middlewares.addReplyObj);
-			tgBot.use(middlewares.addForwardFrom);
-			tgBot.use(middlewares.addTextObj);
-			tgBot.use(middlewares.addFileObj);
-			tgBot.use(middlewares.addFileLink);
-			tgBot.use(middlewares.addPreparedObj);
+			tgBot.use(skipCallbackQueries(middlewares.addFromObj));
+			tgBot.use(skipCallbackQueries(middlewares.addReplyObj));
+			tgBot.use(skipCallbackQueries(middlewares.addForwardFrom));
+			tgBot.use(skipCallbackQueries(middlewares.addTextObj));
+			tgBot.use(skipCallbackQueries(middlewares.addFileObj));
+			tgBot.use(skipCallbackQueries(middlewares.addFileLink));
+			tgBot.use(skipCallbackQueries(middlewares.addPreparedObj));
+
+			// Add callback query handler for connect and remove commands
+			tgBot.on("callback_query", async (ctx: any) => {
+				try {
+					await processCallback(ctx);
+				} catch (error: any) {
+					logger.error(`Error in callback query handler: ${error.message}`);
+					logger.error(error.stack);
+					try {
+						await ctx.answerCbQuery("An error occurred");
+					} catch (err) {
+						// Ignore error answering callback query
+					}
+				}
+			});
 
 			// Apply endwares
 			tgBot.on(["edited_message", "edited_channel_post"], handleEdits);
