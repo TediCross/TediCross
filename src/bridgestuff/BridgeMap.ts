@@ -52,6 +52,40 @@ export class BridgeMap {
 	}
 
 	/**
+	 * Gets bridges from Telegram chat ID, properly filtering by thread ID
+	 *
+	 * @param telegramChatId ID of the Telegram chat to get the bridge for
+	 * @param threadId Optional thread ID to filter bridges by
+	 *
+	 * @returns The bridges corresponding to the chat ID and thread ID
+	 */
+	fromTelegramChatIdWithThread(telegramChatId: number, threadId?: number) {
+		const allBridges = R.defaultTo([], this._telegramToBridge.get(telegramChatId));
+		
+		if (!threadId) {
+			// No thread ID - only return bridges without thread mappings or bridges that don't restrict to specific threads
+			return allBridges.filter(bridge => {
+				// If bridge has no threadMap, it handles all messages from the chat
+				if (!bridge.threadMap || bridge.threadMap.length === 0) {
+					return true;
+				}
+				// If bridge has threadMap, it only handles messages from mapped threads, not general chat messages
+				return false;
+			});
+		} else {
+			// Thread ID provided - only return bridges that handle this specific thread
+			return allBridges.filter(bridge => {
+				// If bridge has no threadMap, it doesn't handle thread messages
+				if (!bridge.threadMap || bridge.threadMap.length === 0) {
+					return false;
+				}
+				// Check if any thread mapping matches this thread ID
+				return bridge.threadMap.some(threadMap => threadMap.telegram === threadId);
+			});
+		}
+	}
+
+	/**
 	 * Gets a bridge from Discord channel ID
 	 *
 	 * @param discordChannelId ID of the Discord channel to get the bridge for
