@@ -206,7 +206,7 @@ export function setup(
 			tgBot.use(middlewares.addMessageObj);
 			tgBot.use(skipCallbackQueries(middlewares.addMessageId));
 			tgBot.use(skipCallbackQueries(middlewares.addBridgesToContext));
-			tgBot.use(middlewares.informThisIsPrivateBot);
+			tgBot.use(skipCallbackQueries(middlewares.informThisIsPrivateBot));
 			tgBot.use(skipCallbackQueries(middlewares.removeD2TBridges));
 
 			//@ts-ignore telegram expacts a second parameter
