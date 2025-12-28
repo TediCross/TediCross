@@ -16,11 +16,16 @@ import { TelegramSettings } from "../settings/TelegramSettings";
  */
 export function handleEmbed(embed: Embed, senderName: string, settings: TelegramSettings) {
 	// Construct the text to send
-	let text = `<b>${senderName}</b>\n`;
+	let text = "";
+	
+	// Only add sender name if provided (for backward compatibility)
+	if (senderName) {
+		text = `<b>${senderName}</b>\n`;
+	}
 
 	// Handle the title
-	if (embed.title !== undefined) {
-		const hasUrl = embed.url !== undefined;
+	if (embed.title !== undefined && embed.title !== null) {
+		const hasUrl = embed.url !== undefined && embed.url !== null;
 		if (hasUrl) {
 			text += `<a href="${embed.url}">`;
 		}
@@ -32,18 +37,24 @@ export function handleEmbed(embed: Embed, senderName: string, settings: Telegram
 	}
 
 	// Handle the description
-	if (embed.description !== undefined) {
-		text += md2html(embed.description!, settings) + "\n";
+	if (embed.description !== undefined && embed.description !== null && embed.description.trim() !== "") {
+		text += md2html(embed.description, settings);
 	}
 
 	// Handle the fields
-	embed.fields.forEach(field => {
-		text += `\n<b>${field.name}</b>\n` + md2html(field.value, settings) + "\n";
-	});
+	if (embed.fields && embed.fields.length > 0) {
+		embed.fields.forEach(field => {
+			if (field.name && field.value) {
+				text += field.name ? `\n<b>${field.name}</b>\n` : "\n";
+				text += md2html(field.value, settings);
+			}
+		});
+	}
 
 	// Handle the author part
-	if (embed.author !== null) {
-		text += "\n<b>Author</b>\n" + embed.author.name + "\n";
+	if (embed.author !== null && embed.author?.name) {
+		text += text.length > 0 ? "\n\n<b>Author</b>\n" : "<b>Author</b>\n";
+		text += embed.author.name;
 	}
 
 	// All done!
