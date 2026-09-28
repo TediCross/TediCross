@@ -335,20 +335,20 @@ export const relayMessage = (ctx: TediCrossContext) => {
 
 				// Voice messages cannot include content or embeds. Keep sender/caption text
 				// as a regular companion message, then attach the audio as a voice message.
-				let voiceReply = messageToReply;
 				if (messageText.trim()) {
 					const captionPayload =
 						prepared.bridge.telegram.messageStyle === "componentsV2"
 							? await createComponentsV2Message(ctx, prepared, false)
 							: messageText;
-					voiceReply = await sendToDiscord(captionPayload);
+					await sendToDiscord(captionPayload);
 				}
 				const voiceAttachment = new AttachmentBuilder(audio, { name: prepared.file.name })
 					.setDuration(prepared.voiceDuration)
 					.setWaveform(waveform.toString("base64"));
-				const voiceMessage = voiceReply
-					? await voiceReply.reply({ files: [voiceAttachment], flags: [MessageFlags.IsVoiceMessage] })
-					: await channel.send({ files: [voiceAttachment], flags: [MessageFlags.IsVoiceMessage] });
+				const voiceMessage = await channel.send({
+					files: [voiceAttachment],
+					flags: [MessageFlags.IsVoiceMessage]
+				});
 				discordMessages.push(voiceMessage);
 				await ctx.TediCross.messageMap.replace(
 					MessageMap.TELEGRAM_TO_DISCORD,

@@ -1,4 +1,13 @@
-import { AttachmentBuilder, MessageFlags, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder } from "discord.js";
+import {
+	AttachmentBuilder,
+	FileBuilder,
+	MediaGalleryBuilder,
+	MediaGalleryItemBuilder,
+	MessageFlags,
+	SectionBuilder,
+	TextDisplayBuilder,
+	ThumbnailBuilder
+} from "discord.js";
 
 const avatarCache = new Map<string, { avatar: Buffer | null; expiresAt: number }>();
 const avatarFilename = "telegram-sender-avatar.jpg";
@@ -54,7 +63,7 @@ export async function createComponentsV2Message(ctx: any, prepared: any, include
 	const content = prepared.text || "\u200b";
 	const header = prepared.header || (prepared.grouped ? "" : `**${prepared.senderName}**`);
 	const avatar = header ? await getSenderAvatar(ctx, ctx.tediCross.message) : undefined;
-	const components: Array<SectionBuilder | TextDisplayBuilder> = [];
+	const components: Array<SectionBuilder | TextDisplayBuilder | MediaGalleryBuilder | FileBuilder> = [];
 
 	if (header) {
 		const firstChunkLength = Math.max(1, 4000 - header.length - 1);
@@ -79,8 +88,31 @@ export async function createComponentsV2Message(ctx: any, prepared: any, include
 
 	const files: AttachmentBuilder[] = [];
 	if (includeMedia) {
-		const mediaFiles = prepared.files?.length ? prepared.files : prepared.file ? [prepared.file] : [];
+		const mediaFiles: AttachmentBuilder[] = prepared.files?.length
+			? prepared.files
+			: prepared.file
+				? [prepared.file]
+				: [];
 		files.push(...mediaFiles);
+		const galleryFiles = mediaFiles.filter(file => file.description === "photo" || file.description === "video");
+		if (galleryFiles.length) {
+			components.push(
+				new MediaGalleryBuilder().addItems(
+					...galleryFiles.map(file =>
+						new MediaGalleryItemBuilder()
+							.setURL(`attachment://${file.name}`)
+							.setSpoiler(file.name?.startsWith("SPOILER_") ?? false)
+					)
+				)
+			);
+		}
+		for (const file of mediaFiles.filter(item => !galleryFiles.includes(item))) {
+			components.push(
+				new FileBuilder()
+					.setURL(`attachment://${file.name}`)
+					.setSpoiler(file.name?.startsWith("SPOILER_") ?? false)
+			);
+		}
 	}
 	if (avatar) files.push(new AttachmentBuilder(avatar, { name: avatarFilename }));
 
