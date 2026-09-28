@@ -1,0 +1,87 @@
+name: Bug report
+description: Report a reproducible problem with TediCross.
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a report, check whether it has already been reported. For support and setup questions, use the [Telegram support group](https://t.me/TediCrossSupport) or [Discord server](https://discord.gg/MfzGMzy).
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected to happen instead.
+      placeholder: A concise description of the unexpected behavior.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: TediCross version
+      description: Include the exact release or image tag, such as 1.0.0-rc.1 or dev.
+      placeholder: 1.0.0-rc.1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install_method
+    attributes:
+      label: How do you run TediCross?
+      options:
+        - Node.js
+        - Docker
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime and version
+      description: For example, Node.js 22.13.1 or Docker Engine 28.0.1. Leave blank if unknown.
+      placeholder: Node.js 22.13.1
+
+  - type: dropdown
+    id: operating_system
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - Windows
+        - macOS
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: List the actions or messages that reliably trigger the problem.
+      placeholder: |
+        1. Configure a bridge between …
+        2. Send …
+        3. Observe …
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or configuration
+      description: Include only the relevant excerpt. Redact bot tokens, API keys, personal data, and private chat content. Do not upload your complete settings file.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and did not find this report.
+          required: true
+        - label: I removed secrets and private information from this report.
+          required: true

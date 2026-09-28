@@ -1,0 +1,42 @@
+name: Feature request
+description: Suggest an improvement or capability for TediCross.
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For questions or discussion before filing, visit the [Telegram support group](https://t.me/TediCrossSupport) or [Discord server](https://discord.gg/MfzGMzy).
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the situation or limitation you are running into.
+      placeholder: I need to … because …
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like TediCross to do?
+      description: Describe the behavior or outcome you have in mind. Implementation details are optional.
+      placeholder: It would help if TediCross could …
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or additional context
+      description: Mention workarounds you use today, who would benefit, or any examples that help explain the request.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and did not find this request.
+          required: true

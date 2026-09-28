@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discord community and support
+    url: https://discord.gg/MfzGMzy
+    about: Ask questions and get help from the TediCross community.
+  - name: Telegram support group
+    url: https://t.me/TediCrossSupport
+    about: Get help with setup and discuss TediCross.
+  - name: Telegram news channel
+    url: https://t.me/TediCross
+    about: Follow TediCross announcements and project news.

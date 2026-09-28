@@ -1,0 +1,97 @@
+name: Complex or multi-bug report
+description: Report several related bugs or a larger issue that needs more context.
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for a larger report or to bundle multiple bugs in one issue. List each distinct problem separately so maintainers can track and discuss every part of the report. For support and setup questions, visit the [Telegram support group](https://t.me/TediCrossSupport) or [Discord server](https://discord.gg/MfzGMzy).
+
+  - type: textarea
+    id: overview
+    attributes:
+      label: Overview and context
+      description: Explain the overall situation, affected workflow, and any context that applies to the whole bundle.
+      placeholder: Describe the workflow or bridge setup where these problems occur.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: TediCross version
+      description: Include the exact release or image tag, such as 1.0.0-rc.1 or dev.
+      placeholder: 1.0.0-rc.1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install_method
+    attributes:
+      label: How do you run TediCross?
+      options:
+        - Node.js
+        - Docker
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime and version
+      description: For example, Node.js 22.13.1 or Docker Engine 28.0.1. Leave blank if unknown.
+      placeholder: Node.js 22.13.1
+
+  - type: dropdown
+    id: operating_system
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - Windows
+        - macOS
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: bugs
+    attributes:
+      label: Bugs and reproduction details
+      description: Add one numbered entry per distinct bug. For each, include what you expected, what happened, and steps to reproduce it. If a bug has different steps, list those separately.
+      placeholder: |
+        Bug 1: Short description
+        Expected:
+        Actual:
+        Steps to reproduce:
+        1.
+        2.
+
+        Bug 2: Short description
+        Expected:
+        Actual:
+        Steps to reproduce:
+        1.
+        2.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or configuration
+      description: Include only excerpts relevant to these bugs. Redact bot tokens, API keys, personal data, and private chat content. Do not upload your complete settings file.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and did not find these reports.
+          required: true
+        - label: I removed secrets and private information from this report.
+          required: true
