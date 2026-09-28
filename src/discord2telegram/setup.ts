@@ -12,7 +12,7 @@ import { sleepOneMinute } from "../sleep";
 import { fetchDiscordChannel } from "../fetchDiscordChannel";
 import { Logger } from "../Logger";
 import { BridgeMap } from "../bridgestuff/BridgeMap";
-import { Telegraf } from "telegraf";
+import { Input, Telegraf } from "telegraf";
 import {
 	escapeHTMLSpecialChars,
 	extractComponentContent,
@@ -25,6 +25,7 @@ import {
 	Collection,
 	Message,
 	MessageReferenceType,
+	MessageFlags,
 	MessageType,
 	PermissionFlagsBits,
 	REST,
@@ -323,6 +324,14 @@ export function setup(
 				// console.dir(message.attachments);
 
 				const sentTelegramMessageIds: string[] = [];
+				const voiceMessageAttachment = message.flags.has(MessageFlags.IsVoiceMessage)
+					? Array.from(message.attachments.values()).find(attachment => {
+							const contentType = attachment.contentType?.toLowerCase() ?? "";
+							return (
+								contentType.startsWith("audio/ogg") || attachment.name.toLowerCase().endsWith(".ogg")
+							);
+						})
+					: undefined;
 				const componentContent = extractComponentContent(message.components ?? []);
 				const messageParts: string[] = [];
 				if (message.cleanContent) messageParts.push(md2html(message.cleanContent, settings.telegram));
@@ -367,14 +376,17 @@ export function setup(
 				if (messageParts.length) {
 					const sender = bridge.discord.sendUsernames && !grouped ? `<b>${senderName}</b>\n` : "";
 					messageCaption = sender + messageParts.join("\n\n");
+				} else if (voiceMessageAttachment && bridge.discord.sendUsernames && !grouped) {
+					messageCaption = `<b>${senderName}</b>`;
 				}
 
 				// Telegram can attach a caption to a single photo or the first item of an
 				// album. Use that to keep an embed's text and image together when possible.
 				const captionWithGallery =
 					message.attachments.size === 0 && galleryImageUrls.length > 0 && messageCaption.length <= 1024;
+				const captionWithVoice = Boolean(voiceMessageAttachment && messageCaption.length <= 1024);
 
-				if (messageParts.length && !captionWithGallery) {
+				if (messageParts.length && !captionWithGallery && !captionWithVoice) {
 					try {
 						const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, messageCaption, {
 							...telegramReplyOptions(replyId),
@@ -396,6 +408,19 @@ export function setup(
 				const documents: InputMediaDocument[] = [];
 				const skippedAttachments: Array<{ name: string; size: number; limit: number }> = [];
 				let mediaSendFailed = false;
+				const sendVoiceCaptionAsText = async () => {
+					if (!captionWithVoice) return;
+					try {
+						const textMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, messageCaption, {
+							...telegramReplyOptions(replyId),
+							parse_mode: "HTML",
+							message_thread_id: bridge.tgThread
+						});
+						sentTelegramMessageIds.push(textMessage.message_id.toString());
+					} catch (error) {
+						logger.error(`[${bridge.name}] Could not send the voice message caption to Telegram:`, error);
+					}
+				};
 
 				const handleMediaFile = (attachment: any, type: "video" | "photo" | "audio" | "document") => {
 					// Telegram fetches media from URLs supplied by bots. Its URL import
@@ -434,6 +459,7 @@ export function setup(
 				};
 
 				for (const attachment of message.attachments.values()) {
+					if (attachment.id === voiceMessageAttachment?.id) continue;
 					const fileType: string = attachment.contentType || "";
 					if (fileType.indexOf("video") >= 0) {
 						handleMediaFile(attachment, "video");
@@ -519,6 +545,39 @@ export function setup(
 					}
 				}
 
+				if (voiceMessageAttachment) {
+					if (voiceMessageAttachment.size > 50_000_000) {
+						skippedAttachments.push({
+							name: voiceMessageAttachment.name,
+							size: voiceMessageAttachment.size,
+							limit: 50_000_000
+						});
+						await sendVoiceCaptionAsText();
+					} else {
+						try {
+							const sent = await tgBot.telegram.sendVoice(
+								bridge.telegram.chatId,
+								Input.fromURLStream(voiceMessageAttachment.url, voiceMessageAttachment.name),
+								{
+									...telegramReplyOptions(replyId),
+									...(captionWithVoice
+										? { caption: messageCaption, parse_mode: "HTML" as const }
+										: {}),
+									message_thread_id: bridge.tgThread
+								}
+							);
+							sentTelegramMessageIds.push(sent.message_id.toString());
+						} catch (err) {
+							mediaSendFailed = true;
+							logger.error(
+								`[${bridge.name}] Telegram did not accept a Discord voice message:`,
+								(err as Error).toString()
+							);
+							await sendVoiceCaptionAsText();
+						}
+					}
+				}
+
 				for (let i = 0; i < galleryImageUrls.length; i += 10) {
 					const media: InputMediaPhoto[] = galleryImageUrls
 						.slice(i, i + 10)
@@ -566,7 +625,7 @@ export function setup(
 						.join(", ");
 					const notice = [
 						skippedAttachments.length
-							? `TediCross could not send ${skippedAttachments.length === 1 ? "this file" : `${skippedAttachments.length} files`} to Telegram because they exceed Telegram's URL upload limit${sizeDetails ? `: ${sizeDetails}` : ""}.`
+							? `TediCross could not send ${skippedAttachments.length === 1 ? "this file" : `${skippedAttachments.length} files`} to Telegram because they exceed Telegram's upload limit${sizeDetails ? `: ${sizeDetails}` : ""}.`
 							: "",
 						mediaSendFailed ? "Telegram rejected one or more media files." : "",
 						"The original file(s) are still available in Discord."
