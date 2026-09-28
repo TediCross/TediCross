@@ -231,7 +231,7 @@ const parseMediaGroup = (ctx: TediCrossContext, byTimer: boolean = false) => {
 					if (lPrepared.text) {
 						prepared.text = lPrepared.text;
 					}
-					if (lPrepared.file.attachment) {
+					if (lPrepared.file?.attachment) {
 						prepared.files.push(lPrepared.file);
 					}
 				}

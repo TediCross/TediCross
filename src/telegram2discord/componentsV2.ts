@@ -59,23 +59,29 @@ export async function createComponentsV2Message(ctx: any, prepared: any, include
 	if (header) {
 		const firstChunkLength = Math.max(1, 4000 - header.length - 1);
 		const [first = "", ...remaining] = chunkText(content, firstChunkLength);
-		const section = new SectionBuilder().addTextDisplayComponents(
-			new TextDisplayBuilder().setContent(`${header}${first ? `\n${first}` : ""}`)
-		);
 		if (avatar) {
+			const section = new SectionBuilder().addTextDisplayComponents(
+				new TextDisplayBuilder().setContent(`${header}${first ? `\n${first}` : ""}`)
+			);
 			section.setThumbnailAccessory(
 				new ThumbnailBuilder()
 					.setURL(`attachment://${avatarFilename}`)
 					.setDescription(`${prepared.senderName}'s avatar`)
 			);
+			components.push(section);
+		} else {
+			components.push(new TextDisplayBuilder().setContent(`${header}${first ? `\n${first}` : ""}`));
 		}
-		components.push(section, ...remaining.map(chunk => new TextDisplayBuilder().setContent(chunk)));
+		components.push(...remaining.map(chunk => new TextDisplayBuilder().setContent(chunk)));
 	} else {
 		components.push(...chunkText(content, 4000).map(chunk => new TextDisplayBuilder().setContent(chunk)));
 	}
 
 	const files: AttachmentBuilder[] = [];
-	if (includeMedia && prepared.file) files.push(prepared.file);
+	if (includeMedia) {
+		const mediaFiles = prepared.files?.length ? prepared.files : prepared.file ? [prepared.file] : [];
+		files.push(...mediaFiles);
+	}
 	if (avatar) files.push(new AttachmentBuilder(avatar, { name: avatarFilename }));
 
 	return {
