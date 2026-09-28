@@ -286,12 +286,14 @@ export function setup(
 
 				// Check if the message is a reply and get the id of that message on Telegram
 				let replyId = "0";
+				let isForward = false;
 				const messageReference = message?.reference;
 
 				if (typeof messageReference !== "undefined") {
 					if (messageReference?.type === MessageReferenceType.Forward) {
 						//forwarded message object
 						const frwdMessage = message.messageSnapshots.get(messageReference?.messageId ?? "") ?? message;
+						isForward = true;
 						//console.log("==== discord2telegram forward ====");
 						//console.log(`[${bridge.name}] ${JSON.stringify(frwdMessage, null, 2)}`);
 						message.content = frwdMessage?.content ?? message.content;
@@ -334,6 +336,7 @@ export function setup(
 					: undefined;
 				const componentContent = extractComponentContent(message.components ?? []);
 				const messageParts: string[] = [];
+				if (isForward) messageParts.push("<b>Forwarded message</b>");
 				if (message.cleanContent) messageParts.push(md2html(message.cleanContent, settings.telegram));
 				if (componentContent.text.length) {
 					messageParts.push(md2html(componentContent.text.join("\n"), settings.telegram));
@@ -745,8 +748,9 @@ export function setup(
 
 			try {
 				// Get the corresponding Telegram message IDs
+				// Bot-authored relays are destinations of Telegram-to-Discord mappings.
 				const tgMessageIds: string[] = isFromTelegram
-					? await messageMap.getCorrespondingReverse(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id)
+					? await messageMap.getCorrespondingReverse(MessageMap.TELEGRAM_TO_DISCORD, bridge, message.id)
 					: await messageMap.getCorresponding(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id);
 				//console.log("d2t delete: " + tgMessageIds);
 				if (bridge.discord.crossDeleteOnTelegram === "mark") {
