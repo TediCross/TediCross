@@ -1,0 +1,35 @@
+# Copy example.settings.yaml to settings.yaml, configure it, then run:
+#   docker compose up --build -d
+services:
+  tedicross:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tedicross:local
+    init: true
+    restart: unless-stopped
+    command: ["--config", "/run/tedicross/settings.yaml", "--data-dir", "/opt/TediCross/data"]
+    # Set these in your shell or a local .env file when the settings use token: env.
+    # Tokens written directly in settings.yaml do not need these entries.
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+    volumes:
+      - type: bind
+        source: ./settings.yaml
+        target: /run/tedicross/settings.yaml
+        read_only: true
+        bind:
+          create_host_path: false
+      - tedicross-data:/opt/TediCross/data
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+
+volumes:
+  tedicross-data:
