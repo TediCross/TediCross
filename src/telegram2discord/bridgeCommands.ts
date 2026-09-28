@@ -3,7 +3,9 @@ import { TediCrossContext } from "./endwares";
 
 async function isBridgeManagementEnabled(ctx: TediCrossContext) {
 	if (ctx.TediCross.settings.telegram.enableBridgeManagement) return true;
-	await ctx.reply("Bridge management is disabled. Enable `telegram.enableBridgeManagement` in the settings file to use these commands.");
+	await ctx.reply(
+		"Bridge management is disabled. Enable `telegram.enableBridgeManagement` in the settings file to use these commands."
+	);
 	return false;
 }
 
