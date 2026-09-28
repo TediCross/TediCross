@@ -4,7 +4,7 @@ import { Bridge } from "./Bridge";
 /** Map between chat IDs and bridges */
 export class BridgeMap {
 	public bridges: Bridge[];
-	private _discordToBridge: Map<number, Bridge[]>;
+	private _discordToBridge: Map<string, Bridge[]>;
 	private _telegramToBridge: Map<number, Bridge[]>;
 
 	/**
@@ -24,16 +24,17 @@ export class BridgeMap {
 
 		// Populate the maps and set
 		bridges.forEach(bridge => {
-			const d = this._discordToBridge.get(Number(bridge.discord.channelId)) || [];
+			const d = this._discordToBridge.get(bridge.discord.channelId) || [];
 			const t = this._telegramToBridge.get(bridge.telegram.chatId) || [];
-			this._discordToBridge.set(Number(bridge.discord.channelId), [...d, bridge]);
-			if (bridge.threadMap) {
-				for (const trMap of bridge.threadMap) {
+			this._discordToBridge.set(bridge.discord.channelId, [...d, bridge]);
+			if (bridge.topicBridges) {
+				for (const trMap of bridge.topicBridges) {
 					const upBridge = {
 						...bridge,
 						tgThread: trMap.telegram
 					};
-					this._discordToBridge.set(Number(trMap.discord), [...d, upBridge]);
+					const channelBridges = this._discordToBridge.get(trMap.discord) || [];
+					this._discordToBridge.set(trMap.discord, [...channelBridges, upBridge]);
 				}
 			}
 			this._telegramToBridge.set(bridge.telegram.chatId, [...t, bridge]);
@@ -58,7 +59,7 @@ export class BridgeMap {
 	 *
 	 * @returns The bridges corresponding to the channel ID
 	 */
-	fromDiscordChannelId(discordChannelId: number) {
+	fromDiscordChannelId(discordChannelId: string) {
 		return R.defaultTo([], this._discordToBridge.get(discordChannelId));
 	}
 }

@@ -82,7 +82,7 @@ const spoilerRule = {
 	// `html:`, as long as you never ask for an outputter
 	// for the other type.)
 	html: function (node: SingleASTNode, output: Function) {
-		return "<spoiler>" + output(node.content) + "</spoiler>";
+		return "<tg-spoiler>" + output(node.content) + "</tg-spoiler>";
 	}
 };
 
@@ -169,6 +169,11 @@ export function md2html(text: string, settings: TelegramSettings) {
 }
 
 function htmlCleanup(input: string, settings: TelegramSettings) {
+	input = input.replace(/&lt;a?:([^:]+):\d+&gt;/g, (raw, name: string) => {
+		const replacement = settings.emojiMap[name] ?? settings.emojiMap[name.toLowerCase()];
+		return replacement === undefined ? raw : escapeHTMLSpecialChars(replacement);
+	});
+
 	if (settings.useCustomEmojiFilter) {
 		input = removeCustomEmojis(input);
 	}
