@@ -30,7 +30,7 @@ if (!semver.gte(process.version, "18.0.0")) {
  *************/
 
 // Get command line arguments if any
-const args = yargs
+const args = yargs(process.argv.slice(2))
 	.alias("v", "version")
 	.alias("h", "help")
 	.option("config", {
