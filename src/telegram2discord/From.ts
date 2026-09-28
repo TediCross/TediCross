@@ -42,7 +42,7 @@ export function createFromObjFromMessage(message: Message) {
 		// Check if the `from` object exists
 		R.compose(R.isNil, R.prop("from")),
 		// This message is from a channel
-		message => createFromObj(message.chat.title, "", ""),
+		message => createFromObj(message.sender_chat?.title ?? message.chat.title, "", ""),
 		// This message is from a user
 		R.compose(createFromObjFromUser, R.prop("from") as any)
 	)(message);

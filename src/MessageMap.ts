@@ -77,7 +77,10 @@ export class MessageMap {
 			}
 			const key = `${direction} ${fromId}`;
 			keyToIdsMap.set(key, new Set(toIds));
-			safeTimeout(() => keyToIdsMap?.delete(key), moment.duration(this._messageTimeoutAmount, this._messageTimeoutUnit).asMilliseconds());
+			safeTimeout(
+				() => keyToIdsMap?.delete(key),
+				moment.duration(this._messageTimeoutAmount, this._messageTimeoutUnit).asMilliseconds()
+			);
 			return;
 		}
 

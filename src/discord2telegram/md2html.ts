@@ -126,6 +126,9 @@ export function md2html(text: string, settings: TelegramSettings) {
 	// XXX Some users get a space after @ in mentions bridged to Telegram. See #148
 	// This is compensation for that discord error
 	text = R.replace("@\u200B", "@", R.defaultTo("", text));
+	// Discord wraps links in angle brackets to suppress previews. Telegram does not need
+	// those delimiters, and keeping them in HTML mode can display malformed punctuation.
+	text = text.replace(/<(https?:\/\/[^\s<>]+)>/g, "$1");
 
 	// Escape HTML in the input
 	const processedText = escapeHTMLSpecialChars(text);
@@ -152,7 +155,8 @@ export function md2html(text: string, settings: TelegramSettings) {
 			} else if (node.type === "hr") {
 				return html + "---";
 			} else if (node.type === "link") {
-				return html + `<a href='${node.target}'>${extractText(node)}</a>`;
+				const target = escapeHTMLSpecialChars(String(node.target)).replace(/"/g, "&quot;");
+				return html + `<a href="${target}">${extractText(node)}</a>`;
 			}
 
 			// Turn the nodes into HTML
