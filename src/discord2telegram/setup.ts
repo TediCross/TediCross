@@ -341,33 +341,43 @@ export function setup(
 					messageParts.push(`[Sticker: ${escapeHTMLSpecialChars(sticker.name)}${emoji}]`);
 				}
 
+				const galleryImageUrls = [...componentContent.imageUrls];
+				for (const embed of message.embeds) {
+					const imageUrl = embed.image?.url ?? embed.thumbnail?.url;
+					if (!imageUrl || galleryImageUrls.includes(imageUrl)) continue;
+					galleryImageUrls.push(imageUrl);
+				}
+
+				let messageCaption = "";
 				if (messageParts.length) {
+					const streamKey = `${bridge.name}:${bridge.tgThread ?? "general"}`;
+					const senderId = message.author.id;
+					const grouped =
+						bridge.discord.groupMessages && lastDiscordSenderByBridge.get(streamKey) === senderId;
+					lastDiscordSenderByBridge.set(streamKey, senderId);
+					const sender = bridge.discord.sendUsernames && !grouped ? `<b>${senderName}</b>\n` : "";
+					messageCaption = sender + messageParts.join("\n\n");
+				}
+
+				// Telegram can attach a caption to a single photo or the first item of an
+				// album. Use that to keep an embed's text and image together when possible.
+				const captionWithGallery =
+					message.attachments.size === 0 && galleryImageUrls.length > 0 && messageCaption.length <= 1024;
+
+				if (messageParts.length && !captionWithGallery) {
 					try {
-						const streamKey = `${bridge.name}:${bridge.tgThread ?? "general"}`;
-						const senderId = message.author.id;
-						const grouped =
-							bridge.discord.groupMessages && lastDiscordSenderByBridge.get(streamKey) === senderId;
-						lastDiscordSenderByBridge.set(streamKey, senderId);
-						const sender = bridge.discord.sendUsernames && !grouped ? `<b>${senderName}</b>\n` : "";
-						const tgMessage = await tgBot.telegram.sendMessage(
-							bridge.telegram.chatId,
-							sender + messageParts.join("\n\n"),
-							{
-								...telegramReplyOptions(replyId),
-								parse_mode: "HTML",
-								link_preview_options: { is_disabled: bridge.discord.disableWebPreviewOnTelegram },
-								message_thread_id: bridge.tgThread
-							}
-						);
+						const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, messageCaption, {
+							...telegramReplyOptions(replyId),
+							parse_mode: "HTML",
+							link_preview_options: { is_disabled: bridge.discord.disableWebPreviewOnTelegram },
+							message_thread_id: bridge.tgThread
+						});
 						sentTelegramMessageIds.push(tgMessage.message_id.toString());
 					} catch (err) {
 						logger.error(`[${bridge.name}] Telegram did not accept a message`);
 						logger.error(`[${bridge.name}] Failed message:`, (err as Error).toString());
 					}
 				}
-
-				// NOTE: can set caption for media group if media types <= 1 - else send text in standalone message
-				// For now: ignoring captions - always send as standalone message
 
 				// Check for attachments and pass them on
 				const images: InputMediaPhoto[] = [];
@@ -487,18 +497,16 @@ export function setup(
 					}
 				}
 
-				const galleryImageUrls = [...componentContent.imageUrls];
-				for (const embed of message.embeds) {
-					const imageUrl = embed.image?.url ?? embed.thumbnail?.url;
-					if (!imageUrl || galleryImageUrls.includes(imageUrl)) continue;
-					galleryImageUrls.push(imageUrl);
-				}
 				for (let i = 0; i < galleryImageUrls.length; i += 10) {
 					const media: InputMediaPhoto[] = galleryImageUrls
 						.slice(i, i + 10)
 						.map(url => ({ type: "photo", media: url }));
 					try {
 						if (media.length > 1) {
+							if (captionWithGallery && i === 0) {
+								media[0].caption = messageCaption;
+								media[0].parse_mode = "HTML";
+							}
 							const sent = await tgBot.telegram.sendMediaGroup(bridge.telegram.chatId, media, {
 								...telegramReplyOptions(replyId),
 								message_thread_id: bridge.tgThread
@@ -510,6 +518,9 @@ export function setup(
 								media[0].media as string,
 								{
 									...telegramReplyOptions(replyId),
+									...(captionWithGallery && i === 0
+										? { caption: messageCaption, parse_mode: "HTML" as const }
+										: {}),
 									message_thread_id: bridge.tgThread
 								}
 							);
