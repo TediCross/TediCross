@@ -1,4 +1,10 @@
-/node_modules
-/dist
+node_modules
+dist
+.git
+.github
 settings.yaml
-package-lock.json
+codex_data
+codex-data
+.env
+.env.*
+*.log
