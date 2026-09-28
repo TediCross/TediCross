@@ -1,6 +1,6 @@
 import { Client } from "discord.js";
 import R from "ramda";
-import { MessageEntity } from "telegraf/typings/core/types/typegram";
+import { MessageEntity } from "telegraf/types";
 import { Bridge } from "../bridgestuff/Bridge";
 import { fetchDiscordChannel } from "../fetchDiscordChannel";
 

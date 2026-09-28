@@ -1,5 +1,5 @@
 import R from "ramda";
-import { Message, User } from "telegraf/typings/core/types/typegram";
+import { Message, User } from "telegraf/types";
 
 /**********************
  * The From functions *

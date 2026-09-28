@@ -5,7 +5,7 @@ import { handleEntities } from "./handleEntities";
 import Discord, { Client } from "discord.js";
 import { sleepOneMinute } from "../sleep";
 import { fetchDiscordChannel } from "../fetchDiscordChannel";
-import { Message } from "telegraf/typings/core/types/typegram";
+import { Message } from "telegraf/types";
 import { TediCrossContext } from "./endwares";
 import { createFromObjFromChat, createFromObjFromMessage, createFromObjFromUser, makeDisplayName } from "./From";
 import { deleteMessage, ignoreAlreadyDeletedError } from "./helpers";
@@ -122,7 +122,7 @@ async function makeDiscordMention(username: string, dcBot: Client, bridge: Bridg
 		const dcUser = await channel.members.find(R.propEq(username, "displayName"));
 
 		return dcUser ? `<@${dcUser.id}>` : username;
-	} catch (err) {
+	} catch {
 		// Cannot make a mention. Just return the username
 		return username;
 	}
@@ -353,8 +353,8 @@ function addReplyObj(ctx: TediCrossContext, next: () => void) {
 		? ctx.tediCross.message?.message_thread_id !== ctx.tediCross.message?.reply_to_message?.message_id
 			? ctx.tediCross.message?.reply_to_message
 			: ctx.tediCross.message?.reply_to_message?.message_thread_id
-			? undefined
-			: ctx.tediCross.message?.reply_to_message
+				? undefined
+				: ctx.tediCross.message?.reply_to_message
 		: ctx.tediCross.message?.reply_to_message;
 
 	// console.log(`repliedToMessage: ${repliedToMessage}`);
@@ -566,8 +566,8 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				? ctx.tediCross.message?.message_thread_id !== ctx.tediCross.message?.reply_to_message?.message_id
 					? ctx.tediCross.message?.reply_to_message
 					: ctx.tediCross.message?.reply_to_message?.message_thread_id
-					? undefined
-					: ctx.tediCross.message?.reply_to_message
+						? undefined
+						: ctx.tediCross.message?.reply_to_message
 				: ctx.tediCross.message?.reply_to_message;
 
 			if (typeof messageReference !== "undefined") {
@@ -631,7 +631,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 								//@ts-ignore
 								R.prop("originalFrom")
 							)
-					  )(tc.replyTo);
+						)(tc.replyTo);
 				// Build the header
 				let header: string;
 				if (bridge.telegram.sendUsernames) {

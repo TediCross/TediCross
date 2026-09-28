@@ -35,13 +35,13 @@ export class LatestDiscordMessageIds {
 		try {
 			// Check if the file exists. This throws if it doesn't
 			fs.accessSync(this._filepath, fs.constants.F_OK);
-		} catch (e) {
+		} catch {
 			// Nope, it doesn't. Create it
 			fs.writeFileSync(this._filepath, JSON.stringify({}));
 		}
 
 		// Read the file
-		let data = null;
+		let data: string;
 		try {
 			//TODO added encoding. Check if it still works
 			data = fs.readFileSync(this._filepath, "utf8");

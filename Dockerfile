@@ -1,4 +1,4 @@
-FROM node:22.9-alpine3.20
+FROM node:24-alpine
 
 RUN apk add --no-cache python3 g++ make
 
@@ -10,5 +10,5 @@ RUN npm install --omit=dev
 
 VOLUME /opt/TediCross/data/
 
-ENTRYPOINT ["/usr/local/bin/npm"]
-CMD ["start", "--", "-c", "data/settings.yaml"]
+ENTRYPOINT ["node", "dist/main.js"]
+CMD ["-c", "data/settings.yaml"]
