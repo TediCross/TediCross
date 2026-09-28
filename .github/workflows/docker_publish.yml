@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
+      artifact-metadata: write
       attestations: write
       contents: read
       id-token: write
@@ -93,10 +94,16 @@ jobs:
       - name: Extract image tags and labels
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
         with:
           images: |
             ${{ env.DOCKERHUB_IMAGE }}
             ${{ env.GHCR_IMAGE }}
+          annotations: |
+            org.opencontainers.image.source=https://github.com/TediCross/TediCross
+            org.opencontainers.image.description=A bot that bridges chats between Telegram and Discord.
+            org.opencontainers.image.licenses=MIT
           flavor: latest=false
           tags: |
             type=ref,event=branch,enable=${{ github.event_name == 'push' }}
@@ -114,6 +121,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: mode=max
