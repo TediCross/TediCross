@@ -273,6 +273,7 @@ async function addBridgesToContext(ctx: TediCrossContext, next: () => void) {
 	).then(groups => groups.flat());
 	const senderId = ctx.tediCross.message.from?.id?.toString() ?? ctx.tediCross.message.sender_chat?.id?.toString();
 	ctx.tediCross.bridges = ctx.tediCross.bridges.filter((bridge: Bridge) => {
+		if (bridge.telegram.ignoreBots && ctx.tediCross.message.from?.is_bot) return false;
 		const allowed = bridge.telegram.allowedUserIds;
 		const blocked = bridge.telegram.blockedUserIds;
 		return (!allowed?.length || allowed.includes(senderId)) && !blocked?.includes(senderId);

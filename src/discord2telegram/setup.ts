@@ -266,6 +266,12 @@ export function setup(
 				if (bridge.direction === Bridge.DIRECTION_TELEGRAM_TO_DISCORD) {
 					continue;
 				}
+				if (
+					(message.author.bot && bridge.discord.ignoreBots) ||
+					(message.webhookId && bridge.discord.ignoreWebhooks)
+				) {
+					continue;
+				}
 				const allowedUserIds = bridge.discord.allowedUserIds;
 				if (
 					(allowedUserIds.length > 0 && !allowedUserIds.includes(message.author.id)) ||
@@ -624,6 +630,12 @@ export function setup(
 
 		// Pass it on to the bridges
 		bridgesForDiscordMessage(bridgeMap, newMessage).forEach(async bridge => {
+			if (
+				(bridge.discord.ignoreBots && newMessage.author?.bot) ||
+				(bridge.discord.ignoreWebhooks && newMessage.webhookId)
+			) {
+				return;
+			}
 			try {
 				// Get the corresponding Telegram message ID
 				const tgMessageIds = await messageMap.getCorresponding(

@@ -6,6 +6,8 @@ export interface BridgeSettingsDiscordProperties {
 	crossDeleteOnTelegram: boolean | "mark";
 	allowedUserIds?: string[];
 	blockedUserIds?: string[];
+	ignoreBots?: boolean;
+	ignoreWebhooks?: boolean;
 	groupMessages?: boolean;
 	disableWebPreviewOnTelegram?: boolean;
 	useEmbeds: string;
@@ -21,6 +23,8 @@ export class BridgeSettingsDiscord {
 	public crossDeleteOnTelegram: boolean | "mark";
 	public allowedUserIds: string[];
 	public blockedUserIds: string[];
+	public ignoreBots: boolean;
+	public ignoreWebhooks: boolean;
 	public groupMessages: boolean;
 	public disableWebPreviewOnTelegram: undefined | boolean;
 	public useEmbeds: string;
@@ -55,6 +59,8 @@ export class BridgeSettingsDiscord {
 		this.crossDeleteOnTelegram = settings.crossDeleteOnTelegram;
 		this.allowedUserIds = settings.allowedUserIds ?? [];
 		this.blockedUserIds = settings.blockedUserIds ?? [];
+		this.ignoreBots = settings.ignoreBots ?? true;
+		this.ignoreWebhooks = settings.ignoreWebhooks ?? true;
 		this.groupMessages = settings.groupMessages ?? false;
 
 		/** Whether to enable web preview relaying to Telegram */
@@ -107,6 +113,12 @@ export class BridgeSettingsDiscord {
 		}
 		if (settings.groupMessages !== undefined && typeof settings.groupMessages !== "boolean") {
 			throw new Error("settings.discord.groupMessages must be a boolean");
+		}
+		if (settings.ignoreBots !== undefined && typeof settings.ignoreBots !== "boolean") {
+			throw new Error("settings.discord.ignoreBots must be a boolean");
+		}
+		if (settings.ignoreWebhooks !== undefined && typeof settings.ignoreWebhooks !== "boolean") {
+			throw new Error("settings.discord.ignoreWebhooks must be a boolean");
 		}
 	}
 }

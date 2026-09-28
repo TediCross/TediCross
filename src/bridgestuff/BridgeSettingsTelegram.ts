@@ -38,6 +38,7 @@ export interface BridgeSettingsTelegramProperties {
 	crossDeleteOnDiscord: boolean;
 	allowedUserIds?: string[];
 	blockedUserIds?: string[];
+	ignoreBots?: boolean;
 	groupMessages?: boolean;
 	media?: BridgeMediaSettingsProperties;
 	ignoreCommands?: boolean;
@@ -53,6 +54,7 @@ export class BridgeSettingsTelegram {
 	public crossDeleteOnDiscord: boolean;
 	public allowedUserIds: string[];
 	public blockedUserIds: string[];
+	public ignoreBots: boolean;
 	public groupMessages: boolean;
 	public media: BridgeMediaSettings;
 	public messageStyle: "text" | "componentsV2";
@@ -89,6 +91,7 @@ export class BridgeSettingsTelegram {
 		this.crossDeleteOnDiscord = settings.crossDeleteOnDiscord;
 		this.allowedUserIds = settings.allowedUserIds ?? [];
 		this.blockedUserIds = settings.blockedUserIds ?? [];
+		this.ignoreBots = settings.ignoreBots ?? true;
 		this.groupMessages = settings.groupMessages ?? false;
 		this.media = BridgeSettingsTelegram.createMediaSettings(settings.media);
 		this.messageStyle = settings.messageStyle ?? "text";
@@ -136,6 +139,9 @@ export class BridgeSettingsTelegram {
 		}
 		if (settings.groupMessages !== undefined && typeof settings.groupMessages !== "boolean") {
 			throw new Error("settings.telegram.groupMessages must be a boolean");
+		}
+		if (settings.ignoreBots !== undefined && typeof settings.ignoreBots !== "boolean") {
+			throw new Error("settings.telegram.ignoreBots must be a boolean");
 		}
 		const legacySettings = settings as BridgeSettingsTelegramProperties & Record<string, unknown>;
 		if ("relayMedia" in legacySettings || "mediaReplacementText" in legacySettings) {
