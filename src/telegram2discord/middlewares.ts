@@ -1,5 +1,6 @@
 import R from "ramda";
 import { Bridge } from "../bridgestuff/Bridge";
+import { BridgeMediaType } from "../bridgestuff/BridgeSettingsTelegram";
 import mime from "mime/lite";
 import { handleEntities } from "./handleEntities";
 import Discord, { Client } from "discord.js";
@@ -19,6 +20,25 @@ const telegramBotApiDownloadLimitBytes = 20_000_000;
 function formatFileSize(bytes: number | undefined): string | undefined {
 	if (bytes === undefined || !Number.isFinite(bytes) || bytes < 0) return undefined;
 	return `${(bytes / 1_000_000).toFixed(1)} MB`;
+}
+
+function bridgeMediaType(fileType: string | undefined): BridgeMediaType | undefined {
+	switch (fileType) {
+		case "photo":
+			return "photo";
+		case "video":
+		case "animation":
+			return "video";
+		case "audio":
+		case "voice":
+			return "audio";
+		case "sticker":
+			return "sticker";
+		case "document":
+			return "file";
+		default:
+			return undefined;
+	}
 }
 
 /***********
@@ -778,7 +798,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				? `**Poll: ${poll.question}**\n${(poll.options ?? []).map((option: any) => `• ${option.text}`).join("\n")}`
 				: "";
 			const rawText = [tc.text.raw, pollText].filter(Boolean).join("\n\n");
-			const [text, hasLinks] = await (async () => {
+			const [text, hasLinks, contentText, mediaNotice, mediaAllowed, mediaType] = await (async () => {
 				const [text, hasLinks] = await handleEntities(rawText, tc.text.entities, ctx.TediCross.dcBot, bridge);
 				let editableText = text;
 
@@ -786,23 +806,35 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 					editableText = replyQuote + "\n" + editableText;
 				}
 
-				const mediaAllowed = bridge.telegram.relayMedia;
-				const mediaNotice =
-					!mediaAllowed && tc.file
-						? bridge.telegram.mediaReplacementText
-						: attachmentTooLarge
-							? `[${tc.file.name} (${formatFileSize(tc.file.size) ?? "large file"}) was not relayed because it ${[
-									telegramFileTooLarge ? "exceeds Telegram's Bot API 20 MB download limit" : "",
-									discordFileTooLarge
-										? `exceeds this Discord server's ${Math.floor(maxUploadBytes / 1_000_000)} MB upload limit`
-										: ""
-								]
-									.filter(Boolean)
-									.join(" and ")}. The original is still available in Telegram.]`
-							: tc.file?.linkError
-								? `[${tc.file.name} could not be downloaded from Telegram, so it was not attached. The original is still available in Telegram.]`
-								: "";
-				return [[editableText, mediaNotice].filter(Boolean).join("\n"), hasLinks];
+				const mediaType = bridgeMediaType(tc.file?.type);
+				const mediaTypeSettings = mediaType ? bridge.telegram.media[mediaType] : undefined;
+				const mediaAllowed = bridge.telegram.media.enabled && (mediaTypeSettings?.enabled ?? true);
+				const mediaDisabled = Boolean(tc.file) && !mediaAllowed;
+				const mediaReplacementText = mediaDisabled
+					? (mediaTypeSettings?.replacementText ?? "[Media omitted]")
+					: "";
+				const mediaNotice = mediaDisabled
+					? mediaReplacementText
+					: attachmentTooLarge
+						? `[${tc.file.name} (${formatFileSize(tc.file.size) ?? "large file"}) was not relayed because it ${[
+								telegramFileTooLarge ? "exceeds Telegram's Bot API 20 MB download limit" : "",
+								discordFileTooLarge
+									? `exceeds this Discord server's ${Math.floor(maxUploadBytes / 1_000_000)} MB upload limit`
+									: ""
+							]
+								.filter(Boolean)
+								.join(" and ")}. The original is still available in Telegram.]`
+						: tc.file?.linkError
+							? `[${tc.file.name} could not be downloaded from Telegram, so it was not attached. The original is still available in Telegram.]`
+							: "";
+				return [
+					[editableText, mediaNotice].filter(Boolean).join("\n"),
+					hasLinks,
+					editableText,
+					mediaNotice,
+					mediaAllowed,
+					mediaType
+				];
 			})();
 
 			return {
@@ -810,9 +842,12 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				header,
 				senderName,
 				grouped,
-				file: bridge.telegram.relayMedia && !attachmentTooLarge && !tc.file?.linkError ? file : undefined,
+				file: mediaAllowed && !attachmentTooLarge && !tc.file?.linkError ? file : undefined,
 				voiceDuration: (tc.message as any).voice?.duration,
 				text,
+				contentText,
+				mediaNotice,
+				mediaNoticeKey: mediaType ?? mediaNotice,
 				messageToReply,
 				replyId,
 				hasLinks

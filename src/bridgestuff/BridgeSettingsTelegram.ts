@@ -1,3 +1,34 @@
+export const bridgeMediaTypes = ["photo", "video", "audio", "file", "sticker"] as const;
+export type BridgeMediaType = (typeof bridgeMediaTypes)[number];
+
+export interface BridgeMediaTypeSettingsProperties {
+	enabled?: boolean;
+	replacementText?: string;
+}
+
+export interface BridgeMediaSettingsProperties {
+	enabled?: boolean;
+	photo?: BridgeMediaTypeSettingsProperties;
+	video?: BridgeMediaTypeSettingsProperties;
+	audio?: BridgeMediaTypeSettingsProperties;
+	file?: BridgeMediaTypeSettingsProperties;
+	sticker?: BridgeMediaTypeSettingsProperties;
+}
+
+export interface BridgeMediaTypeSettings {
+	enabled: boolean;
+	replacementText: string;
+}
+
+export interface BridgeMediaSettings {
+	enabled: boolean;
+	photo: BridgeMediaTypeSettings;
+	video: BridgeMediaTypeSettings;
+	audio: BridgeMediaTypeSettings;
+	file: BridgeMediaTypeSettings;
+	sticker: BridgeMediaTypeSettings;
+}
+
 export interface BridgeSettingsTelegramProperties {
 	chatId: number;
 	sendUsernames: boolean;
@@ -8,8 +39,7 @@ export interface BridgeSettingsTelegramProperties {
 	allowedUserIds?: string[];
 	blockedUserIds?: string[];
 	groupMessages?: boolean;
-	relayMedia?: boolean;
-	mediaReplacementText?: string;
+	media?: BridgeMediaSettingsProperties;
 	ignoreCommands?: boolean;
 	messageStyle?: "text" | "componentsV2";
 }
@@ -24,8 +54,7 @@ export class BridgeSettingsTelegram {
 	public allowedUserIds: string[];
 	public blockedUserIds: string[];
 	public groupMessages: boolean;
-	public relayMedia: boolean;
-	public mediaReplacementText: string;
+	public media: BridgeMediaSettings;
 	public messageStyle: "text" | "componentsV2";
 	//public relayCommands: boolean;
 
@@ -61,8 +90,7 @@ export class BridgeSettingsTelegram {
 		this.allowedUserIds = settings.allowedUserIds ?? [];
 		this.blockedUserIds = settings.blockedUserIds ?? [];
 		this.groupMessages = settings.groupMessages ?? false;
-		this.relayMedia = settings.relayMedia ?? true;
-		this.mediaReplacementText = settings.mediaReplacementText ?? "[Media omitted]";
+		this.media = BridgeSettingsTelegram.createMediaSettings(settings.media);
 		this.messageStyle = settings.messageStyle ?? "text";
 	}
 
@@ -106,17 +134,69 @@ export class BridgeSettingsTelegram {
 				throw new Error(`settings.telegram.${key} must be an array of user IDs`);
 			}
 		}
-		if (settings.relayMedia !== undefined && typeof settings.relayMedia !== "boolean") {
-			throw new Error("settings.telegram.relayMedia must be a boolean");
-		}
 		if (settings.groupMessages !== undefined && typeof settings.groupMessages !== "boolean") {
 			throw new Error("settings.telegram.groupMessages must be a boolean");
 		}
-		if (settings.mediaReplacementText !== undefined && typeof settings.mediaReplacementText !== "string") {
-			throw new Error("settings.telegram.mediaReplacementText must be a string");
+		const legacySettings = settings as BridgeSettingsTelegramProperties & Record<string, unknown>;
+		if ("relayMedia" in legacySettings || "mediaReplacementText" in legacySettings) {
+			throw new Error(
+				"settings.telegram.relayMedia and mediaReplacementText have been replaced by settings.telegram.media"
+			);
+		}
+		if (settings.media !== undefined) {
+			if (typeof settings.media !== "object" || settings.media === null || Array.isArray(settings.media)) {
+				throw new Error("settings.telegram.media must be an object");
+			}
+			const allowedMediaKeys = new Set(["enabled", ...bridgeMediaTypes]);
+			const unknownMediaKeys = Object.keys(settings.media).filter(key => !allowedMediaKeys.has(key));
+			if (unknownMediaKeys.length > 0) {
+				throw new Error(`settings.telegram.media contains unknown keys: ${unknownMediaKeys.join(", ")}`);
+			}
+			if (settings.media.enabled !== undefined && typeof settings.media.enabled !== "boolean") {
+				throw new Error("settings.telegram.media.enabled must be a boolean");
+			}
+			for (const type of bridgeMediaTypes) {
+				const typeSettings = settings.media[type];
+				if (typeSettings === undefined) continue;
+				if (typeof typeSettings !== "object" || typeSettings === null || Array.isArray(typeSettings)) {
+					throw new Error(`settings.telegram.media.${type} must be an object`);
+				}
+				const unknownTypeKeys = Object.keys(typeSettings).filter(
+					key => key !== "enabled" && key !== "replacementText"
+				);
+				if (unknownTypeKeys.length > 0) {
+					throw new Error(
+						`settings.telegram.media.${type} contains unknown keys: ${unknownTypeKeys.join(", ")}`
+					);
+				}
+				if (typeSettings.enabled !== undefined && typeof typeSettings.enabled !== "boolean") {
+					throw new Error(`settings.telegram.media.${type}.enabled must be a boolean`);
+				}
+				if (typeSettings.replacementText !== undefined && typeof typeSettings.replacementText !== "string") {
+					throw new Error(`settings.telegram.media.${type}.replacementText must be a string`);
+				}
+			}
 		}
 		if (settings.messageStyle !== undefined && !["text", "componentsV2"].includes(settings.messageStyle)) {
 			throw new Error('settings.telegram.messageStyle must be "text" or "componentsV2"');
 		}
+	}
+
+	private static createMediaSettings(settings?: BridgeMediaSettingsProperties): BridgeMediaSettings {
+		const defaults: Record<BridgeMediaType, string> = {
+			photo: "[Photo omitted]",
+			video: "[Video omitted]",
+			audio: "[Audio omitted]",
+			file: "[File omitted]",
+			sticker: "[Sticker omitted]"
+		};
+		const normalized = {} as Pick<BridgeMediaSettings, BridgeMediaType>;
+		for (const type of bridgeMediaTypes) {
+			normalized[type] = {
+				enabled: settings?.[type]?.enabled ?? true,
+				replacementText: settings?.[type]?.replacementText ?? defaults[type]
+			};
+		}
+		return { enabled: settings?.enabled ?? true, ...normalized };
 	}
 }

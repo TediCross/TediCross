@@ -228,6 +228,8 @@ const parseMediaGroup = (ctx: TediCrossContext, byTimer: boolean = false) => {
 				comboCtx.tediCross.hasMediaGroup = true;
 				const prepared = comboCtx.tediCross.prepared[0];
 				prepared.files = [];
+				const contentTexts: string[] = [];
+				const mediaNotices = new Map<string, string>();
 
 				for (const lCtx of ctxArray) {
 					const lPrepared = lCtx.tediCross.prepared[0];
@@ -237,13 +239,21 @@ const parseMediaGroup = (ctx: TediCrossContext, byTimer: boolean = false) => {
 					if (lPrepared.hasLinks) {
 						prepared.hasLinks = lPrepared.hasLinks;
 					}
-					if (lPrepared.text) {
-						prepared.text = lPrepared.text;
+					if (lPrepared.contentText !== undefined) {
+						if (lPrepared.contentText) contentTexts.push(lPrepared.contentText);
+						if (lPrepared.mediaNotice) {
+							mediaNotices.set(lPrepared.mediaNoticeKey || lPrepared.mediaNotice, lPrepared.mediaNotice);
+						}
+					} else if (lPrepared.text) {
+						contentTexts.push(lPrepared.text);
 					}
 					if (lPrepared.file?.attachment) {
 						prepared.files.push(lPrepared.file);
 					}
 				}
+				prepared.contentText = contentTexts.join("\n");
+				prepared.mediaNotice = [...mediaNotices.values()].join("\n");
+				prepared.text = [prepared.contentText, prepared.mediaNotice].filter(Boolean).join("\n");
 
 				//ctx.TediCross.logger.info(`Files Array Length: ${prepared.files.length}`);
 
