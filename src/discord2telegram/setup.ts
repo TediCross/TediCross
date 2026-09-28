@@ -709,8 +709,8 @@ export function setup(
 	// Make a promise which resolves when the dcBot is ready
 	//@ts-ignore
 	dcBot.ready = new Promise<void>(resolve => {
-		// Listen for the 'ready' event
-		dcBot.once("ready", () => {
+		// Listen for Discord.js's clientReady event
+		dcBot.once("clientReady", () => {
 			// Log the event
 			logger.info(`Discord: ${dcBot.user?.username} (${dcBot.user?.id})`);
 
