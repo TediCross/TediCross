@@ -321,8 +321,9 @@ function removeBridgesIgnoringLeaveMessages(ctx: TediCrossContext, next: () => v
  */
 function informThisIsPrivateBot(ctx: TediCrossContext, next: () => void) {
 	if (ctx.TediCross.settings.telegram.suppressThisIsPrivateBotMessage) {
-		// Monkeypatch for the issue below
-		return;
+		// Suppress only the notice; messages with a configured bridge still need to
+		// continue through the relay middleware.
+		return next();
 	}
 	R.ifElse(
 		// If there are no bridges
