@@ -313,7 +313,7 @@ export const relayMessage = (ctx: TediCrossContext) => {
 				let waveform: Buffer;
 				try {
 					await decoder.ready;
-					const decoded = decoder.decode(audio);
+					const decoded = await decoder.decodeFile(audio);
 					const samples = decoded.channelData[0];
 					if (!samples?.length) throw new Error("Telegram voice note did not contain decodable Opus audio");
 					const bucketCount = 256;
