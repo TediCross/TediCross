@@ -1,6 +1,12 @@
 import { Bridge, BridgeProperties } from "../bridgestuff/Bridge";
 import { TediCrossContext } from "./endwares";
 
+async function isBridgeManagementEnabled(ctx: TediCrossContext) {
+	if (ctx.TediCross.settings.telegram.enableBridgeManagement) return true;
+	await ctx.reply("Bridge management is disabled. Enable `telegram.enableBridgeManagement` in the settings file to use these commands.");
+	return false;
+}
+
 async function isChatAdmin(ctx: TediCrossContext) {
 	if (!ctx.chat || !ctx.from || (ctx.chat.type !== "group" && ctx.chat.type !== "supergroup")) return false;
 	const member = await ctx.telegram.getChatMember(ctx.chat.id, ctx.from.id);
@@ -13,6 +19,7 @@ function getTopicId(ctx: TediCrossContext) {
 
 /** Connect a Telegram chat or forum topic to a Discord text channel. */
 export async function connectBridge(ctx: TediCrossContext) {
+	if (!(await isBridgeManagementEnabled(ctx))) return;
 	if (!(await isChatAdmin(ctx))) {
 		await ctx.reply("Only a group administrator can manage bridges.");
 		return;
@@ -87,6 +94,7 @@ export async function connectBridge(ctx: TediCrossContext) {
 
 /** Remove a topic mapping from inside the topic, or a whole bridge by name. */
 export async function removeBridge(ctx: TediCrossContext) {
+	if (!(await isBridgeManagementEnabled(ctx))) return;
 	if (!(await isChatAdmin(ctx))) {
 		await ctx.reply("Only a group administrator can manage bridges.");
 		return;

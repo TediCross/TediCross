@@ -100,14 +100,18 @@ export function setup(
 					command: "threadinfo",
 					description: "Get info about the thread"
 				},
-				{
-					command: "connect",
-					description: "Connect a Telegram group or topic to Discord"
-				},
-				{
-					command: "remove",
-					description: "Remove a bridge or topic mapping"
-				}
+				...(settings.telegram.enableBridgeManagement
+					? [
+							{
+								command: "connect",
+								description: "Connect a Telegram group or topic to Discord"
+							},
+							{
+								command: "remove",
+								description: "Remove a bridge or topic mapping"
+							}
+						]
+					: [])
 			];
 
 			// Set the commands

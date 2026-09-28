@@ -10,6 +10,7 @@ interface SettingProperties {
 	removeNewlineSpaces: boolean;
 	suppressFileTooBigMessages: boolean;
 	suppressThisIsPrivateBotMessage: boolean;
+	enableBridgeManagement: boolean;
 	emojiMap?: Record<string, string>;
 }
 
@@ -30,6 +31,7 @@ export class TelegramSettings {
 	removeNewlineSpaces: boolean;
 	suppressFileTooBigMessages: boolean;
 	suppressThisIsPrivateBotMessage: boolean;
+	enableBridgeManagement: boolean;
 	emojiMap: Record<string, string>;
 
 	/**
@@ -85,6 +87,7 @@ export class TelegramSettings {
 
 		/** Whether to suppress warning in chat when no bridge configured */
 		this.suppressThisIsPrivateBotMessage = settings.suppressThisIsPrivateBotMessage;
+		this.enableBridgeManagement = settings.enableBridgeManagement;
 		this.emojiMap = settings.emojiMap ?? {};
 	}
 
@@ -166,6 +169,10 @@ export class TelegramSettings {
 			throw new Error("`settings.suppressThisIsPrivateBotMessage` must be a boolean");
 		}
 
+		if (Boolean(settings.enableBridgeManagement) !== settings.enableBridgeManagement) {
+			throw new Error("`settings.enableBridgeManagement` must be a boolean");
+		}
+
 		if (
 			settings.emojiMap !== undefined &&
 			(typeof settings.emojiMap !== "object" ||
@@ -195,6 +202,7 @@ export class TelegramSettings {
 			removeNewlineSpaces: false,
 			suppressFileTooBigMessages: false,
 			suppressThisIsPrivateBotMessage: false,
+			enableBridgeManagement: false,
 			emojiMap: {}
 		};
 	}
