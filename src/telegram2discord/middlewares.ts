@@ -9,6 +9,8 @@ import { Message } from "telegraf/types";
 import { TediCrossContext } from "./endwares";
 import { createFromObjFromChat, createFromObjFromMessage, createFromObjFromUser, makeDisplayName } from "./From";
 import { deleteMessage, ignoreAlreadyDeletedError } from "./helpers";
+
+const lastTelegramSenderByBridge = new Map<string, string>();
 import { MessageMap } from "../MessageMap";
 
 /***********
@@ -204,8 +206,49 @@ function addMessageId(ctx: TediCrossContext, next: () => void) {
  * @param ctx.TediCross.bridgeMap The bridge map of the application
  * @param next Function to pass control to next middleware
  */
-function addBridgesToContext(ctx: TediCrossContext, next: () => void) {
-	ctx.tediCross.bridges = ctx.TediCross.bridgeMap.fromTelegramChatId(ctx.tediCross.message.chat.id);
+async function addBridgesToContext(ctx: TediCrossContext, next: () => void) {
+	const message = ctx.tediCross.message;
+	const threadId = message.message_thread_id;
+	ctx.tediCross.bridges = await Promise.all(
+		ctx.TediCross.bridgeMap.fromTelegramChatId(message.chat.id).map(async (bridge: Bridge) => {
+			if (!threadId) return [bridge];
+			const mapping = bridge.topicBridges?.find((item: any) => item.telegram === threadId);
+			if (mapping) return [{ ...bridge, tgThread: mapping.telegram }];
+			if (!bridge.topicBridges?.length && !bridge.topicBridgesAutoCreate) return [bridge];
+			if (!bridge.topicBridgesAutoCreate) return [];
+			try {
+				const channel = await fetchDiscordChannel(ctx.TediCross.dcBot, bridge);
+				if (!(channel as any).threads?.create) return [];
+				const name = message.forum_topic_created?.name ?? `Telegram topic ${threadId}`;
+				const discordThread = await (channel as any).threads.create({ name });
+				ctx.TediCross.settings.updateBridge({
+					...bridge,
+					topicBridges: [
+						...(bridge.topicBridges ?? []),
+						{ telegram: threadId, discord: discordThread.id, name }
+					]
+				});
+				return [
+					{
+						...ctx.TediCross.settings.bridges.find((item: Bridge) => item.name === bridge.name),
+						tgThread: threadId
+					}
+				];
+			} catch (error) {
+				ctx.TediCross.logger.error(
+					`[${bridge.name}] Could not create a Discord thread for Telegram topic ${threadId}:`,
+					error
+				);
+				return [];
+			}
+		})
+	).then(groups => groups.flat());
+	const senderId = ctx.tediCross.message.from?.id?.toString() ?? ctx.tediCross.message.sender_chat?.id?.toString();
+	ctx.tediCross.bridges = ctx.tediCross.bridges.filter((bridge: Bridge) => {
+		const allowed = bridge.telegram.allowedUserIds;
+		const blocked = bridge.telegram.blockedUserIds;
+		return (!allowed?.length || allowed.includes(senderId)) && !blocked?.includes(senderId);
+	});
 
 	next();
 }
@@ -460,14 +503,16 @@ function addFileObj(ctx: TediCrossContext, next: () => void) {
 		ctx.tediCross.file = {
 			type: "audio",
 			id: message.audio.file_id,
-			name: message.audio.title + "." + mime.getExtension(message.audio.mime_type)
+			name: message.audio.title + "." + mime.getExtension(message.audio.mime_type),
+			size: message.audio.file_size
 		};
 	} else if (!R.isNil(message.document)) {
 		// Generic file
 		ctx.tediCross.file = {
 			type: "document",
 			id: message.document.file_id,
-			name: message.document.file_name
+			name: message.document.file_name,
+			size: message.document.file_size
 		};
 	} else if (!R.isNil(message.photo)) {
 		// Photo. It has an array of photos of different sizes. Use the last and biggest
@@ -475,7 +520,8 @@ function addFileObj(ctx: TediCrossContext, next: () => void) {
 		ctx.tediCross.file = {
 			type: "photo",
 			id: photo.file_id,
-			name: "photo.jpg" // Telegram will convert it to a jpg no matter which format is originally sent
+			name: "photo.jpg", // Telegram will convert it to a jpg no matter which format is originally sent
+			size: photo.file_size
 		};
 	} else if (!R.isNil(message.sticker)) {
 		// Sticker
@@ -486,21 +532,24 @@ function addFileObj(ctx: TediCrossContext, next: () => void) {
 				R.path(["thumb", "file_id"]),
 				R.prop<any>("file_id")
 			)(message.sticker),
-			name: "sticker.webp"
+			name: "sticker.webp",
+			size: message.sticker.file_size
 		};
 	} else if (!R.isNil(message.video)) {
 		// Video
 		ctx.tediCross.file = {
 			type: "video",
 			id: message.video.file_id,
-			name: message.video.file_name || `video.${mime.getExtension(message.video.mime_type)}`
+			name: message.video.file_name || `video.${mime.getExtension(message.video.mime_type)}`,
+			size: message.video.file_size
 		};
 	} else if (!R.isNil(message.voice)) {
 		// Voice
 		ctx.tediCross.file = {
 			type: "voice",
 			id: message.voice.file_id,
-			name: "voice" + "." + mime.getExtension(message.voice.mime_type)
+			name: "voice" + "." + mime.getExtension(message.voice.mime_type),
+			size: message.voice.file_size
 		};
 	}
 
@@ -559,6 +608,11 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				bridge,
 				ctx.tediCross.message?.message_thread_id
 			);
+			// Discord applies the guild upload limit to bot uploads. Guild boost tiers 2 and 3
+			// raise that limit; keep the actual API rejection handler as the final authority.
+			const premiumTier = (channel as any).guild?.premiumTier ?? 0;
+			const maxUploadBytes = premiumTier >= 3 ? 100_000_000 : premiumTier >= 2 ? 50_000_000 : 20_000_000;
+			const attachmentTooLarge = Boolean(tc.file?.size && tc.file.size > maxUploadBytes);
 
 			// Check if the message is a reply and get the id of that message on Discord
 			let replyId = "0";
@@ -634,7 +688,17 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 						)(tc.replyTo);
 				// Build the header
 				let header: string;
-				if (bridge.telegram.sendUsernames) {
+				const senderId = tc.message.from?.id?.toString() ?? tc.message.sender_chat?.id?.toString();
+				const streamKey = `${bridge.name}:${tc.message.message_thread_id ?? "general"}`;
+				const grouped =
+					bridge.telegram.groupMessages &&
+					senderId !== undefined &&
+					lastTelegramSenderByBridge.get(streamKey) === senderId &&
+					R.isNil(tc.forwardFrom) &&
+					R.isNil(tc.replyTo) &&
+					!tc.hasActualReference;
+				if (senderId !== undefined) lastTelegramSenderByBridge.set(streamKey, senderId);
+				if (bridge.telegram.sendUsernames && !grouped) {
 					if (!R.isNil(tc.forwardFrom)) {
 						// Forward
 						header = `**${originalSender}** (forwarded by **${senderName}**)`;
@@ -684,31 +748,44 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				R.compose(R.isNil, R.prop("file")),
 				R.always(undefined),
 				(tc: TediCrossContext["TediCross"]["tc"]) =>
-					new Discord.AttachmentBuilder(tc.file.link, { name: tc.file.name, description: tc.file.type })
+					new Discord.AttachmentBuilder(tc.file.link, {
+						name:
+							(tc.message as any).has_media_spoiler && !tc.file.name.startsWith("SPOILER_")
+								? `SPOILER_${tc.file.name}`
+								: tc.file.name,
+						description: tc.file.type
+					})
 			)(tc);
 
 			// Make the text to send
+			const poll = (tc.message as any).poll;
+			const pollText = poll
+				? `**Poll: ${poll.question}**\n${(poll.options ?? []).map((option: any) => `• ${option.text}`).join("\n")}`
+				: "";
+			const rawText = [tc.text.raw, pollText].filter(Boolean).join("\n\n");
 			const [text, hasLinks] = await (async () => {
-				const [text, hasLinks] = await handleEntities(
-					tc.text.raw,
-					tc.text.entities,
-					ctx.TediCross.dcBot,
-					bridge
-				);
+				const [text, hasLinks] = await handleEntities(rawText, tc.text.entities, ctx.TediCross.dcBot, bridge);
 				let editableText = text;
 
 				if (!R.isNil(replyQuote) && !tc.hasActualReference) {
 					editableText = replyQuote + "\n" + editableText;
 				}
 
-				return [editableText, hasLinks];
+				const mediaAllowed = bridge.telegram.relayMedia;
+				const mediaNotice =
+					!mediaAllowed && tc.file
+						? bridge.telegram.mediaReplacementText
+						: attachmentTooLarge
+							? `[File omitted: exceeds this Discord server's ${Math.floor(maxUploadBytes / 1_000_000)} MB upload limit]`
+							: "";
+				return [[editableText, mediaNotice].filter(Boolean).join("\n"), hasLinks];
 			})();
 
 			return {
 				bridge,
 				header,
 				senderName,
-				file,
+				file: bridge.telegram.relayMedia && !attachmentTooLarge ? file : undefined,
 				text,
 				messageToReply,
 				replyId,

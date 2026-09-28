@@ -50,6 +50,7 @@ const args = yargs
 const settingsPath = args.config;
 const rawSettingsObj = jsYaml.load(fs.readFileSync(settingsPath, "utf-8"));
 const settings = Settings.fromObj(rawSettingsObj);
+settings.setConfigPath(settingsPath);
 
 // Initialize logger
 const logger = new Logger(settings.debug);
@@ -109,7 +110,7 @@ const dcBot = new DiscordClient({
 const messageMap = new MessageMap(settings, logger, args.dataDir);
 
 // Create the bridge map
-const bridgeMap = new BridgeMap(settings.bridges.map((bridgeSettings: BridgeProperties) => new Bridge(bridgeSettings)));
+const bridgeMap = new BridgeMap(settings.bridges);
 
 /*********************
  * Set up the bridge *

@@ -1,6 +1,7 @@
 import fs from "fs";
 import R from "ramda";
-import { Bridge } from "../bridgestuff/Bridge";
+import { Bridge, BridgeProperties } from "../bridgestuff/Bridge";
+import { BridgeMap } from "../bridgestuff/BridgeMap";
 import { TelegramSettings } from "./TelegramSettings";
 import { DiscordSettings } from "./DiscordSettings";
 import jsYaml from "js-yaml";
@@ -13,7 +14,7 @@ interface SettingProperties {
 	messageTimeoutAmount: number;
 	messageTimeoutUnit: moment.unitOfTime.DurationConstructor;
 	persistentMessageMap: boolean;
-	bridges: Bridge[];
+	bridges: BridgeProperties[];
 	token: string;
 }
 
@@ -32,6 +33,9 @@ export class Settings {
 	discord: DiscordSettings;
 	telegram: TelegramSettings;
 	bridges: Bridge[];
+	private _configPath?: string;
+	// eslint-disable-next-line no-unused-vars
+	private _bridgeMapListeners!: Array<(bridgeMap: BridgeMap) => void>;
 
 	/**
 	 * Creates a new settings object
@@ -48,6 +52,8 @@ export class Settings {
 	 * @throws If the raw settings object does not validate
 	 */
 	constructor(settings: SettingProperties) {
+		Object.defineProperty(this, "_configPath", { value: undefined, writable: true, enumerable: false });
+		Object.defineProperty(this, "_bridgeMapListeners", { value: [], writable: true, enumerable: false });
 		// Make sure the settings are valid
 		Settings.validate(settings);
 
@@ -70,7 +76,71 @@ export class Settings {
 		this.persistentMessageMap = settings.persistentMessageMap;
 
 		/** The config for the bridges */
-		this.bridges = settings.bridges;
+		this.bridges = settings.bridges.map(bridge => new Bridge(bridge));
+	}
+
+	setConfigPath(filepath: string) {
+		this._configPath = filepath;
+	}
+
+	// eslint-disable-next-line no-unused-vars
+	onBridgeMapUpdate(listener: (map: BridgeMap) => void) {
+		this._bridgeMapListeners.push(listener);
+	}
+
+	updateBridge(updated: Bridge | BridgeProperties) {
+		const index = this.bridges.findIndex(bridge => bridge.name === updated.name);
+		if (index < 0) throw new Error(`Unknown bridge: ${updated.name}`);
+		const previous = this.bridges;
+		const bridge = new Bridge(updated);
+		this.bridges = [...previous.slice(0, index), bridge, ...previous.slice(index + 1)];
+		try {
+			if (this._configPath) {
+				const yaml = jsYaml.dump(this.toObj()).replace(/\n/g, "\r\n");
+				fs.writeFileSync(this._configPath, yaml);
+			}
+		} catch (error) {
+			this.bridges = previous;
+			throw error;
+		}
+		const bridgeMap = new BridgeMap(this.bridges);
+		this._bridgeMapListeners.forEach(listener => listener(bridgeMap));
+	}
+
+	addBridge(settings: BridgeProperties) {
+		if (this.bridges.some(bridge => bridge.name === settings.name)) {
+			throw new Error(`Bridge name already exists: ${settings.name}`);
+		}
+		const previous = this.bridges;
+		this.bridges = [...previous, new Bridge(settings)];
+		try {
+			if (this._configPath) {
+				const yaml = jsYaml.dump(this.toObj()).replace(/\n/g, "\r\n");
+				fs.writeFileSync(this._configPath, yaml);
+			}
+		} catch (error) {
+			this.bridges = previous;
+			throw error;
+		}
+		const bridgeMap = new BridgeMap(this.bridges);
+		this._bridgeMapListeners.forEach(listener => listener(bridgeMap));
+	}
+
+	removeBridge(name: string) {
+		const previous = this.bridges;
+		this.bridges = previous.filter(bridge => bridge.name !== name);
+		if (this.bridges.length === previous.length) throw new Error(`Unknown bridge: ${name}`);
+		try {
+			if (this._configPath) {
+				const yaml = jsYaml.dump(this.toObj()).replace(/\n/g, "\r\n");
+				fs.writeFileSync(this._configPath, yaml);
+			}
+		} catch (error) {
+			this.bridges = previous;
+			throw error;
+		}
+		const bridgeMap = new BridgeMap(this.bridges);
+		this._bridgeMapListeners.forEach(listener => listener(bridgeMap));
 	}
 
 	/**
@@ -159,7 +229,7 @@ export class Settings {
 		settings.bridges.forEach(Bridge.validate);
 
 		// Check that all the bridges have unique names
-		settings.bridges.forEach(function (value: Bridge, index: number, array: Bridge[]) {
+		settings.bridges.forEach(function (value: BridgeProperties, index: number, array: BridgeProperties[]) {
 			for (let i = 0; i < array.length; i++) {
 				if (value.name === array[i].name && i !== index) {
 					throw new Error("`settings.bridges` must have unique names for each bridge");
@@ -201,6 +271,11 @@ export class Settings {
 		// 2019-11-08: Remove the `serverId` setting from the discord part of the bridges
 		for (const bridge of settings.bridges) {
 			delete bridge.discord.serverId;
+			if (!bridge.topicBridges && bridge.threadMap) {
+				bridge.topicBridges = bridge.threadMap;
+			}
+			delete bridge.threadMap;
+			if (bridge.topicBridgesAutoCreate === undefined) bridge.topicBridgesAutoCreate = false;
 		}
 
 		// 2020-02-09: Removed the `displayTelegramReplies` option from Discord

@@ -99,6 +99,14 @@ export function setup(
 				{
 					command: "threadinfo",
 					description: "Get info about the thread"
+				},
+				{
+					command: "connect",
+					description: "Connect a Telegram group or topic to Discord"
+				},
+				{
+					command: "remove",
+					description: "Remove a bridge or topic mapping"
 				}
 			];
 
@@ -108,8 +116,8 @@ export function setup(
 				setTimeout(() => {
 					tgBot.telegram.getMyCommands().then((commands: BotCommand[]) => {
 						logger.info("Telegram commands:", commands);
-						if (commands.length < 2) {
-							throw new Error("Telegram: Expected 2 commands, got " + commands.length);
+						if (commands.length < myCommands.length) {
+							throw new Error(`Telegram: Expected ${myCommands.length} commands, got ${commands.length}`);
 						}
 					});
 				}, 5000);
@@ -146,6 +154,10 @@ export function setup(
 			const antiInfoSpamSet = new Set();
 
 			const groupIdMap: Map<string, TediCrossContext[]> = new Map();
+			settings.onBridgeMapUpdate(updatedBridgeMap => {
+				bridgeMap = updatedBridgeMap;
+				tgBot.context.TediCross.bridgeMap = updatedBridgeMap;
+			});
 
 			// Add some global context
 			tgBot.context.TediCross = {
@@ -162,6 +174,8 @@ export function setup(
 			// Apply middlewares and endwares
 			tgBot.command("chatinfo", chatinfo);
 			tgBot.command("threadinfo", threadinfo);
+			tgBot.command("connect", require("./bridgeCommands").connectBridge);
+			tgBot.command("remove", require("./bridgeCommands").removeBridge);
 			tgBot.use(channelChatInfo as any);
 			tgBot.use(middlewares.addTediCrossObj);
 			tgBot.use(middlewares.addMessageObj);

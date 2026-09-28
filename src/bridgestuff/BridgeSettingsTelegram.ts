@@ -5,6 +5,11 @@ export interface BridgeSettingsTelegramProperties {
 	relayJoinMessages: boolean;
 	relayLeaveMessages: boolean;
 	crossDeleteOnDiscord: boolean;
+	allowedUserIds?: string[];
+	blockedUserIds?: string[];
+	groupMessages?: boolean;
+	relayMedia?: boolean;
+	mediaReplacementText?: string;
 	ignoreCommands?: boolean;
 }
 
@@ -15,6 +20,11 @@ export class BridgeSettingsTelegram {
 	public relayJoinMessages: boolean;
 	public relayLeaveMessages: boolean;
 	public crossDeleteOnDiscord: boolean;
+	public allowedUserIds: string[];
+	public blockedUserIds: string[];
+	public groupMessages: boolean;
+	public relayMedia: boolean;
+	public mediaReplacementText: string;
 	//public relayCommands: boolean;
 
 	/**
@@ -46,6 +56,11 @@ export class BridgeSettingsTelegram {
 
 		/** Whether or not to delete messages when they are edited to be a single dot */
 		this.crossDeleteOnDiscord = settings.crossDeleteOnDiscord;
+		this.allowedUserIds = settings.allowedUserIds ?? [];
+		this.blockedUserIds = settings.blockedUserIds ?? [];
+		this.groupMessages = settings.groupMessages ?? false;
+		this.relayMedia = settings.relayMedia ?? true;
+		this.mediaReplacementText = settings.mediaReplacementText ?? "[Media omitted]";
 	}
 
 	/**
@@ -79,6 +94,23 @@ export class BridgeSettingsTelegram {
 		// Check that crossDeleteOnDiscord is a boolean
 		if (Boolean(settings.crossDeleteOnDiscord) !== settings.crossDeleteOnDiscord) {
 			throw new Error("`settings.crossDeleteOnDiscord` must be a boolean");
+		}
+		for (const [key, value] of Object.entries({
+			allowedUserIds: settings.allowedUserIds,
+			blockedUserIds: settings.blockedUserIds
+		})) {
+			if (value !== undefined && (!Array.isArray(value) || value.some(id => typeof id !== "string"))) {
+				throw new Error(`settings.telegram.${key} must be an array of user IDs`);
+			}
+		}
+		if (settings.relayMedia !== undefined && typeof settings.relayMedia !== "boolean") {
+			throw new Error("settings.telegram.relayMedia must be a boolean");
+		}
+		if (settings.groupMessages !== undefined && typeof settings.groupMessages !== "boolean") {
+			throw new Error("settings.telegram.groupMessages must be a boolean");
+		}
+		if (settings.mediaReplacementText !== undefined && typeof settings.mediaReplacementText !== "string") {
+			throw new Error("settings.telegram.mediaReplacementText must be a string");
 		}
 	}
 }
