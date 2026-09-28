@@ -94,7 +94,9 @@ export async function createComponentsV2Message(ctx: any, prepared: any, include
 				? [prepared.file]
 				: [];
 		files.push(...mediaFiles);
-		const galleryFiles = mediaFiles.filter(file => file.description === "photo" || file.description === "video");
+		const galleryFiles = mediaFiles.filter(file =>
+			["photo", "video", "animation"].includes(file.description ?? "")
+		);
 		if (galleryFiles.length) {
 			components.push(
 				new MediaGalleryBuilder().addItems(

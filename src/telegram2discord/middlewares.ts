@@ -544,6 +544,14 @@ function addFileObj(ctx: TediCrossContext, next: () => void) {
 			name: message.video.file_name || `video.${mime.getExtension(message.video.mime_type)}`,
 			size: message.video.file_size
 		};
+	} else if (!R.isNil(message.animation)) {
+		// Telegram sends GIFs as animations, usually encoded as MP4 files.
+		ctx.tediCross.file = {
+			type: "animation",
+			id: message.animation.file_id,
+			name: message.animation.file_name || `animation.${mime.getExtension(message.animation.mime_type) || "mp4"}`,
+			size: message.animation.file_size
+		};
 	} else if (!R.isNil(message.voice)) {
 		// Voice
 		ctx.tediCross.file = {
