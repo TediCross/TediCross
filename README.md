@@ -2,7 +2,7 @@ TediCross
 =========
 TediCross is a bot which bridges a chat in [Telegram](https://telegram.org) with a channel in [Discord](https://discord.com/).
 
-There is no public TediCross bot. You need to host it yourself. To host a bot, you need [nodejs](https://nodejs.org). The bot requires NodeJS 18 or higher.
+There is no public TediCross bot. You need to host it yourself. To host a bot, you need [nodejs](https://nodejs.org). The bot requires Node.js 22.13 or higher.
 
 If you are cloning the repository and looking for the stable release, switch to the `stable` branch.
 
@@ -25,7 +25,7 @@ Step by step installation:
 --------------------------
 Setting up the bot requires basic knowledge of the command line, which is bash or similar on Linux/Mac, and cmd.exe in Windows
 
- 1. Install [nodejs](https://nodejs.org). TediCross requires at least node version 18
+ 1. Install [nodejs](https://nodejs.org). TediCross requires at least Node.js 22.13
  2. Download the latest [release](https://github.com/TediCross/TediCross/releases/latest)
  3. Open a terminal and enter the repo with the [`cd`](https://en.wikipedia.org/wiki/Cd_(command)) command. Something like `cd Downloads/TediCross-master`. Your exact command may differ
  4. Run the command `npm install --omit=dev`
@@ -43,7 +43,7 @@ Setting up the bot requires basic knowledge of the command line, which is bash o
    - If you want to bridge a Telegram group or channel, remember that the ID is negative. Include the `-` when entering it into the settings file
    - It is important that the Discord  channel ID is wrapped with single quotes when entered into the settings file. `'244791815503347712'`, not `244791815503347712`
  12. Restart TediCross. You stop it by pressing CTRL + C in the terminal it is running in
- 13. To turn on threads support (EXPERIMENTAL) just add `threadMap` section under particular `Bridge`. Write `/threadinfo` in telegram and discord threads to get corresponding IDs.
+ 13. To map Telegram forum topics to Discord threads, add a `topicBridges` section under the relevant bridge in `settings.yaml`. Use `/topicinfo` in the Telegram topic and Discord thread to get their IDs.
 
 Done! You now have a nice bridge between a Telegram chat and a Discord channel
 
@@ -53,62 +53,6 @@ Running in Docker
 Please refer to [Docker Guide](./guides/docker/Docker.md) for the details.
 
 
-Settings
---------
-
-As mentioned in the step-by-step installation guide, there is a settings file. Here is a description of what the settings do.
-
-* `telegram`: Object authorizing and defining the Telegram bot's behavior
-	* `token`: The Telegram bot's token. It is needed for the bot to authenticate to the Telegram servers and be able to send and receive messages. If set to `"env"`, TediCross will read the token from the environment variable `TELEGRAM_BOT_TOKEN`
-	* `useFirstNameInsteadOfUsername`: If set to `true`, the messages sent to Discord will be tagged with the sender's first name + last name. If set to `false` - sender's username will be preferred, but if username is not set - first name + last name. Note that Discord users can't @-mention Telegram users by their first name. Defaults to `false`
-	* `colonAfterSenderName`: Whether to put a colon after the name of the sender in messages from Discord to Telegram. If true, the name is displayed `Name:`. If false, it is displayed `Name`. Defaults to false
-	* `skipOldMessages`: Whether to skip through all previous messages cached from the telegram-side and start processing new messages ONLY. Defaults to true. Note that there is no guarantee the old messages will arrive at Discord in order
-	* `sendEmojiWithStickers`: Whether to send the corresponding emoji when relaying stickers to Discord
-	* `filterCustomEmojis`: Determines what to do with custom emojis from Discord message before it reaches telegram. Has three states:
-		01. `default` - custom emojis will be transferred without any processing (ex: <:emojisnhead:1102667149627113602> My Text);
-		02. `remove` - custom emojis will be removed from the output (ex: My Text);
-		03. `replace` - custom emojis will be replaced with a definable string. Defined in `replaceCustomEmojisWith` (ex: 🔹 My Text).
-		Defaults to `default`
-	* `replaceCustomEmojisWith`: Determines a string that will be used as a replacement for custom emojis. Anything that can be passed as a string is supported, including emojis. Defaults to `🔹`
-	* `replaceAtSign`: Whether to replace `@` sign to something else from Discord message before it reaches. When set to `true` will replace `@` with a string you put into `settings.replaceAtSignWith`. If set to `false` - will do nothing. Defaults to `false`
-	* `replaceAtSignWith`: Determines the string that will be used as a replacement for `@` sign. Anything that can be passed as a string is supported, including emojis. Defaults to `#`
-	* `removeExcessiveSpacings`: **USE WITH CAUTION** Whether to remove excessive (2 or more) `whitespaces` from Discord message. Can help to neat your message up if it wasn't particulary untidy in the source. When set to `true` will remove excessive `whitespaces` and replace them with a single `whitespace` instead. If set to `false` - will do nothing. Defaults to `false`
-	* `suppressFileTooBigMessages`: Suppress warning messages on errors with sending too big files (due to API limitations) from telegram to discord. Defaults to `false`.
-	* `suppressThisIsPrivateBotMessage`: If set to `true` - suppress warning messages (`This is an instance of a TediCross bot...`) in telegram chats outside configured bridges. Defaults to `false`
-* `discord`: Object authorizing and defining the Discord bot's behavior
-	* `token`: The Discord bot's token. It is needed for the bot to authenticate to the Discord servers and be able to send and receive messages. If set to `"env"`, TediCross will read the token from the environment variable `DISCORD_BOT_TOKEN`
-	* `skipOldMessages`: Whether to skip through all previous messages sent since the bot was last turned off and start processing new messages ONLY. Defaults to true. Note that there is no guarantee the old messages will arrive at Telegram in order. **NOTE:** [Telegram has a limit](https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this) on how quickly a bot can send messages. If there is a big backlog, this will cause problems
-	* `useNickname`: Uses the sending user's nickname instead of username when relaying messages to Telegram
-	* `replyLength`: How many characters of the original message to display on replies
-	* `maxReplyLines`: How many lines of the original message to display on replies
-	* `suppressThisIsPrivateBotMessage`: If set to `true` - suppress warning messages (`This is an instance of a TediCross bot...`) in discord channels outside configured bridges. Defaults to `false`
-	* `enableCustomStatus`: If set to `true` - enables the custom status. Defaults to `false`
-	* `customStatusMessage`: The message to set as custom status. Defaults to "TediCross"
-* `debug`: If set to `true`, activates debugging output from the bot. Defaults to `false`
-* `messageTimeoutAmount`: Amount for your unit of time to expire messages in MessageMap. Defaults to `24`
-* `messageTimeoutUnit`: Format of time as a string (ie: 'hours', 'days', 'weeks', etc...). Defaults to `'hours'`
-* `persistentMessageMap`: Allow MessageMap to persist between reboots by saving it to a file. Defaults to `false`
-* `bridges`: An array containing all your chats and channels. For each object in this array, you should have the following properties:
-	* `name`: A internal name of the chat. Appears in the log
-	* `direction`: Direction of the bridge. "both" for bidirectional, "d2t" for discord-to-telegram, "t2d" for telegram-to-discord
-	* `telegram.chatId`: ID of the chat that is the Telegram end of this bridge. See step 11 on how to acquire it
-	* `telegram.relayJoinMessages`: Whether to relay messages to Discord about people joining the Telegram chat
-	* `telegram.relayLeaveMessages`: Whether to relay messages to Discord about people leaving the Telegram chat
-	* `telegram.sendUsernames`: Whether to send the sender's name with the messages to Discord
-	<!--* `telegram.relayCommands`: If set to `false`, messages starting with a `/` are not relayed to Discord-->
-	* `telegram.crossDeleteOnDiscord`: Whether to also delete the corresponding message on Discord when one is deleted on Telegram. **NOTE**: See FAQ about deleting messages.
-	* `discord.channelId`: ID of the channel the Discord end of the bridge is in. See step 11 on how to acquire it
-	* `discord.relayJoinMessages`: Whether to relay messages to Telegram about people joining the Discord chat
-	* `discord.relayLeaveMessages`: Whether to relay messages to Telegram about people leaving the Discord chat
-	* `discord.sendUsernames`: Whether to send the sender's name with the messages to Telegram
-	* `discord.crossDeleteOnTelegram`: Whether to also delete the corresponding message on Telegram when one is deleted in Discord
-	* `discord.disableWebPreviewOnTelegram`: Whether to disable links preview when relaying to Telegram
-	* `discord.useEmbeds`: Whether to use embeds for current bridge. Can be `always`, `never`, `auto`. Defaults to `false`
-	* `threadMap`: An array containing all threads mapping for each bridge
-		* `telegram`: Telegram thread ID. See step 13 on how to acquire it
-		* `discord`: Discord thread ID. See step 13 on how to acquire it
-
-The available settings will occasionally change. The bot takes care of this automatically
 
 FAQ
 ---
@@ -127,10 +71,10 @@ Not much at all. Almost all the commands are written in the installation guide e
 
 This likely means you are using Ubuntu or another Debian based Linux distro. You get node version 4 when you do `apt-get install nodejs`, and it is called `nodejs` instead of `node`.
 
-TediCross requires node 18 or higher to run. To get node 18 on a Debian based system (including Ubuntu), run the following two commands:
+TediCross requires Node.js 22.13 or higher to run. To install Node.js 22 on a Debian based system (including Ubuntu), run the following two commands:
 
 ```bash
-curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+curl -sL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 

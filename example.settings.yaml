@@ -1,48 +1,124 @@
+# TediCross configuration example. Copy this file to settings.yaml and edit it.
+# Tokens can be entered here directly, or set to "env" to read them from the
+# TELEGRAM_BOT_TOKEN / DISCORD_BOT_TOKEN environment variables.
 telegram:
-  token: TELEGRAM_BOT_TOKEN_HERE # Telegram bot tokens look like this: 113031530:AAH_4c5Gt9gsVu82OVNjUV7poU7PodYiNsA
+  token: env
+
+  # Use the Telegram first and last name rather than the username when relaying to Discord.
   useFirstNameInsteadOfUsername: false
+  # Add a colon after sender names in messages sent from Discord to Telegram.
   colonAfterSenderName: false
+  # Skip messages sent while TediCross was offline.
   skipOldMessages: true
+  # Include the sticker's associated emoji when available.
   sendEmojiWithStickers: true
-  useCustomEmojiFilter: false # Experimental, might break
-  replaceAtWithHash: false # Experimental, might break
-  replaceExcessiveSpaces: false # Experimental, might break
-  removeNewlineSpaces: false # Experimental, might break
+  # Filter custom Discord emoji before sending messages to Telegram.
+  useCustomEmojiFilter: false
+  # Replace @ with # in messages sent from Discord to Telegram.
+  replaceAtWithHash: false
+  # Collapse excessive spaces in messages sent from Discord to Telegram.
+  replaceExcessiveSpaces: false
+  # Remove indentation spaces after newlines in messages sent from Discord to Telegram.
+  removeNewlineSpaces: false
+  # Do not send Telegram warnings when a file exceeds Discord's upload limit.
   suppressFileTooBigMessages: false
+  # Suppress the notice sent when the bot receives a message outside a configured bridge.
   suppressThisIsPrivateBotMessage: false
+  # Bridge management commands are currently disabled by default.
+  enableBridgeManagement: false
+  # Map Discord custom emoji names to replacement text for Telegram. Example:
+  # emojiMap:
+  #   photon: "✨"
+  emojiMap: {}
+
 discord:
+  token: env
+  # Use the member's server nickname instead of their account username on Telegram.
   useNickname: false
-  token: DISCORD_BOT_TOKEN_HERE # Discord bot tokens look like this: MjI3MDA1NzIvOBQ2MzAzMiMz.DRf-aw.N0MVYtDxXYPSQew4g2TPqvQve2c
+  # Skip messages sent while TediCross was offline.
   skipOldMessages: true
+  # Maximum number of characters shown from the original message in a reply.
   replyLength: 100
+  # Maximum number of lines shown from the original message in a reply.
   maxReplyLines: 2
+  # Suppress the notice sent when the bot receives a message outside a configured bridge.
   suppressThisIsPrivateBotMessage: false
+  # Enable a custom Discord bot status.
   enableCustomStatus: false
+  # Status text shown when enableCustomStatus is true.
   customStatusMessage: "TediCross"
-bridges:
-  - name: First bridge
-    direction: both
-    threadMap: # Remove this and (telegram/discord pairs below if not planing to use Threads )
-      - name: First thread # optional naming for thread mapping
-        telegram: TELEGRAM_THREAD_ID  # Threads have positive IDs
-        discord: 'DISCORD_THREAD_ID' # Discord thread IDs looks like other channel IDs
-      - telegram: TELEGRAM_THREAD_ID  # Threads have positive IDs
-        discord: 'DISCORD_THREAD_ID' # Discord thread IDs looks like other channel IDs
-    telegram:
-      chatId: TELEGRAM_CHAT_ID # Remember that Telegram group and channel IDs are negative. Include the `-` if you are bridging a group or a channel
-      relayJoinMessages: true
-      relayLeaveMessages: true
-      sendUsernames: true
-      crossDeleteOnDiscord: true
-    discord:
-      channelId: 'DISCORD_CHANNEL_ID' # This ID must be wrapped in single quotes. Example: '244791815503347712'
-      relayJoinMessages: true
-      relayLeaveMessages: true
-      sendUsernames: true
-      crossDeleteOnTelegram: true
-      disableWebPreviewOnTelegram: false
-      useEmbeds: 'auto' # always / never / auto
-debug: false
+  # Embed behavior for Discord messages. Bridge-level discord.useEmbeds controls relaying.
+  # Accepted values are "always", "never", or "auto".
+  useEmbeds: "auto"
+
+# Defaults for MessageMap entries that connect messages across platforms.
+# Entries expire after this amount of time unless persistentMessageMap is enabled.
 messageTimeoutAmount: 24
-messageTimeoutUnit: 'hours' # This string must be a valid Moment time format. Example: seconds, minutes, hours, days, weeks, months, years
+messageTimeoutUnit: hours # Moment duration unit: years, months, weeks, days, hours, minutes, seconds, milliseconds
+# Save message mappings to disk so they survive restarts.
 persistentMessageMap: false
+# Print additional diagnostic information to the logs.
+debug: false
+
+bridges:
+  - name: Main bridge # Unique internal name used in logs and message mapping.
+    direction: both # "both", "d2t" (Discord to Telegram), or "t2d" (Telegram to Discord).
+
+    # Optional mapping of Telegram forum topics to Discord threads/channels.
+    # Telegram topic IDs are numbers; Discord snowflake IDs must be quoted strings.
+    # Omit topicBridges when not mapping individual topics.
+    # topicBridges:
+    #   - name: Announcements # Optional label used in logs.
+    #     telegram: 123
+    #     discord: '123456789012345678'
+    # Automatically create Discord threads for Telegram topics without a mapping.
+    topicBridgesAutoCreate: false
+
+    telegram:
+      chatId: -1001234567890 # Telegram group/channel IDs are negative.
+      sendUsernames: true # Include sender names in messages sent to Discord.
+      relayJoinMessages: true # Relay Telegram member join events to Discord.
+      relayLeaveMessages: true # Relay Telegram member leave events to Discord.
+      crossDeleteOnDiscord: true # Delete the Discord copy when the Telegram message is deleted (where supported).
+      # Optional Telegram user ID allow/block filters. IDs are strings.
+      allowedUserIds: [] # If non-empty, only relay messages from these Telegram users.
+      blockedUserIds: [] # Never relay messages from these Telegram users.
+      ignoreBots: true # Skip Telegram bot messages (Telegram bots cannot see messages from other bots).
+      groupMessages: false # Group consecutive messages from the same sender when supported.
+      messageStyle: text # "text" or "componentsV2" for messages sent to Discord.
+
+      # Media forwarding controls apply to Telegram-to-Discord messages.
+      # Set enabled: false here to replace all media with a single notice.
+      # Individual media types can also be disabled or given custom replacement text.
+      media:
+        enabled: true
+        photo:
+          enabled: true
+          replacementText: "[Photo omitted]"
+        video:
+          enabled: true
+          replacementText: "[Video omitted]"
+        audio:
+          enabled: true
+          replacementText: "[Audio omitted]"
+        file:
+          enabled: true
+          replacementText: "[File omitted]"
+        sticker:
+          enabled: true
+          replacementText: "[Sticker omitted]"
+
+    discord:
+      channelId: '123456789012345678' # Always quote Discord snowflake IDs to preserve precision.
+      sendUsernames: true # Include sender names in messages sent to Telegram.
+      relayJoinMessages: true # Relay Discord member join events to Telegram.
+      relayLeaveMessages: true # Relay Discord member leave events to Telegram.
+      crossDeleteOnTelegram: true # Delete the Telegram copy when its Discord message is deleted; "mark" marks it instead.
+      # Optional Discord user ID allow/block filters. IDs are strings.
+      allowedUserIds: [] # If non-empty, only relay messages from these Discord users.
+      blockedUserIds: [] # Never relay messages from these Discord users.
+      ignoreBots: true # Skip messages authored by bots.
+      ignoreWebhooks: true # Skip messages authored by webhooks.
+      groupMessages: false # Group consecutive messages from the same sender when supported.
+      disableWebPreviewOnTelegram: false # Disable Telegram link previews for relayed messages.
+      useEmbeds: auto # "always", "never", or "auto" embed behavior for this bridge.
