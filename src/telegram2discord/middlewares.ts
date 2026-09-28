@@ -9,8 +9,9 @@ import { Message } from "telegraf/types";
 import { TediCrossContext } from "./endwares";
 import { createFromObjFromChat, createFromObjFromMessage, createFromObjFromUser, makeDisplayName } from "./From";
 import { deleteMessage, ignoreAlreadyDeletedError } from "./helpers";
+import { groupSenderMessage, LastMessageSender } from "../bridgestuff/MessageGrouping";
 
-const lastTelegramSenderByBridge = new Map<string, string>();
+const lastTelegramSenderByBridge = new Map<string, LastMessageSender>();
 import { MessageMap } from "../MessageMap";
 
 const telegramBotApiDownloadLimitBytes = 20_000_000;
@@ -705,14 +706,13 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				let header: string;
 				const senderId = tc.message.from?.id?.toString() ?? tc.message.sender_chat?.id?.toString();
 				const streamKey = `${bridge.name}:${tc.message.message_thread_id ?? "general"}`;
-				grouped =
-					bridge.telegram.groupMessages &&
-					senderId !== undefined &&
-					lastTelegramSenderByBridge.get(streamKey) === senderId &&
-					R.isNil(tc.forwardFrom) &&
-					R.isNil(tc.replyTo) &&
-					!tc.hasActualReference;
-				if (senderId !== undefined) lastTelegramSenderByBridge.set(streamKey, senderId);
+				grouped = groupSenderMessage(
+					lastTelegramSenderByBridge,
+					streamKey,
+					senderId,
+					bridge.telegram.groupMessages,
+					!R.isNil(tc.forwardFrom) || !R.isNil(tc.replyTo) || tc.hasActualReference
+				);
 				if (bridge.telegram.sendUsernames && !grouped) {
 					if (!R.isNil(tc.forwardFrom)) {
 						// Forward

@@ -4,6 +4,7 @@ import { LatestDiscordMessageIds } from "./LatestDiscordMessageIds";
 import { handleEmbed } from "./handleEmbed";
 import { relayOldMessages } from "./relayOldMessages";
 import { Bridge } from "../bridgestuff/Bridge";
+import { groupSenderMessage, LastMessageSender } from "../bridgestuff/MessageGrouping";
 import fs from "fs";
 import path from "path";
 import R from "ramda";
@@ -177,7 +178,7 @@ export function setup(
 		path.join(datadirPath, "latestDiscordMessageIds.json")
 	);
 	const useNickname = settings.discord.useNickname;
-	const lastDiscordSenderByBridge = new Map<string, string>();
+	const lastDiscordSenderByBridge = new Map<string, LastMessageSender>();
 
 	// Make a set to keep track of where the "This is an instance of TediCross..." message has been sent the last minute
 	const antiInfoSpamSet = new Set();
@@ -349,12 +350,15 @@ export function setup(
 				}
 
 				let messageCaption = "";
+				const streamKey = `${bridge.name}:${bridge.tgThread ?? "general"}`;
+				const grouped = groupSenderMessage(
+					lastDiscordSenderByBridge,
+					streamKey,
+					message.author.id,
+					bridge.discord.groupMessages,
+					Boolean(messageReference) || messageParts.length === 0
+				);
 				if (messageParts.length) {
-					const streamKey = `${bridge.name}:${bridge.tgThread ?? "general"}`;
-					const senderId = message.author.id;
-					const grouped =
-						bridge.discord.groupMessages && lastDiscordSenderByBridge.get(streamKey) === senderId;
-					lastDiscordSenderByBridge.set(streamKey, senderId);
 					const sender = bridge.discord.sendUsernames && !grouped ? `<b>${senderName}</b>\n` : "";
 					messageCaption = sender + messageParts.join("\n\n");
 				}
