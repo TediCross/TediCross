@@ -548,7 +548,7 @@ function addFileObj(ctx: TediCrossContext, next: () => void) {
 		ctx.tediCross.file = {
 			type: "voice",
 			id: message.voice.file_id,
-			name: "voice" + "." + mime.getExtension(message.voice.mime_type),
+			name: "voice.ogg",
 			size: message.voice.file_size
 		};
 	}
@@ -786,6 +786,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				header,
 				senderName,
 				file: bridge.telegram.relayMedia && !attachmentTooLarge ? file : undefined,
+				voiceDuration: (tc.message as any).voice?.duration,
 				text,
 				messageToReply,
 				replyId,

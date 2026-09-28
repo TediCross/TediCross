@@ -5,13 +5,14 @@ import { fetchDiscordChannel } from "../fetchDiscordChannel";
 import { Context } from "telegraf";
 import { deleteMessage, ignoreAlreadyDeletedError } from "./helpers";
 import { createFromObjFromUser } from "./From";
-import { MessageEditOptions, EmbedBuilder } from "discord.js";
+import { MessageEditOptions, EmbedBuilder, MessageFlags, AttachmentBuilder } from "discord.js";
 import { Message, User } from "telegraf/types";
 
 interface DiscordMessage {
 	embeds?: any[];
 	content?: string;
 	files?: any[];
+	flags?: MessageFlags[];
 }
 
 export interface TediCrossContext extends Context {
@@ -292,6 +293,62 @@ export const relayMessage = (ctx: TediCrossContext) => {
 
 			const messageText = prepared.header + "\n" + prepared.text;
 			const sendObject: DiscordMessage = {};
+
+			// Telegram voice notes are Ogg Opus already. Decode only to build Discord's
+			// required sampled waveform, then send the original audio as a voice message.
+			if (prepared.voiceDuration !== undefined && prepared.file) {
+				let response: Response;
+				try {
+					response = await fetch(prepared.file.attachment);
+				} catch {
+					throw new Error("Could not download Telegram voice note");
+				}
+				if (!response.ok) throw new Error(`Could not download Telegram voice note: HTTP ${response.status}`);
+				const audio = Buffer.from(await response.arrayBuffer());
+				const { OggOpusDecoder } = await import("ogg-opus-decoder");
+				const decoder = new OggOpusDecoder();
+				let waveform: Buffer;
+				try {
+					await decoder.ready;
+					const decoded = decoder.decode(audio);
+					const samples = decoded.channelData[0];
+					if (!samples?.length) throw new Error("Telegram voice note did not contain decodable Opus audio");
+					const bucketCount = 256;
+					const bucketEnergy = new Float64Array(bucketCount);
+					const bucketSamples = new Uint32Array(bucketCount);
+					for (let i = 0; i < samples.length; i++) {
+						const bucket = Math.min(bucketCount - 1, Math.floor((i * bucketCount) / samples.length));
+						bucketEnergy[bucket] += samples[i] * samples[i];
+						bucketSamples[bucket]++;
+					}
+					waveform = Buffer.from(
+						Array.from(bucketEnergy, (energy, i) =>
+							Math.min(255, Math.round(Math.sqrt(energy / Math.max(1, bucketSamples[i])) * 255))
+						)
+					);
+				} finally {
+					decoder.free();
+				}
+
+				// Voice messages cannot include content or embeds. Keep sender/caption text
+				// as a regular companion message, then attach the audio as a voice message.
+				let voiceReply = messageToReply;
+				if (messageText.trim()) voiceReply = await sendToDiscord(messageText);
+				const voiceAttachment = new AttachmentBuilder(audio, { name: prepared.file.name })
+					.setDuration(prepared.voiceDuration)
+					.setWaveform(waveform.toString("base64"));
+				const voiceMessage = voiceReply
+					? await voiceReply.reply({ files: [voiceAttachment], flags: [MessageFlags.IsVoiceMessage] })
+					: await channel.send({ files: [voiceAttachment], flags: [MessageFlags.IsVoiceMessage] });
+				discordMessages.push(voiceMessage);
+				await ctx.TediCross.messageMap.replace(
+					MessageMap.TELEGRAM_TO_DISCORD,
+					prepared.bridge,
+					ctx.tediCross.messageId,
+					discordMessages.map(message => message.id)
+				);
+				return;
+			}
 
 			const useEmbeds =
 				(messageText.length > 2000 && prepared.bridge.discord.useEmbeds !== "never") || prepared.hasLinks;
