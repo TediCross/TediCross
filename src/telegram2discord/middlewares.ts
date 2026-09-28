@@ -13,6 +13,13 @@ import { deleteMessage, ignoreAlreadyDeletedError } from "./helpers";
 const lastTelegramSenderByBridge = new Map<string, string>();
 import { MessageMap } from "../MessageMap";
 
+const telegramBotApiDownloadLimitBytes = 20_000_000;
+
+function formatFileSize(bytes: number | undefined): string | undefined {
+	if (bytes === undefined || !Number.isFinite(bytes) || bytes < 0) return undefined;
+	return `${(bytes / 1_000_000).toFixed(1)} MB`;
+}
+
 /***********
  * Helpers *
  ***********/
@@ -574,32 +581,28 @@ function addFileObj(ctx: TediCrossContext, next: () => void) {
  *
  * @returns Promise resolving to nothing when the operation is complete
  */
-function addFileLink(ctx: TediCrossContext, next: () => void) {
-	return Promise.resolve()
-		.then(() => {
-			// Get a stream to the file, if one was found
-			if (!R.isNil(ctx.tediCross.file)) {
-				return ctx.telegram.getFileLink(ctx.tediCross.file.id).then(fileLink => {
-					ctx.tediCross.file.link = fileLink.href;
-					if (ctx.tediCross.file.type === "photo") {
-						ctx.tediCross.file.name = fileLink.href.split("/").pop() || ctx.tediCross.file.name;
-					}
-				});
-			}
-		})
-		.then(next)
-		.then(R.always(undefined))
-		.catch(err => {
-			if (ctx.TediCross.settings.telegram.suppressFileTooBigMessages) {
-				console.log(err.response ? err.response.description : "Bad Request");
-			} else if (err.response && err.response.description === "Bad Request: file is too big") {
-				ctx.reply(`<i>File '${ctx.tediCross.file.name}' is too big for TediCross to handle</i>`, {
-					parse_mode: "HTML"
-				}).then();
-			}
+async function addFileLink(ctx: TediCrossContext, next: () => void) {
+	const file = ctx.tediCross.file;
+	if (!file || (file.size ?? 0) > telegramBotApiDownloadLimitBytes) {
+		next();
+		return;
+	}
 
-			next();
-		});
+	try {
+		const fileLink = await ctx.telegram.getFileLink(file.id);
+		file.link = fileLink.href;
+		if (file.type === "photo") {
+			file.name = fileLink.href.split("/").pop() || file.name;
+		}
+	} catch (err: any) {
+		file.linkError = true;
+		ctx.TediCross.logger.warn(
+			`Could not retrieve Telegram media${file.name ? ` '${file.name}'` : ""}. ` +
+				(err.response?.description ?? err.code ?? "Telegram API request failed")
+		);
+	}
+
+	next();
 }
 
 async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
@@ -621,7 +624,9 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 			// raise that limit; keep the actual API rejection handler as the final authority.
 			const premiumTier = (channel as any).guild?.premiumTier ?? 0;
 			const maxUploadBytes = premiumTier >= 3 ? 100_000_000 : premiumTier >= 2 ? 50_000_000 : 20_000_000;
-			const attachmentTooLarge = Boolean(tc.file?.size && tc.file.size > maxUploadBytes);
+			const telegramFileTooLarge = Boolean(tc.file?.size && tc.file.size > telegramBotApiDownloadLimitBytes);
+			const discordFileTooLarge = Boolean(tc.file?.size && tc.file.size > maxUploadBytes);
+			const attachmentTooLarge = telegramFileTooLarge || discordFileTooLarge;
 
 			// Check if the message is a reply and get the id of that message on Discord
 			let replyId = "0";
@@ -755,7 +760,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 
 			// Handle file
 			const file = R.ifElse(
-				R.compose(R.isNil, R.prop("file")),
+				(tc: TediCrossContext["TediCross"]["tc"]) => R.isNil(tc.file) || R.isNil(tc.file.link),
 				R.always(undefined),
 				(tc: TediCrossContext["TediCross"]["tc"]) =>
 					new Discord.AttachmentBuilder(tc.file.link, {
@@ -786,8 +791,17 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 					!mediaAllowed && tc.file
 						? bridge.telegram.mediaReplacementText
 						: attachmentTooLarge
-							? `[File omitted: exceeds this Discord server's ${Math.floor(maxUploadBytes / 1_000_000)} MB upload limit]`
-							: "";
+							? `[${tc.file.name} (${formatFileSize(tc.file.size) ?? "large file"}) was not relayed because it ${[
+									telegramFileTooLarge ? "exceeds Telegram's Bot API 20 MB download limit" : "",
+									discordFileTooLarge
+										? `exceeds this Discord server's ${Math.floor(maxUploadBytes / 1_000_000)} MB upload limit`
+										: ""
+								]
+									.filter(Boolean)
+									.join(" and ")}. The original is still available in Telegram.]`
+							: tc.file?.linkError
+								? `[${tc.file.name} could not be downloaded from Telegram, so it was not attached. The original is still available in Telegram.]`
+								: "";
 				return [[editableText, mediaNotice].filter(Boolean).join("\n"), hasLinks];
 			})();
 
@@ -796,7 +810,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				header,
 				senderName,
 				grouped,
-				file: bridge.telegram.relayMedia && !attachmentTooLarge ? file : undefined,
+				file: bridge.telegram.relayMedia && !attachmentTooLarge && !tc.file?.linkError ? file : undefined,
 				voiceDuration: (tc.message as any).voice?.duration,
 				text,
 				messageToReply,

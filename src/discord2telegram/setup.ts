@@ -384,11 +384,15 @@ export function setup(
 				const videos: InputMediaVideo[] = [];
 				const audios: InputMediaAudio[] = [];
 				const documents: InputMediaDocument[] = [];
+				const skippedAttachments: Array<{ name: string; size: number; limit: number }> = [];
+				let mediaSendFailed = false;
 
 				const handleMediaFile = (attachment: any, type: "video" | "photo" | "audio" | "document") => {
-					const maxFileSize = type === "video" ? 20000000 : 10000000;
+					// Telegram fetches media from URLs supplied by bots. Its URL import
+					// limits are 5 MB for photos and 20 MB for other media.
+					const maxFileSize = type === "photo" ? 5_000_000 : 20_000_000;
 
-					if (attachment.size < maxFileSize) {
+					if (attachment.size === undefined || attachment.size <= maxFileSize) {
 						const mediaFile: any = { media: { url: attachment.url, filename: attachment.name }, type };
 						if (attachment.spoiler || attachment.name?.startsWith("SPOILER_")) {
 							if (type === "photo" || type === "video") mediaFile.has_spoiler = true;
@@ -408,7 +412,14 @@ export function setup(
 								break;
 						}
 					} else {
-						logger.error(`[${bridge.name}] Too big attachment ${type} File: ${attachment.name}`);
+						skippedAttachments.push({
+							name: attachment.name || `${type} attachment`,
+							size: attachment.size,
+							limit: maxFileSize
+						});
+						logger.warn(
+							`[${bridge.name}] Skipped ${type} attachment '${attachment.name}' (${attachment.size} bytes): Telegram's URL import limit is ${maxFileSize} bytes`
+						);
 					}
 				};
 
@@ -489,6 +500,7 @@ export function setup(
 								if (sent?.message_id) sentTelegramMessageIds.push(sent.message_id.toString());
 							}
 						} catch (err) {
+							mediaSendFailed = true;
 							logger.error(
 								`[${bridge.name}] Telegram did not accept ${type} attachment:`,
 								(err as Error).toString()
@@ -527,12 +539,44 @@ export function setup(
 							sentTelegramMessageIds.push(sent.message_id.toString());
 						}
 					} catch (err) {
+						mediaSendFailed = true;
 						logger.error(
 							`[${bridge.name}] Telegram did not accept component or embed images:`,
 							(err as Error).toString()
 						);
 					}
 				}
+
+				if (skippedAttachments.length || mediaSendFailed) {
+					const sizeDetails = skippedAttachments
+						.map(
+							file =>
+								`${file.name} (${(file.size / 1_000_000).toFixed(1)} MB; limit ${(file.limit / 1_000_000).toFixed(0)} MB)`
+						)
+						.join(", ");
+					const notice = [
+						skippedAttachments.length
+							? `TediCross could not send ${skippedAttachments.length === 1 ? "this file" : `${skippedAttachments.length} files`} to Telegram because they exceed Telegram's URL upload limit${sizeDetails ? `: ${sizeDetails}` : ""}.`
+							: "",
+						mediaSendFailed ? "Telegram rejected one or more media files." : "",
+						"The original file(s) are still available in Discord."
+					]
+						.filter(Boolean)
+						.join(" ");
+					try {
+						const noticeMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, notice, {
+							...telegramReplyOptions(replyId),
+							message_thread_id: bridge.tgThread
+						});
+						sentTelegramMessageIds.push(noticeMessage.message_id.toString());
+					} catch (err) {
+						logger.error(
+							`[${bridge.name}] Could not send the media delivery notice to Telegram:`,
+							(err as Error).toString()
+						);
+					}
+				}
+
 				for (const telegramMessageId of sentTelegramMessageIds) {
 					messageMap.insert(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id, telegramMessageId);
 				}

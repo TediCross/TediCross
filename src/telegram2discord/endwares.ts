@@ -18,6 +18,14 @@ interface DiscordMessage {
 	attachments?: Array<{ id: string }>;
 }
 
+function isPayloadTooLarge(error: any): boolean {
+	return (
+		error?.code === 40005 ||
+		error?.status === 413 ||
+		/request entity too large|payload too large/i.test(String(error?.message ?? error))
+	);
+}
+
 export interface TediCrossContext extends Context {
 	TediCross: any;
 	tediCross: {
@@ -27,6 +35,7 @@ export interface TediCrossContext extends Context {
 			id: string;
 			name: string;
 			link?: string;
+			linkError?: boolean;
 			size?: number;
 		};
 		messageId: string;
@@ -420,9 +429,9 @@ export const relayMessage = (ctx: TediCrossContext) => {
 				try {
 					await sendToDiscord(sendObject);
 				} catch (err: any) {
-					if (err.message === "Request entity too large") {
+					if (isPayloadTooLarge(err)) {
 						await sendToDiscord(
-							`***${prepared.senderName}** on Telegram sent a file, but it was too large for Discord. If you want it, ask them to send it some other way*`
+							`***${prepared.senderName}** on Telegram sent a file that Discord could not accept because it was too large. The original is still available in Telegram; ask them to send a smaller file or raise this server's upload limit.*`
 						);
 					} else {
 						throw err;
@@ -440,9 +449,9 @@ export const relayMessage = (ctx: TediCrossContext) => {
 						});
 						chunkIndex = 1;
 					} catch (err: any) {
-						if (err.message === "Request entity too large") {
+						if (isPayloadTooLarge(err)) {
 							await sendToDiscord(
-								`***${prepared.senderName}** on Telegram sent a file, but it was too large for Discord. If you want it, ask them to send it some other way*`
+								`***${prepared.senderName}** on Telegram sent a file that Discord could not accept because it was too large. The original is still available in Telegram; ask them to send a smaller file or raise this server's upload limit.*`
 							);
 						} else {
 							throw err;
