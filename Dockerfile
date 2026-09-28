@@ -13,6 +13,10 @@ RUN npm run build && npm prune --omit=dev
 
 FROM node:24-alpine AS runtime
 
+LABEL org.opencontainers.image.source="https://github.com/TediCross/TediCross" \
+	org.opencontainers.image.description="A bot that bridges chats between Telegram and Discord." \
+	org.opencontainers.image.licenses="MIT"
+
 ENV NODE_ENV=production
 WORKDIR /opt/TediCross
 
