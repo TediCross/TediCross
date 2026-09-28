@@ -3,11 +3,12 @@ description: Report several related bugs or a larger issue that needs more conte
 title: "bug: "
 labels:
   - bug
+type: Bug
 body:
   - type: markdown
     attributes:
       value: |
-        Use this form for a larger report or to bundle multiple bugs in one issue. List each distinct problem separately so maintainers can track and discuss every part of the report. For support and setup questions, visit the [Telegram support group](https://t.me/TediCrossSupport) or [Discord server](https://discord.gg/MfzGMzy).
+        Use this form for a larger report or to bundle multiple bugs in one issue. List each distinct problem separately so maintainers can track and discuss every part of the report. The maintainers are notified when you create an issue: @TediCross/active-tedicross-maintainers. For support and setup questions, visit the [Telegram support group](https://t.me/TediCrossSupport) or [Discord server](https://discord.gg/MfzGMzy).
 
   - type: textarea
     id: overview

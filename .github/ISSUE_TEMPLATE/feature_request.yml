@@ -3,11 +3,12 @@ description: Suggest an improvement or capability for TediCross.
 title: "feat: "
 labels:
   - enhancement
+type: Feature
 body:
   - type: markdown
     attributes:
       value: |
-        For questions or discussion before filing, visit the [Telegram support group](https://t.me/TediCrossSupport) or [Discord server](https://discord.gg/MfzGMzy).
+        The maintainers are notified when you create an issue: @TediCross/active-tedicross-maintainers. For questions or discussion before filing, visit the [Telegram support group](https://t.me/TediCrossSupport) or [Discord server](https://discord.gg/MfzGMzy).
 
   - type: textarea
     id: problem

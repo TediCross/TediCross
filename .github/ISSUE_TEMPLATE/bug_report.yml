@@ -3,11 +3,12 @@ description: Report a reproducible problem with TediCross.
 title: "bug: "
 labels:
   - bug
+type: Bug
 body:
   - type: markdown
     attributes:
       value: |
-        Before opening a report, check whether it has already been reported. For support and setup questions, use the [Telegram support group](https://t.me/TediCrossSupport) or [Discord server](https://discord.gg/MfzGMzy).
+        Before opening a report, check whether it has already been reported. The maintainers are notified when you create an issue: @TediCross/active-tedicross-maintainers. For support and setup questions, use the [Telegram support group](https://t.me/TediCrossSupport) or [Discord server](https://discord.gg/MfzGMzy).
 
   - type: textarea
     id: summary

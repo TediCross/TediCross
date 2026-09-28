@@ -2,6 +2,8 @@
 
 <!-- What changed, and why? Add any context reviewers need. -->
 
+Maintainers: @TediCross/active-tedicross-maintainers
+
 ## Related issue
 
 <!-- Add `Closes #123` when this PR should close an issue. -->
