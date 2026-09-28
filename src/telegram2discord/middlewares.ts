@@ -663,6 +663,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 			const senderName = makeDisplayName(ctx.TediCross.settings.telegram.useFirstNameInsteadOfUsername, tc.from);
 
 			// Make the header
+			let grouped = false;
 			// WARNING! Butt-ugly code! If you see a nice way to clean this up, please do it
 			const header = await (async () => {
 				// Get the name of the original sender, if this is a forward
@@ -690,7 +691,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				let header: string;
 				const senderId = tc.message.from?.id?.toString() ?? tc.message.sender_chat?.id?.toString();
 				const streamKey = `${bridge.name}:${tc.message.message_thread_id ?? "general"}`;
-				const grouped =
+				grouped =
 					bridge.telegram.groupMessages &&
 					senderId !== undefined &&
 					lastTelegramSenderByBridge.get(streamKey) === senderId &&
@@ -785,6 +786,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 				bridge,
 				header,
 				senderName,
+				grouped,
 				file: bridge.telegram.relayMedia && !attachmentTooLarge ? file : undefined,
 				voiceDuration: (tc.message as any).voice?.duration,
 				text,

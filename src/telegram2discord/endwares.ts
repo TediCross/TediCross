@@ -5,6 +5,7 @@ import { fetchDiscordChannel } from "../fetchDiscordChannel";
 import { Context } from "telegraf";
 import { deleteMessage, ignoreAlreadyDeletedError } from "./helpers";
 import { createFromObjFromUser } from "./From";
+import { createComponentsV2Message } from "./componentsV2";
 import { MessageEditOptions, EmbedBuilder, MessageFlags, AttachmentBuilder } from "discord.js";
 import { Message, User } from "telegraf/types";
 
@@ -12,7 +13,9 @@ interface DiscordMessage {
 	embeds?: any[];
 	content?: string;
 	files?: any[];
+	components?: any[];
 	flags?: MessageFlags[];
+	attachments?: Array<{ id: string }>;
 }
 
 export interface TediCrossContext extends Context {
@@ -333,7 +336,13 @@ export const relayMessage = (ctx: TediCrossContext) => {
 				// Voice messages cannot include content or embeds. Keep sender/caption text
 				// as a regular companion message, then attach the audio as a voice message.
 				let voiceReply = messageToReply;
-				if (messageText.trim()) voiceReply = await sendToDiscord(messageText);
+				if (messageText.trim()) {
+					const captionPayload =
+						prepared.bridge.telegram.messageStyle === "componentsV2"
+							? await createComponentsV2Message(ctx, prepared, false)
+							: messageText;
+					voiceReply = await sendToDiscord(captionPayload);
+				}
 				const voiceAttachment = new AttachmentBuilder(audio, { name: prepared.file.name })
 					.setDuration(prepared.voiceDuration)
 					.setWaveform(waveform.toString("base64"));
@@ -341,6 +350,18 @@ export const relayMessage = (ctx: TediCrossContext) => {
 					? await voiceReply.reply({ files: [voiceAttachment], flags: [MessageFlags.IsVoiceMessage] })
 					: await channel.send({ files: [voiceAttachment], flags: [MessageFlags.IsVoiceMessage] });
 				discordMessages.push(voiceMessage);
+				await ctx.TediCross.messageMap.replace(
+					MessageMap.TELEGRAM_TO_DISCORD,
+					prepared.bridge,
+					ctx.tediCross.messageId,
+					discordMessages.map(message => message.id)
+				);
+				return;
+			}
+
+			if (prepared.bridge.telegram.messageStyle === "componentsV2") {
+				const payload = await createComponentsV2Message(ctx, prepared);
+				await sendToDiscord(payload);
 				await ctx.TediCross.messageMap.replace(
 					MessageMap.TELEGRAM_TO_DISCORD,
 					prepared.bridge,
@@ -519,15 +540,23 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 			const dcMessages = await Promise.all(
 				dcMessageIds.map((id: string) => channel.messages.fetch(id).catch(() => undefined))
 			);
-			const dcMessage = dcMessages.find(Boolean);
+			const dcMessage = dcMessages.find(message => message && !message.flags.has(MessageFlags.IsVoiceMessage));
 			if (!dcMessage) return;
+			const relatedVoiceMessages = dcMessages.filter((message): message is NonNullable<typeof message> =>
+				Boolean(message?.flags.has(MessageFlags.IsVoiceMessage))
+			);
 			const prepared = ctx.tediCross.prepared[0];
 			const messageText = [prepared.header, prepared.text].filter(Boolean).join("\n");
-			const useEmbeds = (messageText.length > 2000 && bridge.discord.useEmbeds !== "never") || prepared.hasLinks;
 			const remainingChunks: string[] = [];
 			let sendObject: DiscordMessage;
 
-			if (useEmbeds) {
+			if (bridge.telegram.messageStyle === "componentsV2") {
+				const componentsPayload = await createComponentsV2Message(ctx, prepared, false);
+				const keptAttachments = Array.from(dcMessage.attachments.values())
+					.filter(attachment => attachment.name !== "telegram-sender-avatar.jpg")
+					.map(attachment => ({ id: attachment.id }));
+				sendObject = { ...componentsPayload, attachments: keptAttachments } as DiscordMessage;
+			} else if ((messageText.length > 2000 && bridge.discord.useEmbeds !== "never") || prepared.hasLinks) {
 				const description = prepared.text || " ";
 				const embed = new EmbedBuilder().setDescription(description.slice(0, 4096));
 				if (prepared.header) embed.setTitle(prepared.header.slice(0, 256));
@@ -540,14 +569,19 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 			}
 
 			await dcMessage.edit(sendObject as MessageEditOptions);
-			const updatedIds = [dcMessage.id];
+			const updatedIds = [dcMessage.id, ...relatedVoiceMessages.map(message => message.id)];
 			for (const chunk of remainingChunks) {
 				const sent = await channel.send(chunk);
 				updatedIds.push(sent.id);
 			}
 			await Promise.all(
 				dcMessages
-					.filter(message => Boolean(message) && message!.id !== dcMessage.id)
+					.filter(
+						message =>
+							Boolean(message) &&
+							message!.id !== dcMessage.id &&
+							!message!.flags.has(MessageFlags.IsVoiceMessage)
+					)
 					.map(message => message!.delete().catch(() => undefined))
 			);
 			await ctx.TediCross.messageMap.replace(

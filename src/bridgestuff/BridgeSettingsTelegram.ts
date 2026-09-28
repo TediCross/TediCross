@@ -11,6 +11,7 @@ export interface BridgeSettingsTelegramProperties {
 	relayMedia?: boolean;
 	mediaReplacementText?: string;
 	ignoreCommands?: boolean;
+	messageStyle?: "text" | "componentsV2";
 }
 
 /** Holds settings for the Telegram part of a bridge */
@@ -25,6 +26,7 @@ export class BridgeSettingsTelegram {
 	public groupMessages: boolean;
 	public relayMedia: boolean;
 	public mediaReplacementText: string;
+	public messageStyle: "text" | "componentsV2";
 	//public relayCommands: boolean;
 
 	/**
@@ -61,6 +63,7 @@ export class BridgeSettingsTelegram {
 		this.groupMessages = settings.groupMessages ?? false;
 		this.relayMedia = settings.relayMedia ?? true;
 		this.mediaReplacementText = settings.mediaReplacementText ?? "[Media omitted]";
+		this.messageStyle = settings.messageStyle ?? "text";
 	}
 
 	/**
@@ -111,6 +114,9 @@ export class BridgeSettingsTelegram {
 		}
 		if (settings.mediaReplacementText !== undefined && typeof settings.mediaReplacementText !== "string") {
 			throw new Error("settings.telegram.mediaReplacementText must be a string");
+		}
+		if (settings.messageStyle !== undefined && !["text", "componentsV2"].includes(settings.messageStyle)) {
+			throw new Error('settings.telegram.messageStyle must be "text" or "componentsV2"');
 		}
 	}
 }
