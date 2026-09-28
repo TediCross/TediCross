@@ -9,4 +9,4 @@
 
 ## Reporting a Vulnerability
 
-Write an mail to aiko@aitsys.dev or report it via [Security](https://github.com/TediCross/TediCross/security/advisories/new).
+Write an mail to tedicross@aitsys.dev or report it via [Security](https://github.com/TediCross/TediCross/security/advisories/new).

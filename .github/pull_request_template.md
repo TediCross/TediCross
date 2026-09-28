@@ -2,8 +2,6 @@
 
 <!-- What changed, and why? Add any context reviewers need. -->
 
-Maintainers: @TediCross/active-tedicross-maintainers
-
 ## Related issue
 
 <!-- Add `Closes #123` when this PR should close an issue. -->
@@ -29,3 +27,5 @@ Maintainers: @TediCross/active-tedicross-maintainers
 - [ ] I updated documentation or configuration examples where needed.
 - [ ] I noted relevant breaking changes and migration steps above.
 - [ ] I disclosed whether and how I used AI tools or other automation, including if I used none.
+
+@TediCross/active-tedicross-maintainers

@@ -10,6 +10,10 @@
 		"type": "git",
 		"url": "git+https://github.com/TediCross/TediCross.git"
 	},
+	"author": {
+		"name": "TediCross Team",
+		"url": "https://github.com/TediCross"
+	},
 	"scripts": {
 		"build": "tsc",
 		"start": "node dist/main.js",
