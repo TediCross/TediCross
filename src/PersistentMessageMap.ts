@@ -43,21 +43,18 @@ export class PersistentMessageMap {
 		this._db = open({
 			filename: this._filepath,
 			driver: sqlite3.cached.Database
+		}).then(async db => {
+			if (!dbExists) {
+				await db.exec("CREATE TABLE Bridges (pk INTEGER PRIMARY KEY AUTOINCREMENT, BridgeName TEXT)");
+				await db.exec(
+					"CREATE TABLE KeysToIds (pk INTEGER PRIMARY KEY AUTOINCREMENT, [Bridges.pk] INTEGER REFERENCES Bridges (pk), Keys TEXT)"
+				);
+				await db.exec(
+					"CREATE TABLE ToIds (pk INTEGER PRIMARY KEY AUTOINCREMENT, [KeysToIds.pk] INTEGER REFERENCES KeysToIds (pk), Ids TEXT)"
+				);
+			}
+			return db;
 		});
-
-		if (!dbExists) {
-			this._db
-				.then(async db => {
-					await db.exec("CREATE TABLE Bridges (pk INTEGER PRIMARY KEY AUTOINCREMENT, BridgeName TEXT)");
-					await db.exec(
-						"CREATE TABLE KeysToIds (pk INTEGER PRIMARY KEY AUTOINCREMENT, [Bridges.pk] INTEGER REFERENCES Bridges (pk), Keys TEXT)"
-					);
-					await db.exec(
-						"CREATE TABLE ToIds (pk INTEGER PRIMARY KEY AUTOINCREMENT, [KeysToIds.pk] INTEGER REFERENCES KeysToIds (pk), Ids TEXT)"
-					);
-				})
-				.catch(err => this._logger.error("Error Creating Database", err));
-		}
 	}
 
 	insert(direction: Direction, bridge: Bridge, fromId: string, toId: string) {
@@ -90,6 +87,43 @@ export class PersistentMessageMap {
 			.catch(err => this._logger.error("Error Inserting into Database", err));
 	}
 
+	async replace(direction: Direction, bridge: Bridge, fromId: string, toIds: string[]) {
+		const db = await this._db;
+		await db.run("BEGIN");
+		try {
+			let bridgeRow = await db.get("SELECT pk FROM Bridges WHERE BridgeName = :name", { ":name": bridge.name });
+			if (!bridgeRow) {
+				await db.run("INSERT INTO Bridges (BridgeName) VALUES (:name)", { ":name": bridge.name });
+				bridgeRow = await db.get("SELECT pk FROM Bridges WHERE BridgeName = :name", { ":name": bridge.name });
+			}
+			const key = `${direction} ${fromId}`;
+			await db.run(
+				"DELETE FROM ToIds WHERE [KeysToIds.pk] IN (SELECT pk FROM KeysToIds WHERE [Bridges.pk] = :bridge AND Keys = :key)",
+				{ ":bridge": bridgeRow.pk, ":key": key }
+			);
+			await db.run("DELETE FROM KeysToIds WHERE [Bridges.pk] = :bridge AND Keys = :key", {
+				":bridge": bridgeRow.pk,
+				":key": key
+			});
+			if (toIds.length > 0) {
+				const inserted = await db.run("INSERT INTO KeysToIds ([Bridges.pk], Keys) VALUES (:bridge, :key)", {
+					":bridge": bridgeRow.pk,
+					":key": key
+				});
+				for (const id of toIds) {
+					await db.run("INSERT INTO ToIds ([KeysToIds.pk], Ids) VALUES (:key, :id)", {
+						":key": inserted.lastID,
+						":id": id
+					});
+				}
+			}
+			await db.run("COMMIT");
+		} catch (error) {
+			await db.run("ROLLBACK");
+			throw error;
+		}
+	}
+
 	async getCorresponding(direction: Direction, bridge: Bridge, fromId: string) {
 		const toId: string[] = [];
 		const results = await this._db
@@ -115,26 +149,17 @@ export class PersistentMessageMap {
 		return toId;
 	}
 
-	async getCorrespondingReverse(bridge: Bridge, toId: string) {
-		let fromId = "";
-		const results = await this._db
-			.then(async db => {
-				const result = await db.get(
-					"SELECT Keys FROM KeysToIds WHERE [Bridges.pk] = (SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName) AND pk = (SELECT [KeysToIds.pk] FROM ToIds WHERE Ids = :sqlIds)",
-					{
-						":sqlBridgeName": bridge.name,
-						":sqlIds": toId
-					}
-				);
-				return result;
-			})
-			.catch(err => this._logger.error("Error getting Corresponding Reverse from Database", err));
-		if (results !== undefined) {
-			fromId = results.Keys;
-		}
-		//this._logger.log("getCorrespondingReverse for: " + bridge.name + " " + toId);
-		//this._logger.log(results);
-		//this._logger.log(fromId);
-		return fromId;
+	async getCorrespondingReverse(direction: Direction, bridge: Bridge, toId: string) {
+		const result = await this._db.then(db =>
+			db.get(
+				"SELECT k.Keys FROM KeysToIds k INNER JOIN ToIds t ON t.[KeysToIds.pk] = k.pk WHERE k.[Bridges.pk] = (SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName) AND t.Ids = :sqlIds AND k.Keys LIKE :sqlDirection ORDER BY k.pk DESC LIMIT 1",
+				{
+					":sqlBridgeName": bridge.name,
+					":sqlIds": toId,
+					":sqlDirection": `${direction} %`
+				}
+			)
+		);
+		return result?.Keys ?? "";
 	}
 }

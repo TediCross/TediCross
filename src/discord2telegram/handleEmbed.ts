@@ -1,5 +1,6 @@
 import { Embed } from "discord.js";
 import { md2html } from "./md2html";
+import { escapeHTMLSpecialChars } from "./helpers";
 import { TelegramSettings } from "../settings/TelegramSettings";
 
 /****************************
@@ -16,15 +17,15 @@ import { TelegramSettings } from "../settings/TelegramSettings";
  */
 export function handleEmbed(embed: Embed, senderName: string, settings: TelegramSettings) {
 	// Construct the text to send
-	let text = `<b>${senderName}</b>\n`;
+	let text = senderName ? `<b>${escapeHTMLSpecialChars(senderName)}</b>\n` : "";
 
 	// Handle the title
-	if (embed.title !== undefined) {
-		const hasUrl = embed.url !== undefined;
+	if (embed.title !== null && embed.title !== undefined) {
+		const hasUrl = embed.url !== null && embed.url !== undefined;
 		if (hasUrl) {
-			text += `<a href="${embed.url}">`;
+			text += `<a href="${escapeHTMLSpecialChars(embed.url).replace(/"/g, "&quot;")}">`;
 		}
-		text += embed.title;
+		text += escapeHTMLSpecialChars(embed.title);
 		if (hasUrl) {
 			text += "</a>";
 		}
@@ -32,18 +33,18 @@ export function handleEmbed(embed: Embed, senderName: string, settings: Telegram
 	}
 
 	// Handle the description
-	if (embed.description !== undefined) {
-		text += md2html(embed.description!, settings) + "\n";
+	if (embed.description !== null && embed.description !== undefined) {
+		text += md2html(embed.description, settings) + "\n";
 	}
 
 	// Handle the fields
 	embed.fields.forEach(field => {
-		text += `\n<b>${field.name}</b>\n` + md2html(field.value, settings) + "\n";
+		text += `\n<b>${escapeHTMLSpecialChars(field.name)}</b>\n` + md2html(field.value, settings) + "\n";
 	});
 
 	// Handle the author part
-	if (embed.author !== null) {
-		text += "\n<b>Author</b>\n" + embed.author.name + "\n";
+	if (embed.author?.name) {
+		text += "\n<b>Author</b>\n" + escapeHTMLSpecialChars(embed.author.name) + "\n";
 	}
 
 	// All done!

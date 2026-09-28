@@ -10,6 +10,8 @@ interface SettingProperties {
 	removeNewlineSpaces: boolean;
 	suppressFileTooBigMessages: boolean;
 	suppressThisIsPrivateBotMessage: boolean;
+	enableBridgeManagement: boolean;
+	emojiMap?: Record<string, string>;
 }
 
 /******************************
@@ -29,6 +31,8 @@ export class TelegramSettings {
 	removeNewlineSpaces: boolean;
 	suppressFileTooBigMessages: boolean;
 	suppressThisIsPrivateBotMessage: boolean;
+	enableBridgeManagement: boolean;
+	emojiMap: Record<string, string>;
 
 	/**
 	 * Creates a new TelegramSettings object
@@ -83,6 +87,8 @@ export class TelegramSettings {
 
 		/** Whether to suppress warning in chat when no bridge configured */
 		this.suppressThisIsPrivateBotMessage = settings.suppressThisIsPrivateBotMessage;
+		this.enableBridgeManagement = settings.enableBridgeManagement;
+		this.emojiMap = settings.emojiMap ?? {};
 	}
 
 	/** The bot token to use */
@@ -162,6 +168,19 @@ export class TelegramSettings {
 		if (Boolean(settings.suppressThisIsPrivateBotMessage) !== settings.suppressThisIsPrivateBotMessage) {
 			throw new Error("`settings.suppressThisIsPrivateBotMessage` must be a boolean");
 		}
+
+		if (Boolean(settings.enableBridgeManagement) !== settings.enableBridgeManagement) {
+			throw new Error("`settings.enableBridgeManagement` must be a boolean");
+		}
+
+		if (
+			settings.emojiMap !== undefined &&
+			(typeof settings.emojiMap !== "object" ||
+				settings.emojiMap === null ||
+				Object.values(settings.emojiMap).some(value => typeof value !== "string"))
+		) {
+			throw new Error("`settings.emojiMap` must map emoji names to strings");
+		}
 	}
 
 	/** Constant telling the Telegram token should be gotten from the environment */
@@ -182,7 +201,9 @@ export class TelegramSettings {
 			replaceExcessiveSpaces: false,
 			removeNewlineSpaces: false,
 			suppressFileTooBigMessages: false,
-			suppressThisIsPrivateBotMessage: false
+			suppressThisIsPrivateBotMessage: false,
+			enableBridgeManagement: false,
+			emojiMap: {}
 		};
 	}
 }

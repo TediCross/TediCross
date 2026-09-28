@@ -4,6 +4,7 @@ import { LatestDiscordMessageIds } from "./LatestDiscordMessageIds";
 import { handleEmbed } from "./handleEmbed";
 import { relayOldMessages } from "./relayOldMessages";
 import { Bridge } from "../bridgestuff/Bridge";
+import { groupSenderMessage, LastMessageSender } from "../bridgestuff/MessageGrouping";
 import fs from "fs";
 import path from "path";
 import R from "ramda";
@@ -11,9 +12,26 @@ import { sleepOneMinute } from "../sleep";
 import { fetchDiscordChannel } from "../fetchDiscordChannel";
 import { Logger } from "../Logger";
 import { BridgeMap } from "../bridgestuff/BridgeMap";
-import { Telegraf } from "telegraf";
-import { escapeHTMLSpecialChars, ignoreAlreadyDeletedError } from "./helpers";
-import { Client, Collection, Message, MessageReferenceType, MessageType, REST, Routes, TextChannel } from "discord.js";
+import { Input, Telegraf } from "telegraf";
+import {
+	escapeHTMLSpecialChars,
+	extractComponentContent,
+	getDiscordDisplayName,
+	ignoreAlreadyDeletedError,
+	telegramReplyOptions
+} from "./helpers";
+import {
+	Client,
+	Collection,
+	Message,
+	MessageReferenceType,
+	MessageFlags,
+	MessageType,
+	PermissionFlagsBits,
+	REST,
+	Routes,
+	TextChannel
+} from "discord.js";
 import { Settings } from "../settings/Settings";
 import { InputMediaVideo, InputMediaAudio, InputMediaDocument, InputMediaPhoto } from "telegraf/types";
 
@@ -33,39 +51,98 @@ import { InputMediaVideo, InputMediaAudio, InputMediaDocument, InputMediaPhoto }
  *
  * @private
  */
-function makeJoinLeaveFunc(logger: Logger, verb: "joined" | "left", bridgeMap: BridgeMap, tgBot: Telegraf) {
-	// Find out which setting property to check the bridges for
-	const relaySetting = verb === "joined" ? "relayJoinMessages" : "relayLeaveMessages";
-	return function (member: any) {
-		// Get the bridges in the guild the member joined/left
-		member.guild.channels.cache
-			// Get the bridges corresponding to the channels in this guild
-			.map(({ id }: { id: number }) => bridgeMap.fromDiscordChannelId(id))
-			// Remove the ones which are not bridged
-			.filter((bridges: any) => bridges !== undefined)
-			// Flatten the bridge arrays
-			.reduce((flattened: any, bridges: any) => flattened.concat(bridges))
-			// Remove those which do not allow relaying join messages
-			.filter((bridge: any) => bridge.discord[relaySetting])
-			// Ignore the T2D bridges
-			.filter((bridge: any) => bridge.direction !== Bridge.DIRECTION_TELEGRAM_TO_DISCORD)
-			.forEach(async (bridge: any) => {
-				// Make the text to send
-				const text = `<b>${member.displayName} (@${member.user.username})</b> ${verb} the Discord side of the chat`;
+function memberCanSeeBridge(member: any, bridge: Bridge) {
+	const channelIds = [bridge.discord.channelId, ...(bridge.topicBridges ?? []).map(mapping => mapping.discord)];
+	return channelIds.some(channelId => {
+		const channel = member.guild.channels.cache.get(channelId);
+		return (
+			channel?.guildId === member.guild.id &&
+			(channel.permissionsFor(member)?.has(PermissionFlagsBits.ViewChannel) ?? false)
+		);
+	});
+}
 
-				try {
-					// Send it
-					await tgBot.telegram.sendMessage(bridge.telegram.chatId, text, {
-						parse_mode: "HTML",
-						message_thread_id: bridge.tgThread
-					});
-				} catch (err) {
-					logger.error(
-						`[${bridge.name}] Could not notify Telegram about a user that ${verb} Discord`,
-						(err as Error).toString()
-					);
-				}
+function bridgesForDiscordMessage(bridgeMap: BridgeMap, message: Message) {
+	const direct = bridgeMap.fromDiscordChannelId(message.channel.id);
+	if (direct.length > 0) return direct;
+	const channel = message.channel as any;
+	if (!channel.isThread?.() || !channel.parentId) return [];
+	return bridgeMap
+		.fromDiscordChannelId(channel.parentId)
+		.filter(bridge => !bridge.topicBridges?.length && !bridge.topicBridgesAutoCreate);
+}
+
+async function bridgesForNewDiscordThread(
+	bridgeMap: BridgeMap,
+	message: Message,
+	settings: Settings,
+	tgBot: Telegraf,
+	logger: Logger
+) {
+	const direct = bridgeMap.fromDiscordChannelId(message.channel.id);
+	if (direct.length > 0) return direct;
+	const channel = message.channel as any;
+	if (!channel.isThread?.() || !channel.parentId) return [];
+	const parents = bridgeMap.fromDiscordChannelId(channel.parentId);
+	const results: Bridge[] = [];
+	for (const bridge of parents) {
+		if (!bridge.topicBridgesAutoCreate) {
+			if (!bridge.topicBridges?.length) results.push(bridge);
+			continue;
+		}
+		try {
+			const topic = await (tgBot.telegram as any).createForumTopic(
+				bridge.telegram.chatId,
+				(channel.name || `Discord thread ${channel.id}`).slice(0, 128)
+			);
+			settings.updateBridge({
+				...bridge,
+				topicBridges: [
+					...(bridge.topicBridges ?? []),
+					{ telegram: topic.message_thread_id, discord: channel.id, name: channel.name }
+				]
 			});
+			const updated = settings.bridges.find(item => item.name === bridge.name);
+			if (updated) results.push({ ...updated, tgThread: topic.message_thread_id });
+		} catch (error) {
+			logger.error(`[${bridge.name}] Could not create a Telegram topic for Discord thread ${channel.id}:`, error);
+		}
+	}
+	return results;
+}
+
+async function notifyMemberBridge(
+	logger: Logger,
+	tgBot: Telegraf,
+	member: any,
+	bridge: Bridge,
+	verb: "joined" | "left"
+) {
+	const relaySetting = verb === "joined" ? "relayJoinMessages" : "relayLeaveMessages";
+	if (!bridge.discord[relaySetting] || bridge.direction === Bridge.DIRECTION_TELEGRAM_TO_DISCORD) return;
+	const displayName = escapeHTMLSpecialChars(member.displayName || member.user.username);
+	const username = escapeHTMLSpecialChars(member.user.username);
+	try {
+		await tgBot.telegram.sendMessage(
+			bridge.telegram.chatId,
+			`<b>${displayName} (@${username})</b> ${verb} the Discord side of the chat`,
+			{ parse_mode: "HTML", message_thread_id: bridge.tgThread }
+		);
+	} catch (err) {
+		logger.error(
+			`[${bridge.name}] Could not notify Telegram about a user that ${verb} Discord`,
+			(err as Error).toString()
+		);
+	}
+}
+
+function makeJoinLeaveFunc(logger: Logger, verb: "joined" | "left", bridgeMap: BridgeMap, tgBot: Telegraf) {
+	return async function (member: any) {
+		for (const bridge of bridgeMap.bridges) {
+			if (memberCanSeeBridge(member, bridge)) {
+				await notifyMemberBridge(logger, tgBot, member, bridge, verb);
+			}
+		}
 	};
 }
 
@@ -93,12 +170,16 @@ export function setup(
 	settings: Settings,
 	datadirPath: string
 ) {
+	settings.onBridgeMapUpdate(updatedBridgeMap => {
+		bridgeMap = updatedBridgeMap;
+	});
 	// Create the map of latest message IDs and bridges
 	const latestDiscordMessageIds = new LatestDiscordMessageIds(
 		logger,
 		path.join(datadirPath, "latestDiscordMessageIds.json")
 	);
 	const useNickname = settings.discord.useNickname;
+	const lastDiscordSenderByBridge = new Map<string, LastMessageSender>();
 
 	// Make a set to keep track of where the "This is an instance of TediCross..." message has been sent the last minute
 	const antiInfoSpamSet = new Set();
@@ -157,6 +238,15 @@ export function setup(
 
 	// Listen for users joining the server
 	dcBot.on("guildMemberRemove", makeJoinLeaveFunc(logger, "left", bridgeMap, tgBot));
+	dcBot.on("guildMemberUpdate", async (oldMember, newMember) => {
+		for (const bridge of bridgeMap.bridges) {
+			const couldSee = memberCanSeeBridge(oldMember, bridge);
+			const canSee = memberCanSeeBridge(newMember, bridge);
+			if (couldSee !== canSee) {
+				await notifyMemberBridge(logger, tgBot, newMember, bridge, canSee ? "joined" : "left");
+			}
+		}
+	});
 
 	// Listen for Discord messages
 	dcBot.on("messageCreate", async message => {
@@ -166,26 +256,28 @@ export function setup(
 		}
 
 		// Get info about the sender
-		const senderName = R.compose<any, any>(
-			// Make it HTML safe
-			escapeHTMLSpecialChars,
-			// Add a colon if wanted
-			//@ts-ignore
-			R.when(R.always(settings.telegram.colonAfterSenderName), senderName => senderName + ":"),
-			// Figure out what name to use
-			R.ifElse(
-				message => useNickname && !R.isNil(message.member),
-				R.path(["member", "displayName"]),
-				R.path(["author", "username"])
-			)
-		)(message) as string;
+		const name = getDiscordDisplayName(message.member, message.author, useNickname);
+		const senderName = escapeHTMLSpecialChars(name + (settings.telegram.colonAfterSenderName ? ":" : ""));
 
 		// Check if the message is from the correct chat
-		const bridges = bridgeMap.fromDiscordChannelId(Number(message.channel.id));
+		const bridges = await bridgesForNewDiscordThread(bridgeMap, message, settings, tgBot, logger);
 		if (!R.isEmpty(bridges)) {
 			for (const bridge of bridges) {
 				// Ignore it if this is a telegram-to-discord bridge
 				if (bridge.direction === Bridge.DIRECTION_TELEGRAM_TO_DISCORD) {
+					continue;
+				}
+				if (
+					(message.author.bot && bridge.discord.ignoreBots) ||
+					(message.webhookId && bridge.discord.ignoreWebhooks)
+				) {
+					continue;
+				}
+				const allowedUserIds = bridge.discord.allowedUserIds;
+				if (
+					(allowedUserIds.length > 0 && !allowedUserIds.includes(message.author.id)) ||
+					bridge.discord.blockedUserIds.includes(message.author.id)
+				) {
 					continue;
 				}
 
@@ -231,66 +323,115 @@ export function setup(
 
 				// console.dir(message.attachments);
 
-				// Check if there is an ordinary text message
-				if (message.cleanContent) {
-					// Modify the message to fit Telegram
-					const processedMessage = md2html(message.cleanContent, settings.telegram);
+				const sentTelegramMessageIds: string[] = [];
+				const voiceMessageAttachment = message.flags.has(MessageFlags.IsVoiceMessage)
+					? Array.from(message.attachments.values()).find(attachment => {
+							const contentType = attachment.contentType?.toLowerCase() ?? "";
+							return (
+								contentType.startsWith("audio/ogg") || attachment.name.toLowerCase().endsWith(".ogg")
+							);
+						})
+					: undefined;
+				const componentContent = extractComponentContent(message.components ?? []);
+				const messageParts: string[] = [];
+				if (message.cleanContent) messageParts.push(md2html(message.cleanContent, settings.telegram));
+				if (componentContent.text.length) {
+					messageParts.push(md2html(componentContent.text.join("\n"), settings.telegram));
+				}
+				for (const embed of message.embeds) {
+					if (embed.data.type === "rich") messageParts.push(handleEmbed(embed, "", settings.telegram));
+				}
+				const poll = (message as any).poll;
+				if (poll) {
+					const question = poll.question?.text ?? poll.question;
+					const answers = Array.from(poll.answers?.values?.() ?? poll.answers ?? []) as any[];
+					messageParts.push(
+						`<b>${escapeHTMLSpecialChars(String(question ?? "Poll"))}</b>\n` +
+							answers
+								.map(answer => `• ${escapeHTMLSpecialChars(String(answer.text ?? answer))}`)
+								.join("\n")
+					);
+				}
+				for (const sticker of message.stickers.values()) {
+					const emoji = sticker.tags ? ` ${escapeHTMLSpecialChars(sticker.tags)}` : "";
+					messageParts.push(`[Sticker: ${escapeHTMLSpecialChars(sticker.name)}${emoji}]`);
+				}
 
-					// Pass the message on to Telegram
+				const galleryImageUrls = [...componentContent.imageUrls];
+				for (const embed of message.embeds) {
+					const imageUrl = embed.image?.url ?? embed.thumbnail?.url;
+					if (!imageUrl || galleryImageUrls.includes(imageUrl)) continue;
+					galleryImageUrls.push(imageUrl);
+				}
+
+				let messageCaption = "";
+				const streamKey = `${bridge.name}:${bridge.tgThread ?? "general"}`;
+				const grouped = groupSenderMessage(
+					lastDiscordSenderByBridge,
+					streamKey,
+					message.author.id,
+					bridge.discord.groupMessages,
+					Boolean(messageReference) || messageParts.length === 0
+				);
+				if (messageParts.length) {
+					const sender = bridge.discord.sendUsernames && !grouped ? `<b>${senderName}</b>\n` : "";
+					messageCaption = sender + messageParts.join("\n\n");
+				} else if (voiceMessageAttachment && bridge.discord.sendUsernames && !grouped) {
+					messageCaption = `<b>${senderName}</b>`;
+				}
+
+				// Telegram can attach a caption to a single photo or the first item of an
+				// album. Use that to keep an embed's text and image together when possible.
+				const captionWithGallery =
+					message.attachments.size === 0 && galleryImageUrls.length > 0 && messageCaption.length <= 1024;
+				const captionWithVoice = Boolean(voiceMessageAttachment && messageCaption.length <= 1024);
+
+				if (messageParts.length && !captionWithGallery && !captionWithVoice) {
 					try {
-						const textToSend = bridge.discord.sendUsernames
-							? `<b>${senderName}</b>\n${processedMessage}`
-							: processedMessage;
-						// if (replyId === "0" || replyId === undefined) {
-						// 	const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, textToSend, {
-						// 		parse_mode: "HTML"
-						// 	});
-						//
-						// 	// Make the mapping so future edits can work
-						// 	messageMap.insert(
-						// 		MessageMap.DISCORD_TO_TELEGRAM,
-						// 		bridge,
-						// 		message.id,
-						// 		tgMessage.message_id.toString()
-						// 	);
-						// } else {
-						const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, textToSend, {
-							reply_parameters: {
-								message_id: +replyId
-							},
+						const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, messageCaption, {
+							...telegramReplyOptions(replyId),
 							parse_mode: "HTML",
-							link_preview_options: {
-								is_disabled: bridge.discord.disableWebPreviewOnTelegram
-							},
+							link_preview_options: { is_disabled: bridge.discord.disableWebPreviewOnTelegram },
 							message_thread_id: bridge.tgThread
 						});
-						messageMap.insert(
-							MessageMap.DISCORD_TO_TELEGRAM,
-							bridge,
-							message.id,
-							tgMessage.message_id.toString()
-						);
-						// }
+						sentTelegramMessageIds.push(tgMessage.message_id.toString());
 					} catch (err) {
 						logger.error(`[${bridge.name}] Telegram did not accept a message`);
 						logger.error(`[${bridge.name}] Failed message:`, (err as Error).toString());
 					}
 				}
 
-				// NOTE: can set caption for media group if media types <= 1 - else send text in standalone message
-				// For now: ignoring captions - always send as standalone message
-
 				// Check for attachments and pass them on
 				const images: InputMediaPhoto[] = [];
 				const videos: InputMediaVideo[] = [];
 				const audios: InputMediaAudio[] = [];
 				const documents: InputMediaDocument[] = [];
+				const skippedAttachments: Array<{ name: string; size: number; limit: number }> = [];
+				let mediaSendFailed = false;
+				const sendVoiceCaptionAsText = async () => {
+					if (!captionWithVoice) return;
+					try {
+						const textMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, messageCaption, {
+							...telegramReplyOptions(replyId),
+							parse_mode: "HTML",
+							message_thread_id: bridge.tgThread
+						});
+						sentTelegramMessageIds.push(textMessage.message_id.toString());
+					} catch (error) {
+						logger.error(`[${bridge.name}] Could not send the voice message caption to Telegram:`, error);
+					}
+				};
 
 				const handleMediaFile = (attachment: any, type: "video" | "photo" | "audio" | "document") => {
-					const maxFileSize = type === "video" ? 20000000 : 10000000;
+					// Telegram fetches media from URLs supplied by bots. Its URL import
+					// limits are 5 MB for photos and 20 MB for other media.
+					const maxFileSize = type === "photo" ? 5_000_000 : 20_000_000;
 
-					if (attachment.size < maxFileSize) {
-						const mediaFile = { media: { url: attachment.url, filename: attachment.name }, type };
+					if (attachment.size === undefined || attachment.size <= maxFileSize) {
+						const mediaFile: any = { media: { url: attachment.url, filename: attachment.name }, type };
+						if (attachment.spoiler || attachment.name?.startsWith("SPOILER_")) {
+							if (type === "photo" || type === "video") mediaFile.has_spoiler = true;
+						}
 						switch (type) {
 							case "video":
 								videos.push(mediaFile as InputMediaVideo);
@@ -306,11 +447,19 @@ export function setup(
 								break;
 						}
 					} else {
-						logger.error(`[${bridge.name}] Too big attachment ${type} File: ${attachment.name}`);
+						skippedAttachments.push({
+							name: attachment.name || `${type} attachment`,
+							size: attachment.size,
+							limit: maxFileSize
+						});
+						logger.warn(
+							`[${bridge.name}] Skipped ${type} attachment '${attachment.name}' (${attachment.size} bytes): Telegram's URL import limit is ${maxFileSize} bytes`
+						);
 					}
 				};
 
 				for (const attachment of message.attachments.values()) {
+					if (attachment.id === voiceMessageAttachment?.id) continue;
 					const fileType: string = attachment.contentType || "";
 					if (fileType.indexOf("video") >= 0) {
 						handleMediaFile(attachment, "video");
@@ -331,84 +480,174 @@ export function setup(
 
 				for (const oneArray of mediaArray) {
 					const type = oneArray[0].type;
+					for (let i = 0; i < oneArray.length; i += 10) {
+						const batch = oneArray.slice(i, i + 10);
+						try {
+							if (batch.length > 1) {
+								const sent = await tgBot.telegram.sendMediaGroup(bridge.telegram.chatId, batch, {
+									...telegramReplyOptions(replyId),
+									message_thread_id: bridge.tgThread
+								});
+								sentTelegramMessageIds.push(...sent.map(item => item.message_id.toString()));
+							} else {
+								let sent: any;
+								switch (type) {
+									case "video":
+										sent = await tgBot.telegram.sendVideo(
+											bridge.telegram.chatId,
+											oneArray[0].media,
+											{
+												...telegramReplyOptions(replyId),
+												message_thread_id: bridge.tgThread
+											}
+										);
+										break;
+									case "audio":
+										sent = await tgBot.telegram.sendAudio(
+											bridge.telegram.chatId,
+											oneArray[0].media,
+											{
+												...telegramReplyOptions(replyId),
+												message_thread_id: bridge.tgThread
+											}
+										);
+										break;
+									case "photo":
+										sent = await tgBot.telegram.sendPhoto(
+											bridge.telegram.chatId,
+											oneArray[0].media,
+											{
+												...telegramReplyOptions(replyId),
+												message_thread_id: bridge.tgThread
+											}
+										);
+										break;
+									case "document":
+										sent = await tgBot.telegram.sendDocument(
+											bridge.telegram.chatId,
+											oneArray[0].media,
+											{
+												...telegramReplyOptions(replyId),
+												message_thread_id: bridge.tgThread
+											}
+										);
+										break;
+								}
+								if (sent?.message_id) sentTelegramMessageIds.push(sent.message_id.toString());
+							}
+						} catch (err) {
+							mediaSendFailed = true;
+							logger.error(
+								`[${bridge.name}] Telegram did not accept ${type} attachment:`,
+								(err as Error).toString()
+							);
+						}
+					}
+				}
+
+				if (voiceMessageAttachment) {
+					if (voiceMessageAttachment.size > 50_000_000) {
+						skippedAttachments.push({
+							name: voiceMessageAttachment.name,
+							size: voiceMessageAttachment.size,
+							limit: 50_000_000
+						});
+						await sendVoiceCaptionAsText();
+					} else {
+						try {
+							const sent = await tgBot.telegram.sendVoice(
+								bridge.telegram.chatId,
+								Input.fromURLStream(voiceMessageAttachment.url, voiceMessageAttachment.name),
+								{
+									...telegramReplyOptions(replyId),
+									...(captionWithVoice
+										? { caption: messageCaption, parse_mode: "HTML" as const }
+										: {}),
+									message_thread_id: bridge.tgThread
+								}
+							);
+							sentTelegramMessageIds.push(sent.message_id.toString());
+						} catch (err) {
+							mediaSendFailed = true;
+							logger.error(
+								`[${bridge.name}] Telegram did not accept a Discord voice message:`,
+								(err as Error).toString()
+							);
+							await sendVoiceCaptionAsText();
+						}
+					}
+				}
+
+				for (let i = 0; i < galleryImageUrls.length; i += 10) {
+					const media: InputMediaPhoto[] = galleryImageUrls
+						.slice(i, i + 10)
+						.map(url => ({ type: "photo", media: url }));
 					try {
-						if (oneArray.length > 1) {
-							await tgBot.telegram.sendMediaGroup(bridge.telegram.chatId, oneArray, {
-								reply_parameters: {
-									message_id: +replyId
-								},
+						if (media.length > 1) {
+							if (captionWithGallery && i === 0) {
+								media[0].caption = messageCaption;
+								media[0].parse_mode = "HTML";
+							}
+							const sent = await tgBot.telegram.sendMediaGroup(bridge.telegram.chatId, media, {
+								...telegramReplyOptions(replyId),
 								message_thread_id: bridge.tgThread
 							});
-						} else {
-							switch (type) {
-								case "video":
-									await tgBot.telegram.sendVideo(bridge.telegram.chatId, oneArray[0].media, {
-										reply_parameters: {
-											message_id: +replyId
-										},
-										message_thread_id: bridge.tgThread
-									});
-									break;
-								case "audio":
-									await tgBot.telegram.sendAudio(bridge.telegram.chatId, oneArray[0].media, {
-										reply_parameters: {
-											message_id: +replyId
-										},
-										message_thread_id: bridge.tgThread
-									});
-									break;
-								case "photo":
-									await tgBot.telegram.sendPhoto(bridge.telegram.chatId, oneArray[0].media, {
-										reply_parameters: {
-											message_id: +replyId
-										},
-										message_thread_id: bridge.tgThread
-									});
-									break;
-								case "document":
-									await tgBot.telegram.sendDocument(bridge.telegram.chatId, oneArray[0].media, {
-										reply_parameters: {
-											message_id: +replyId
-										},
-										message_thread_id: bridge.tgThread
-									});
-									break;
-							}
+							sentTelegramMessageIds.push(...sent.map(item => item.message_id.toString()));
+						} else if (media.length === 1) {
+							const sent = await tgBot.telegram.sendPhoto(
+								bridge.telegram.chatId,
+								media[0].media as string,
+								{
+									...telegramReplyOptions(replyId),
+									...(captionWithGallery && i === 0
+										? { caption: messageCaption, parse_mode: "HTML" as const }
+										: {}),
+									message_thread_id: bridge.tgThread
+								}
+							);
+							sentTelegramMessageIds.push(sent.message_id.toString());
 						}
 					} catch (err) {
+						mediaSendFailed = true;
 						logger.error(
-							`[${bridge.name}] Telegram did not accept ${type} attachment:`,
+							`[${bridge.name}] Telegram did not accept component or embed images:`,
 							(err as Error).toString()
 						);
 					}
 				}
 
-				// Check the message for embeds
-				for (const embed of message.embeds) {
-					// Ignore it if it is not a "rich" embed (image, link, video, ...)
-					if (embed.data.type !== "rich") {
-						continue;
-					}
-
-					// Convert it to something Telegram likes
-					const text = handleEmbed(embed, senderName, settings.telegram);
-
+				if (skippedAttachments.length || mediaSendFailed) {
+					const sizeDetails = skippedAttachments
+						.map(
+							file =>
+								`${file.name} (${(file.size / 1_000_000).toFixed(1)} MB; limit ${(file.limit / 1_000_000).toFixed(0)} MB)`
+						)
+						.join(", ");
+					const notice = [
+						skippedAttachments.length
+							? `TediCross could not send ${skippedAttachments.length === 1 ? "this file" : `${skippedAttachments.length} files`} to Telegram because they exceed Telegram's upload limit${sizeDetails ? `: ${sizeDetails}` : ""}.`
+							: "",
+						mediaSendFailed ? "Telegram rejected one or more media files." : "",
+						"The original file(s) are still available in Discord."
+					]
+						.filter(Boolean)
+						.join(" ");
 					try {
-						// Send it
-						await tgBot.telegram.sendMessage(bridge.telegram.chatId, text, {
-							reply_parameters: {
-								message_id: +replyId
-							},
-							parse_mode: "HTML",
-							link_preview_options: {
-								is_disabled: bridge.discord.disableWebPreviewOnTelegram
-							},
+						const noticeMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, notice, {
+							...telegramReplyOptions(replyId),
 							message_thread_id: bridge.tgThread
 						});
-						// }
+						sentTelegramMessageIds.push(noticeMessage.message_id.toString());
 					} catch (err) {
-						logger.error(`[${bridge.name}] Telegram did not accept an embed:`, (err as Error).toString());
+						logger.error(
+							`[${bridge.name}] Could not send the media delivery notice to Telegram:`,
+							(err as Error).toString()
+						);
 					}
+				}
+
+				for (const telegramMessageId of sentTelegramMessageIds) {
+					messageMap.insert(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id, telegramMessageId);
 				}
 			}
 		} else if (
@@ -449,20 +688,28 @@ export function setup(
 		}
 
 		// Pass it on to the bridges
-		bridgeMap.fromDiscordChannelId(Number(newMessage.channel.id)).forEach(async bridge => {
+		bridgesForDiscordMessage(bridgeMap, newMessage).forEach(async bridge => {
+			if (
+				(bridge.discord.ignoreBots && newMessage.author?.bot) ||
+				(bridge.discord.ignoreWebhooks && newMessage.webhookId)
+			) {
+				return;
+			}
 			try {
 				// Get the corresponding Telegram message ID
-				const [tgMessageId] = await messageMap.getCorresponding(
+				const tgMessageIds = await messageMap.getCorresponding(
 					MessageMap.DISCORD_TO_TELEGRAM,
 					bridge,
 					newMessage.id
 				);
+				if (tgMessageIds.length === 0) return;
 				//console.log("d2t edit getCorresponding: " + tgMessageId);
 
 				// Get info about the sender
-				const senderName =
-					(useNickname && newMessage.member ? newMessage.member.displayName : newMessage.author?.username) +
-					(settings.telegram.colonAfterSenderName ? ":" : "");
+				const senderName = escapeHTMLSpecialChars(
+					getDiscordDisplayName(newMessage.member, newMessage.author, useNickname) +
+						(settings.telegram.colonAfterSenderName ? ":" : "")
+				);
 
 				// Modify the message to fit Telegram
 				const processedMessage = md2html(newMessage.cleanContent || "", settings.telegram);
@@ -471,9 +718,13 @@ export function setup(
 				const textToSend = bridge.discord.sendUsernames
 					? `<b>${senderName}</b>\n${processedMessage}`
 					: processedMessage;
-				await tgBot.telegram.editMessageText(bridge.telegram.chatId, +tgMessageId, undefined, textToSend, {
-					parse_mode: "HTML"
-				});
+				await Promise.all(
+					tgMessageIds.map(tgMessageId =>
+						tgBot.telegram.editMessageText(bridge.telegram.chatId, +tgMessageId, undefined, textToSend, {
+							parse_mode: "HTML"
+						})
+					)
+				);
 			} catch (err) {
 				logger.error(`[${bridge.name}] Could not edit Telegram message:`, (err as Error).toString());
 			}
@@ -486,7 +737,7 @@ export function setup(
 		const isFromTelegram = message.author.id === dcBot.user?.id;
 
 		// Hand it on to the bridges
-		bridgeMap.fromDiscordChannelId(Number(message.channel.id)).forEach(async bridge => {
+		bridgesForDiscordMessage(bridgeMap, message).forEach(async bridge => {
 			// Ignore it if cross deletion is disabled
 			if (!bridge.discord.crossDeleteOnTelegram) {
 				return;
@@ -494,10 +745,25 @@ export function setup(
 
 			try {
 				// Get the corresponding Telegram message IDs
-				const tgMessageIds = isFromTelegram
+				const tgMessageIds: string[] = isFromTelegram
 					? await messageMap.getCorrespondingReverse(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id)
 					: await messageMap.getCorresponding(MessageMap.DISCORD_TO_TELEGRAM, bridge, message.id);
 				//console.log("d2t delete: " + tgMessageIds);
+				if (bridge.discord.crossDeleteOnTelegram === "mark") {
+					await Promise.all(
+						tgMessageIds.map(tgMessageId =>
+							tgBot.telegram.sendMessage(
+								bridge.telegram.chatId,
+								"⚠️ This message was deleted on Discord.",
+								{
+									...telegramReplyOptions(tgMessageId),
+									message_thread_id: bridge.tgThread
+								}
+							)
+						)
+					);
+					return;
+				}
 				// Try to delete them
 				await Promise.all(
 					tgMessageIds.map(tgMessageId => tgBot.telegram.deleteMessage(bridge.telegram.chatId, +tgMessageId))
@@ -562,8 +828,8 @@ export function setup(
 	// Make a promise which resolves when the dcBot is ready
 	//@ts-ignore
 	dcBot.ready = new Promise<void>(resolve => {
-		// Listen for the 'ready' event
-		dcBot.once("ready", () => {
+		// Listen for Discord.js's clientReady event
+		dcBot.once("clientReady", () => {
 			// Log the event
 			logger.info(`Discord: ${dcBot.user?.username} (${dcBot.user?.id})`);
 

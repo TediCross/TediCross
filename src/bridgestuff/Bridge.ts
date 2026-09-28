@@ -8,8 +8,16 @@ export interface BridgeProperties {
 	telegram: BridgeSettingsTelegramProperties;
 	discord: BridgeSettingsDiscordProperties;
 	direction: "both" | "d2t" | "t2d";
-	threadMap: any[] | undefined;
+	threadMap?: TopicBridge[];
+	topicBridges?: TopicBridge[];
+	topicBridgesAutoCreate?: boolean;
 	tgThread: number | undefined;
+}
+
+export interface TopicBridge {
+	telegram: number;
+	discord: string;
+	name?: string;
 }
 
 /********************
@@ -20,9 +28,10 @@ export interface BridgeProperties {
 export class Bridge {
 	public name: string;
 	public direction: BridgeProperties["direction"];
-	public telegram: BridgeSettingsTelegramProperties;
-	public discord: BridgeSettingsDiscordProperties;
-	public threadMap: any[] | undefined;
+	public telegram: BridgeSettingsTelegram;
+	public discord: BridgeSettingsDiscord;
+	public topicBridges: TopicBridge[];
+	public topicBridgesAutoCreate: boolean;
 	public tgThread: number | undefined;
 	/**
 	 * Creates a new bridge
@@ -51,7 +60,8 @@ export class Bridge {
 		this.discord = new BridgeSettingsDiscord(settings.discord);
 
 		/** Settings for the Threads mapping */
-		this.threadMap = settings.threadMap;
+		this.topicBridges = settings.topicBridges ?? settings.threadMap ?? [];
+		this.topicBridgesAutoCreate = settings.topicBridgesAutoCreate ?? false;
 	}
 
 	/**

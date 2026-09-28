@@ -10,10 +10,10 @@ export const fetchDiscordChannel = (dcBot: Client, bridge: any, threadID?: numbe
 	// Get the channel's ID
 	let channelId = bridge.discord.channelId;
 
-	if (bridge.threadMap && threadID) {
-		for (const threadMap of bridge.threadMap) {
-			if (threadMap.telegram === threadID) {
-				channelId = threadMap.discord;
+	if (bridge.topicBridges && threadID) {
+		for (const topicBridge of bridge.topicBridges) {
+			if (topicBridge.telegram === threadID) {
+				channelId = topicBridge.discord;
 				break;
 			}
 		}

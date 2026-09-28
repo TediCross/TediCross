@@ -20,8 +20,8 @@ import { setup as telegramSetup, TediTelegraf } from "./telegram2discord/setup";
 import { Client as DiscordClient, GatewayIntentBits, ActivityType } from "discord.js";
 import { setup as discordSetup } from "./discord2telegram/setup";
 
-if (!semver.gte(process.version, "18.0.0")) {
-	console.log(`TediCross requires at least nodejs 18.0. Your version is ${process.version}`);
+if (!semver.gte(process.version, "22.13.0")) {
+	console.log(`TediCross requires at least nodejs 22.13. Your version is ${process.version}`);
 	process.exit();
 }
 
@@ -30,7 +30,7 @@ if (!semver.gte(process.version, "18.0.0")) {
  *************/
 
 // Get command line arguments if any
-const args = yargs
+const args = yargs(process.argv.slice(2))
 	.alias("v", "version")
 	.alias("h", "help")
 	.option("config", {
@@ -50,6 +50,7 @@ const args = yargs
 const settingsPath = args.config;
 const rawSettingsObj = jsYaml.load(fs.readFileSync(settingsPath, "utf-8"));
 const settings = Settings.fromObj(rawSettingsObj);
+settings.setConfigPath(settingsPath);
 
 // Initialize logger
 const logger = new Logger(settings.debug);
@@ -109,7 +110,7 @@ const dcBot = new DiscordClient({
 const messageMap = new MessageMap(settings, logger, args.dataDir);
 
 // Create the bridge map
-const bridgeMap = new BridgeMap(settings.bridges.map((bridgeSettings: BridgeProperties) => new Bridge(bridgeSettings)));
+const bridgeMap = new BridgeMap(settings.bridges);
 
 /*********************
  * Set up the bridge *

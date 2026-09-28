@@ -3,7 +3,12 @@ export interface BridgeSettingsDiscordProperties {
 	sendUsernames: boolean;
 	relayJoinMessages: boolean;
 	relayLeaveMessages: boolean;
-	crossDeleteOnTelegram: boolean;
+	crossDeleteOnTelegram: boolean | "mark";
+	allowedUserIds?: string[];
+	blockedUserIds?: string[];
+	ignoreBots?: boolean;
+	ignoreWebhooks?: boolean;
+	groupMessages?: boolean;
 	disableWebPreviewOnTelegram?: boolean;
 	useEmbeds: string;
 	serverId?: string;
@@ -15,9 +20,15 @@ export class BridgeSettingsDiscord {
 	public sendUsernames: boolean;
 	public relayJoinMessages: boolean;
 	public relayLeaveMessages: boolean;
-	public crossDeleteOnTelegram: boolean;
+	public crossDeleteOnTelegram: boolean | "mark";
+	public allowedUserIds: string[];
+	public blockedUserIds: string[];
+	public ignoreBots: boolean;
+	public ignoreWebhooks: boolean;
+	public groupMessages: boolean;
 	public disableWebPreviewOnTelegram: undefined | boolean;
 	public useEmbeds: string;
+	public serverId?: string;
 
 	/**
 	 * Creates a new BridgeSettingsDiscord object
@@ -46,12 +57,18 @@ export class BridgeSettingsDiscord {
 
 		/** Whether or not to delete messages on Telegram when a message is deleted on Discord */
 		this.crossDeleteOnTelegram = settings.crossDeleteOnTelegram;
+		this.allowedUserIds = settings.allowedUserIds ?? [];
+		this.blockedUserIds = settings.blockedUserIds ?? [];
+		this.ignoreBots = settings.ignoreBots ?? true;
+		this.ignoreWebhooks = settings.ignoreWebhooks ?? true;
+		this.groupMessages = settings.groupMessages ?? false;
 
 		/** Whether to enable web preview relaying to Telegram */
 		this.disableWebPreviewOnTelegram = settings.disableWebPreviewOnTelegram;
 
 		/** Whether to use Embeds when posting on Discord */
 		this.useEmbeds = settings.useEmbeds;
+		this.serverId = settings.serverId;
 	}
 
 	/**
@@ -83,8 +100,25 @@ export class BridgeSettingsDiscord {
 		}
 
 		// Check that crossDeleteOnTelegram is a boolean
-		if (Boolean(settings.crossDeleteOnTelegram) !== settings.crossDeleteOnTelegram) {
+		if (typeof settings.crossDeleteOnTelegram !== "boolean" && settings.crossDeleteOnTelegram !== "mark") {
 			throw new Error("`settings.crossDeleteOnTelegram` must be a boolean");
+		}
+		for (const [key, value] of Object.entries({
+			allowedUserIds: settings.allowedUserIds,
+			blockedUserIds: settings.blockedUserIds
+		})) {
+			if (value !== undefined && (!Array.isArray(value) || value.some(id => typeof id !== "string"))) {
+				throw new Error(`settings.discord.${key} must be an array of user IDs`);
+			}
+		}
+		if (settings.groupMessages !== undefined && typeof settings.groupMessages !== "boolean") {
+			throw new Error("settings.discord.groupMessages must be a boolean");
+		}
+		if (settings.ignoreBots !== undefined && typeof settings.ignoreBots !== "boolean") {
+			throw new Error("settings.discord.ignoreBots must be a boolean");
+		}
+		if (settings.ignoreWebhooks !== undefined && typeof settings.ignoreWebhooks !== "boolean") {
+			throw new Error("settings.discord.ignoreWebhooks must be a boolean");
 		}
 	}
 }

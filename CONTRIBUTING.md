@@ -4,7 +4,7 @@ We're really happy to accept contributions. However we also ask that you follow 
 
 # Proper base
 
-When opening a PR, please make sure your branch targets the latest release branch, in this case it would be `master`. Also make sure your branch is even with the target branch, to avoid unnecessary surprises.
+When opening a PR, target the active development branch (`dev`) unless the maintainers ask for a different base. Keep your branch up to date with its target to avoid unnecessary conflicts. The `stable` branch is used for release builds.
 
 # Versioning
 
@@ -32,6 +32,10 @@ Examples of good commit messages:
   - Messages are now stored globally.
   - Cache itself is now a ring buffer.
   ```
+
+# Development setup
+
+See the [build and contribution guide](docs/development/building.md) for the supported Node.js version and local build/lint commands.
 
 # Code style
 

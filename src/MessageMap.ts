@@ -67,6 +67,26 @@ export class MessageMap {
 		}
 	}
 
+	/** Replace every destination ID for a source message, used after editing a split message. */
+	async replace(direction: Direction, bridge: Bridge, fromId: string, toIds: string[]) {
+		if (Object.keys(this._persistentMap).length === 0) {
+			let keyToIdsMap = this._map.get(bridge.name);
+			if (keyToIdsMap === undefined) {
+				keyToIdsMap = new Map();
+				this._map.set(bridge.name, keyToIdsMap);
+			}
+			const key = `${direction} ${fromId}`;
+			keyToIdsMap.set(key, new Set(toIds));
+			safeTimeout(
+				() => keyToIdsMap?.delete(key),
+				moment.duration(this._messageTimeoutAmount, this._messageTimeoutUnit).asMilliseconds()
+			);
+			return;
+		}
+
+		await this._persistentMap.replace(direction, bridge, fromId, toIds);
+	}
+
 	/**
 	 * Gets the ID of a message the bot sent based on the ID of the message the bot received
 	 *
@@ -105,36 +125,18 @@ export class MessageMap {
 		}
 	}
 
-	async getCorrespondingReverse(_direction: string, bridge: Bridge, toId: string) {
+	async getCorrespondingReverse(direction: Direction, bridge: Bridge, toId: string) {
 		try {
 			//Check if persistent MessageMap is not enabled
 			if (Object.keys(this._persistentMap).length === 0) {
-				// The ID to return
-				let fromId: string[] = [];
-
-				// Get the mappings for this bridge
 				const keyToIdsMap = this._map.get(bridge.name);
-				if (keyToIdsMap !== undefined) {
-					// Find the ID
-					const [key] = [...keyToIdsMap].find(([, ids]) => ids.has(toId.toString())) ?? "0";
-					if (key !== "0" && typeof key === "string") {
-						fromId = key.split(" ");
-						fromId.shift();
-					}
-				}
-
-				//console.log(fromId);
-				return fromId;
+				const key = [...(keyToIdsMap ?? [])].find(
+					([candidate, ids]) => candidate.startsWith(`${direction} `) && ids.has(toId)
+				)?.[0];
+				return key?.slice(direction.length + 1).split(" ") ?? [];
 			} else {
-				let fromId: string[] = [];
-				const key = await this._persistentMap.getCorrespondingReverse(bridge, toId);
-				// console.log("getCorrespondingReverse Return");
-				// console.log(fromId);
-				if (key !== "0" && typeof key === "string") {
-					fromId = key.split(" ");
-					fromId.shift();
-				}
-				return fromId;
+				const key = await this._persistentMap.getCorrespondingReverse(direction, bridge, toId);
+				return key?.slice(direction.length + 1).split(" ") ?? [];
 			}
 		} catch (err) {
 			// Unknown message ID. Don't do anything
