@@ -305,10 +305,14 @@ export const relayMessage = (ctx: TediCrossContext) => {
 			const messageToReply = prepared.messageToReply;
 			const replyId = prepared.replyId;
 			const sendToDiscord = async (payload: any) => {
-				const sent =
-					replyId === "0" || replyId === undefined || messageToReply === undefined
-						? await channel.send(payload)
-						: await messageToReply.reply(payload);
+				const hasReplyTarget = replyId !== "0" && replyId !== undefined && messageToReply !== undefined;
+				const replyPayload = typeof payload === "string" ? { content: payload } : payload;
+				const sent = hasReplyTarget
+					? await channel.send({
+							...replyPayload,
+							reply: { messageReference: replyId, failIfNotExists: true }
+						})
+					: await channel.send(payload);
 				discordMessages.push(sent);
 				return sent;
 			};
