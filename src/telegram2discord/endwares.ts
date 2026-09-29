@@ -305,7 +305,7 @@ export const relayMessage = (ctx: TediCrossContext) => {
 			const messageToReply = prepared.messageToReply;
 			const replyId = prepared.replyId;
 			const sendToDiscord = async (payload: any) => {
-				const hasReplyTarget = replyId !== "0" && replyId !== undefined && messageToReply !== undefined;
+				const hasReplyTarget = Boolean(replyId && replyId !== "0" && messageToReply !== undefined);
 				const replyPayload = typeof payload === "string" ? { content: payload } : payload;
 				const sent = hasReplyTarget
 					? await channel.send({

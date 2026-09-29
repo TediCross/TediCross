@@ -136,7 +136,7 @@ export class MessageMap {
 				return key?.slice(direction.length + 1).split(" ") ?? [];
 			} else {
 				const key = await this._persistentMap.getCorrespondingReverse(direction, bridge, toId);
-				return key?.slice(direction.length + 1).split(" ") ?? [];
+				return key ? key.slice(direction.length + 1).split(" ") : [];
 			}
 		} catch (err) {
 			// Unknown message ID. Don't do anything

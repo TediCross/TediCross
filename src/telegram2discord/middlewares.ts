@@ -672,7 +672,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 						referenceId as string
 					);
 					//console.log("d2t replyId: " + replyId);
-					if (replyId === undefined) {
+					if (!replyId || replyId === "0") {
 						[replyId] = await ctx.TediCross.messageMap.getCorresponding(
 							MessageMap.TELEGRAM_TO_DISCORD,
 							bridge,
@@ -685,7 +685,7 @@ async function addPreparedObj(ctx: TediCrossContext, next: () => void) {
 
 			let messageToReply: any;
 
-			if (replyId !== "0" && replyId !== undefined) {
+			if (replyId && replyId !== "0") {
 				messageToReply = await channel.messages.fetch(replyId).catch((err: Error) => {
 					`Could not find Message ${replyId} in Discord Channel ${channel.id} on bridge ${bridge.name}: ${err.message}`;
 				});

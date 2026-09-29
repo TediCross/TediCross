@@ -160,6 +160,6 @@ export class PersistentMessageMap {
 				}
 			)
 		);
-		return result?.Keys ?? "";
+		return result?.Keys;
 	}
 }

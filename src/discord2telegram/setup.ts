@@ -311,7 +311,7 @@ export function setup(
 								referenceId as string
 							);
 							//console.log("t2d replyId: " + replyId);
-							if (replyId === undefined) {
+							if (!replyId || replyId === "0") {
 								[replyId] = await messageMap.getCorresponding(
 									MessageMap.DISCORD_TO_TELEGRAM,
 									bridge,
