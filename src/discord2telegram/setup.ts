@@ -366,6 +366,8 @@ export function setup(
 					if (!imageUrl || galleryImageUrls.includes(imageUrl)) continue;
 					galleryImageUrls.push(imageUrl);
 				}
+				const hasRelayedMedia =
+					message.attachments.size > 0 || Boolean(voiceMessageAttachment) || galleryImageUrls.length > 0;
 
 				let messageCaption = "";
 				const streamKey = `${bridge.name}:${bridge.tgThread ?? "general"}`;
@@ -374,35 +376,32 @@ export function setup(
 					streamKey,
 					message.author.id,
 					bridge.discord.groupMessages,
-					Boolean(messageReference) || messageParts.length === 0
+					Boolean(messageReference) || (messageParts.length === 0 && !hasRelayedMedia)
 				);
 				if (messageParts.length) {
 					const sender = bridge.discord.sendUsernames && !grouped ? `<b>${senderName}</b>\n` : "";
 					messageCaption = sender + messageParts.join("\n\n");
-				} else if (voiceMessageAttachment && bridge.discord.sendUsernames && !grouped) {
+				} else if (hasRelayedMedia && bridge.discord.sendUsernames && !grouped) {
 					messageCaption = `<b>${senderName}</b>`;
 				}
 
 				// Telegram can attach a caption to a single photo or the first item of an
 				// album. Use that to keep an embed's text and image together when possible.
 				const captionWithGallery =
-					message.attachments.size === 0 && galleryImageUrls.length > 0 && messageCaption.length <= 1024;
-				const captionWithVoice = Boolean(voiceMessageAttachment && messageCaption.length <= 1024);
-
-				if (messageParts.length && !captionWithGallery && !captionWithVoice) {
-					try {
-						const tgMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, messageCaption, {
-							...telegramReplyOptions(replyId),
-							parse_mode: "HTML",
-							link_preview_options: { is_disabled: bridge.discord.disableWebPreviewOnTelegram },
-							message_thread_id: bridge.tgThread
-						});
-						sentTelegramMessageIds.push(tgMessage.message_id.toString());
-					} catch (err) {
-						logger.error(`[${bridge.name}] Telegram did not accept a message`);
-						logger.error(`[${bridge.name}] Failed message:`, (err as Error).toString());
-					}
-				}
+					message.attachments.size === 0 &&
+					galleryImageUrls.length > 0 &&
+					messageCaption.length > 0 &&
+					messageCaption.length <= 1024;
+				const captionWithVoice = Boolean(
+					voiceMessageAttachment && messageCaption.length > 0 && messageCaption.length <= 1024
+				);
+				const captionWithAttachments =
+					message.attachments.size > 0 &&
+					!voiceMessageAttachment &&
+					messageCaption.length > 0 &&
+					messageCaption.length <= 1024;
+				let captionSentWithMedia = false;
+				let captionSentAsText = false;
 
 				// Check for attachments and pass them on
 				const images: InputMediaPhoto[] = [];
@@ -420,6 +419,7 @@ export function setup(
 							message_thread_id: bridge.tgThread
 						});
 						sentTelegramMessageIds.push(textMessage.message_id.toString());
+						captionSentAsText = true;
 					} catch (error) {
 						logger.error(`[${bridge.name}] Could not send the voice message caption to Telegram:`, error);
 					}
@@ -485,15 +485,25 @@ export function setup(
 					const type = oneArray[0].type;
 					for (let i = 0; i < oneArray.length; i += 10) {
 						const batch = oneArray.slice(i, i + 10);
+						const attachCaption = captionWithAttachments && !captionSentWithMedia;
 						try {
 							if (batch.length > 1) {
-								const sent = await tgBot.telegram.sendMediaGroup(bridge.telegram.chatId, batch, {
+								const mediaBatch = batch.map((item: any) => ({ ...item }));
+								if (attachCaption) {
+									mediaBatch[0].caption = messageCaption;
+									mediaBatch[0].parse_mode = "HTML";
+								}
+								const sent = await tgBot.telegram.sendMediaGroup(bridge.telegram.chatId, mediaBatch, {
 									...telegramReplyOptions(replyId),
 									message_thread_id: bridge.tgThread
 								});
 								sentTelegramMessageIds.push(...sent.map(item => item.message_id.toString()));
+								if (attachCaption) captionSentWithMedia = true;
 							} else {
 								let sent: any;
+								const captionOptions = attachCaption
+									? { caption: messageCaption, parse_mode: "HTML" as const }
+									: {};
 								switch (type) {
 									case "video":
 										sent = await tgBot.telegram.sendVideo(
@@ -501,6 +511,7 @@ export function setup(
 											oneArray[0].media,
 											{
 												...telegramReplyOptions(replyId),
+												...captionOptions,
 												message_thread_id: bridge.tgThread
 											}
 										);
@@ -511,6 +522,7 @@ export function setup(
 											oneArray[0].media,
 											{
 												...telegramReplyOptions(replyId),
+												...captionOptions,
 												message_thread_id: bridge.tgThread
 											}
 										);
@@ -521,6 +533,7 @@ export function setup(
 											oneArray[0].media,
 											{
 												...telegramReplyOptions(replyId),
+												...captionOptions,
 												message_thread_id: bridge.tgThread
 											}
 										);
@@ -531,12 +544,14 @@ export function setup(
 											oneArray[0].media,
 											{
 												...telegramReplyOptions(replyId),
+												...captionOptions,
 												message_thread_id: bridge.tgThread
 											}
 										);
 										break;
 								}
 								if (sent?.message_id) sentTelegramMessageIds.push(sent.message_id.toString());
+								if (attachCaption && sent?.message_id) captionSentWithMedia = true;
 							}
 						} catch (err) {
 							mediaSendFailed = true;
@@ -570,6 +585,7 @@ export function setup(
 								}
 							);
 							sentTelegramMessageIds.push(sent.message_id.toString());
+							captionSentWithMedia = captionWithVoice;
 						} catch (err) {
 							mediaSendFailed = true;
 							logger.error(
@@ -596,6 +612,7 @@ export function setup(
 								message_thread_id: bridge.tgThread
 							});
 							sentTelegramMessageIds.push(...sent.map(item => item.message_id.toString()));
+							if (captionWithGallery && i === 0) captionSentWithMedia = true;
 						} else if (media.length === 1) {
 							const sent = await tgBot.telegram.sendPhoto(
 								bridge.telegram.chatId,
@@ -609,6 +626,7 @@ export function setup(
 								}
 							);
 							sentTelegramMessageIds.push(sent.message_id.toString());
+							if (captionWithGallery && i === 0) captionSentWithMedia = true;
 						}
 					} catch (err) {
 						mediaSendFailed = true;
@@ -616,6 +634,21 @@ export function setup(
 							`[${bridge.name}] Telegram did not accept component or embed images:`,
 							(err as Error).toString()
 						);
+					}
+				}
+
+				if (messageCaption && !captionSentWithMedia && !captionSentAsText) {
+					try {
+						const textMessage = await tgBot.telegram.sendMessage(bridge.telegram.chatId, messageCaption, {
+							...telegramReplyOptions(replyId),
+							parse_mode: "HTML",
+							link_preview_options: { is_disabled: bridge.discord.disableWebPreviewOnTelegram },
+							message_thread_id: bridge.tgThread
+						});
+						sentTelegramMessageIds.push(textMessage.message_id.toString());
+					} catch (err) {
+						logger.error(`[${bridge.name}] Telegram did not accept a message`);
+						logger.error(`[${bridge.name}] Failed message:`, (err as Error).toString());
 					}
 				}
 

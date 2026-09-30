@@ -228,6 +228,10 @@ const parseMediaGroup = (ctx: TediCrossContext, byTimer: boolean = false) => {
 				comboCtx.tediCross.hasMediaGroup = true;
 				const prepared = comboCtx.tediCross.prepared[0];
 				prepared.files = [];
+				prepared.sourceMessageIds = ctxArray
+					.map((item: TediCrossContext) => item.tediCross.messageId)
+					.filter((id: string | number | undefined) => id !== undefined)
+					.map(String);
 				const contentTexts: string[] = [];
 				const mediaNotices = new Map<string, string>();
 
@@ -304,8 +308,21 @@ export const relayMessage = (ctx: TediCrossContext) => {
 			const discordMessages: Array<{ id: string }> = [];
 			const messageToReply = prepared.messageToReply;
 			const replyId = prepared.replyId;
-			const sendToDiscord = async (payload: any) => {
-				const hasReplyTarget = Boolean(replyId && replyId !== "0" && messageToReply !== undefined);
+			const saveMessageMappings = async (messageIds: string[]) => {
+				const sourceMessageIds = prepared.sourceMessageIds ?? [String(ctx.tediCross.messageId)];
+				for (const sourceId of sourceMessageIds) {
+					await ctx.TediCross.messageMap.replace(
+						MessageMap.TELEGRAM_TO_DISCORD,
+						prepared.bridge,
+						sourceId,
+						messageIds
+					);
+				}
+			};
+			const sendToDiscord = async (payload: any, includeReply = true) => {
+				const hasReplyTarget = Boolean(
+					includeReply && replyId && replyId !== "0" && messageToReply !== undefined
+				);
 				const replyPayload = typeof payload === "string" ? { content: payload } : payload;
 				const sent = hasReplyTarget
 					? await channel.send({
@@ -363,34 +380,28 @@ export const relayMessage = (ctx: TediCrossContext) => {
 						prepared.bridge.telegram.messageStyle === "componentsV2"
 							? await createComponentsV2Message(ctx, prepared, false)
 							: messageText;
-					await sendToDiscord(captionPayload);
+					await sendToDiscord(captionPayload, false);
 				}
 				const voiceAttachment = new AttachmentBuilder(audio, { name: prepared.file.name })
 					.setDuration(prepared.voiceDuration)
 					.setWaveform(waveform.toString("base64"));
-				const voiceMessage = await channel.send({
+				const voiceMessage = await sendToDiscord({
 					files: [voiceAttachment],
 					flags: [MessageFlags.IsVoiceMessage]
 				});
-				discordMessages.push(voiceMessage);
-				await ctx.TediCross.messageMap.replace(
-					MessageMap.TELEGRAM_TO_DISCORD,
-					prepared.bridge,
-					ctx.tediCross.messageId,
-					discordMessages.map(message => message.id)
-				);
+				// Make the voice post the primary mapped target so replies point to audio,
+				// not its optional sender/caption companion.
+				await saveMessageMappings([
+					voiceMessage.id,
+					...discordMessages.filter(message => message.id !== voiceMessage.id).map(message => message.id)
+				]);
 				return;
 			}
 
 			if (prepared.bridge.telegram.messageStyle === "componentsV2") {
 				const payload = await createComponentsV2Message(ctx, prepared);
 				await sendToDiscord(payload);
-				await ctx.TediCross.messageMap.replace(
-					MessageMap.TELEGRAM_TO_DISCORD,
-					prepared.bridge,
-					ctx.tediCross.messageId,
-					discordMessages.map(message => message.id)
-				);
+				await saveMessageMappings(discordMessages.map(message => message.id));
 				return;
 			}
 
@@ -478,12 +489,7 @@ export const relayMessage = (ctx: TediCrossContext) => {
 			}
 
 			// Keep every part mapped so edits and deletions can update the whole relayed message.
-			await ctx.TediCross.messageMap.replace(
-				MessageMap.TELEGRAM_TO_DISCORD,
-				prepared.bridge,
-				ctx.tediCross.messageId,
-				discordMessages.map(message => message.id)
-			);
+			await saveMessageMappings(discordMessages.map(message => message.id));
 		} catch (err: any) {
 			ctx.TediCross.logger.error(
 				`Could not relay a message to Discord on bridge ${prepared.bridge.name}: ${err}`
