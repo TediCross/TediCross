@@ -39,6 +39,19 @@ import { InputMediaVideo, InputMediaAudio, InputMediaDocument, InputMediaPhoto }
  * Helpers *
  ***********/
 
+function telegramErrorText(error: any): string {
+	return [error?.description, error?.response?.description, error?.message, String(error)].filter(Boolean).join(" ");
+}
+
+function isInvalidPhotoDimensionsError(error: any): boolean {
+	return /PHOTO_INVALID_DIMENSIONS/i.test(telegramErrorText(error));
+}
+
+function failedMediaGroupIndex(error: any): number | undefined {
+	const match = telegramErrorText(error).match(/failed to send message #(\d+)/i);
+	return match ? Number(match[1]) - 1 : undefined;
+}
+
 /**
  * Creates a function to give to 'guildMemberAdd' or 'guildMemberRemove' on a Discord bot
  *
@@ -485,7 +498,7 @@ export function setup(
 					const type = oneArray[0].type;
 					for (let i = 0; i < oneArray.length; i += 10) {
 						const batch = oneArray.slice(i, i + 10);
-						const attachCaption = captionWithAttachments && !captionSentWithMedia;
+						const attachCaption: boolean = Boolean(captionWithAttachments && !captionSentWithMedia);
 						try {
 							if (batch.length > 1) {
 								const mediaBatch = batch.map((item: any) => ({ ...item }));
@@ -554,6 +567,92 @@ export function setup(
 								if (attachCaption && sent?.message_id) captionSentWithMedia = true;
 							}
 						} catch (err) {
+							if (type === "photo" && isInvalidPhotoDimensionsError(err)) {
+								const failedIndex = failedMediaGroupIndex(err);
+								if (batch.length === 1) {
+									try {
+										const sent = await tgBot.telegram.sendDocument(
+											bridge.telegram.chatId,
+											batch[0].media,
+											{
+												...telegramReplyOptions(replyId),
+												...(attachCaption
+													? { caption: messageCaption, parse_mode: "HTML" as const }
+													: {}),
+												message_thread_id: bridge.tgThread
+											}
+										);
+										sentTelegramMessageIds.push(sent.message_id.toString());
+										captionSentWithMedia = attachCaption;
+										logger.warn(
+											`[${bridge.name}] Telegram rejected photo dimensions; sent the photo as a document instead.`
+										);
+										continue;
+									} catch (fallbackError) {
+										mediaSendFailed = true;
+										logger.error(
+											`[${bridge.name}] Telegram also rejected the photo as a document:`,
+											(fallbackError as Error).toString()
+										);
+										continue;
+									}
+								}
+
+								if (failedIndex !== undefined && failedIndex >= 0 && failedIndex < batch.length) {
+									// Telegram reports the failing album item by its 1-based position.
+									// Earlier items were accepted; resume at the rejected item to avoid
+									// duplicating those already delivered.
+									if (attachCaption && failedIndex > 0) captionSentWithMedia = true;
+									for (let itemIndex = failedIndex; itemIndex < batch.length; itemIndex++) {
+										const item = batch[itemIndex];
+										const itemCaption = attachCaption && itemIndex === 0;
+										const options = {
+											...telegramReplyOptions(replyId),
+											...(itemCaption
+												? { caption: messageCaption, parse_mode: "HTML" as const }
+												: {}),
+											message_thread_id: bridge.tgThread
+										};
+										try {
+											let sent: any;
+											if (itemIndex === failedIndex) {
+												sent = await tgBot.telegram.sendDocument(
+													bridge.telegram.chatId,
+													item.media,
+													options
+												);
+											} else {
+												try {
+													sent = await tgBot.telegram.sendPhoto(
+														bridge.telegram.chatId,
+														item.media,
+														options
+													);
+												} catch (photoError) {
+													if (!isInvalidPhotoDimensionsError(photoError)) throw photoError;
+													sent = await tgBot.telegram.sendDocument(
+														bridge.telegram.chatId,
+														item.media,
+														options
+													);
+												}
+											}
+											sentTelegramMessageIds.push(sent.message_id.toString());
+											if (itemCaption) captionSentWithMedia = true;
+										} catch (fallbackError) {
+											mediaSendFailed = true;
+											logger.error(
+												`[${bridge.name}] Could not deliver photo album item ${itemIndex + 1}:`,
+												(fallbackError as Error).toString()
+											);
+										}
+									}
+									logger.warn(
+										`[${bridge.name}] Telegram rejected photo dimensions; delivered album items from #${failedIndex + 1} individually, using documents where needed.`
+									);
+									continue;
+								}
+							}
 							mediaSendFailed = true;
 							logger.error(
 								`[${bridge.name}] Telegram did not accept ${type} attachment:`,
@@ -629,6 +728,92 @@ export function setup(
 							if (captionWithGallery && i === 0) captionSentWithMedia = true;
 						}
 					} catch (err) {
+						if (isInvalidPhotoDimensionsError(err)) {
+							const failedIndex = failedMediaGroupIndex(err);
+							if (media.length === 1) {
+								try {
+									const attachCaption = captionWithGallery && i === 0 && !captionSentWithMedia;
+									const sent = await tgBot.telegram.sendDocument(
+										bridge.telegram.chatId,
+										media[0].media as string,
+										{
+											...telegramReplyOptions(replyId),
+											...(attachCaption
+												? { caption: messageCaption, parse_mode: "HTML" as const }
+												: {}),
+											message_thread_id: bridge.tgThread
+										}
+									);
+									sentTelegramMessageIds.push(sent.message_id.toString());
+									captionSentWithMedia = attachCaption;
+									logger.warn(
+										`[${bridge.name}] Telegram rejected component or embed photo dimensions; sent the image as a document instead.`
+									);
+									continue;
+								} catch (fallbackError) {
+									mediaSendFailed = true;
+									logger.error(
+										`[${bridge.name}] Telegram also rejected the component or embed image as a document:`,
+										(fallbackError as Error).toString()
+									);
+									continue;
+								}
+							}
+
+							if (failedIndex !== undefined && failedIndex >= 0 && failedIndex < media.length) {
+								const attachCaption = captionWithGallery && i === 0 && !captionSentWithMedia;
+								// The failed item index comes from Telegram's error. As with attachment albums,
+								// don't retry earlier items because they may already have been delivered.
+								if (attachCaption && failedIndex > 0) captionSentWithMedia = true;
+								for (let itemIndex = failedIndex; itemIndex < media.length; itemIndex++) {
+									const itemCaption = attachCaption && itemIndex === 0;
+									const options = {
+										...telegramReplyOptions(replyId),
+										...(itemCaption
+											? { caption: messageCaption, parse_mode: "HTML" as const }
+											: {}),
+										message_thread_id: bridge.tgThread
+									};
+									try {
+										let sent: any;
+										if (itemIndex === failedIndex) {
+											sent = await tgBot.telegram.sendDocument(
+												bridge.telegram.chatId,
+												media[itemIndex].media as string,
+												options
+											);
+										} else {
+											try {
+												sent = await tgBot.telegram.sendPhoto(
+													bridge.telegram.chatId,
+													media[itemIndex].media as string,
+													options
+												);
+											} catch (photoError) {
+												if (!isInvalidPhotoDimensionsError(photoError)) throw photoError;
+												sent = await tgBot.telegram.sendDocument(
+													bridge.telegram.chatId,
+													media[itemIndex].media as string,
+													options
+												);
+											}
+										}
+										sentTelegramMessageIds.push(sent.message_id.toString());
+										if (itemCaption) captionSentWithMedia = true;
+									} catch (fallbackError) {
+										mediaSendFailed = true;
+										logger.error(
+											`[${bridge.name}] Could not deliver component or embed image ${i + itemIndex + 1}:`,
+											(fallbackError as Error).toString()
+										);
+									}
+								}
+								logger.warn(
+									`[${bridge.name}] Telegram rejected component or embed photo dimensions; delivered images from #${failedIndex + 1} individually, using documents where needed.`
+								);
+								continue;
+							}
+						}
 						mediaSendFailed = true;
 						logger.error(
 							`[${bridge.name}] Telegram did not accept component or embed images:`,

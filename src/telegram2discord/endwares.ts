@@ -223,6 +223,12 @@ const parseMediaGroup = (ctx: TediCrossContext, byTimer: boolean = false) => {
 			const ctxArray = groupIdMap.get(groupId);
 			groupIdMap.delete(groupId);
 			if (ctxArray) {
+				// Telegram delivers each album item as a separate update. Processing can
+				// complete out of order, so restore the album's original message order.
+				ctxArray.sort(
+					(a: TediCrossContext, b: TediCrossContext) =>
+						Number(a.tediCross.messageId) - Number(b.tediCross.messageId)
+				);
 				//ctx.TediCross.logger.info(`Array Length: ${ctxArray.length}`);
 				const comboCtx: TediCrossContext = ctxArray[0];
 				comboCtx.tediCross.hasMediaGroup = true;

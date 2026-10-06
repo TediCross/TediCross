@@ -16,6 +16,16 @@ export class PersistentMessageMap {
 	private _logger: Logger;
 	private _filepath: string;
 	private _db: Promise<Database<sqlite3.Database, sqlite3.Statement>>;
+	private _dbOperationQueue: Promise<void> = Promise.resolve();
+
+	private enqueueDbOperation<T>(operation: () => Promise<T>): Promise<T> {
+		const result = this._dbOperationQueue.then(operation);
+		this._dbOperationQueue = result.then(
+			() => undefined,
+			() => undefined
+		);
+		return result;
+	}
 
 	/**
 	 * Creates a new instance which keeps track of messages and bridges
@@ -58,86 +68,94 @@ export class PersistentMessageMap {
 	}
 
 	insert(direction: Direction, bridge: Bridge, fromId: string, toId: string) {
-		this._db
-			.then(async db => {
-				const bridgeCheck = await db.get("SELECT BridgeName FROM Bridges WHERE BridgeName = :sqlBridgeName", {
+		this.enqueueDbOperation(async () => {
+			const db = await this._db;
+			let bridgeRow = await db.get("SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName", {
+				":sqlBridgeName": bridge.name
+			});
+			if (bridgeRow === undefined) {
+				await db.run("INSERT INTO Bridges (BridgeName) VALUES (:sqlBridgeName)", {
 					":sqlBridgeName": bridge.name
 				});
-				if (bridgeCheck === undefined) {
-					await db.run("INSERT INTO Bridges (BridgeName) VALUES (:sqlBridgeName)", {
-						":sqlBridgeName": bridge.name
-					});
-				}
-				await db.run(
-					"INSERT INTO KeysToIds ([Bridges.pk], Keys) VALUES ((SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName), :sqlKey)",
-					{
-						":sqlKey": `${direction} ${fromId}`,
-						":sqlBridgeName": bridge.name
-					}
-				);
-				await db.run(
-					"INSERT INTO ToIds ([KeysToIds.pk],Ids) VALUES ((SELECT pk FROM KeysToIds WHERE Keys = :sqlKey and [Bridges.pk] = (SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName)),:sqlIds)",
-					{
-						":sqlIds": toId,
-						":sqlBridgeName": bridge.name,
-						":sqlKey": `${direction} ${fromId}`
-					}
-				);
-			})
-			.catch(err => this._logger.error("Error Inserting into Database", err));
-	}
-
-	async replace(direction: Direction, bridge: Bridge, fromId: string, toIds: string[]) {
-		const db = await this._db;
-		await db.run("BEGIN");
-		try {
-			let bridgeRow = await db.get("SELECT pk FROM Bridges WHERE BridgeName = :name", { ":name": bridge.name });
-			if (!bridgeRow) {
-				await db.run("INSERT INTO Bridges (BridgeName) VALUES (:name)", { ":name": bridge.name });
-				bridgeRow = await db.get("SELECT pk FROM Bridges WHERE BridgeName = :name", { ":name": bridge.name });
+				bridgeRow = await db.get("SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName", {
+					":sqlBridgeName": bridge.name
+				});
 			}
 			const key = `${direction} ${fromId}`;
-			await db.run(
-				"DELETE FROM ToIds WHERE [KeysToIds.pk] IN (SELECT pk FROM KeysToIds WHERE [Bridges.pk] = :bridge AND Keys = :key)",
+			let keyRow = await db.get(
+				"SELECT pk FROM KeysToIds WHERE [Bridges.pk] = :bridge AND Keys = :key ORDER BY pk LIMIT 1",
 				{ ":bridge": bridgeRow.pk, ":key": key }
 			);
-			await db.run("DELETE FROM KeysToIds WHERE [Bridges.pk] = :bridge AND Keys = :key", {
-				":bridge": bridgeRow.pk,
-				":key": key
-			});
-			if (toIds.length > 0) {
+			if (keyRow === undefined) {
 				const inserted = await db.run("INSERT INTO KeysToIds ([Bridges.pk], Keys) VALUES (:bridge, :key)", {
 					":bridge": bridgeRow.pk,
 					":key": key
 				});
-				for (const id of toIds) {
-					await db.run("INSERT INTO ToIds ([KeysToIds.pk], Ids) VALUES (:key, :id)", {
-						":key": inserted.lastID,
-						":id": id
+				keyRow = { pk: inserted.lastID };
+			}
+			await db.run("INSERT INTO ToIds ([KeysToIds.pk], Ids) VALUES (:key, :id)", {
+				":key": keyRow.pk,
+				":id": toId
+			});
+		}).catch(err => this._logger.error("Error Inserting into Database", err));
+	}
+
+	async replace(direction: Direction, bridge: Bridge, fromId: string, toIds: string[]) {
+		return this.enqueueDbOperation(async () => {
+			const db = await this._db;
+			await db.run("BEGIN");
+			try {
+				let bridgeRow = await db.get("SELECT pk FROM Bridges WHERE BridgeName = :name", {
+					":name": bridge.name
+				});
+				if (!bridgeRow) {
+					await db.run("INSERT INTO Bridges (BridgeName) VALUES (:name)", { ":name": bridge.name });
+					bridgeRow = await db.get("SELECT pk FROM Bridges WHERE BridgeName = :name", {
+						":name": bridge.name
 					});
 				}
+				const key = `${direction} ${fromId}`;
+				await db.run(
+					"DELETE FROM ToIds WHERE [KeysToIds.pk] IN (SELECT pk FROM KeysToIds WHERE [Bridges.pk] = :bridge AND Keys = :key)",
+					{ ":bridge": bridgeRow.pk, ":key": key }
+				);
+				await db.run("DELETE FROM KeysToIds WHERE [Bridges.pk] = :bridge AND Keys = :key", {
+					":bridge": bridgeRow.pk,
+					":key": key
+				});
+				if (toIds.length > 0) {
+					const inserted = await db.run("INSERT INTO KeysToIds ([Bridges.pk], Keys) VALUES (:bridge, :key)", {
+						":bridge": bridgeRow.pk,
+						":key": key
+					});
+					for (const id of toIds) {
+						await db.run("INSERT INTO ToIds ([KeysToIds.pk], Ids) VALUES (:key, :id)", {
+							":key": inserted.lastID,
+							":id": id
+						});
+					}
+				}
+				await db.run("COMMIT");
+			} catch (error) {
+				await db.run("ROLLBACK");
+				throw error;
 			}
-			await db.run("COMMIT");
-		} catch (error) {
-			await db.run("ROLLBACK");
-			throw error;
-		}
+		});
 	}
 
 	async getCorresponding(direction: Direction, bridge: Bridge, fromId: string) {
 		const toId: string[] = [];
-		const results = await this._db
-			.then(async db => {
-				const result = await db.all(
-					"SELECT Ids FROM ToIds WHERE [KeysToIds.pk] = (SELECT pk FROM KeysToIds WHERE Keys = :sqlKey and [Bridges.pk] = (SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName))",
-					{
-						":sqlKey": `${direction} ${fromId}`,
-						":sqlBridgeName": bridge.name
-					}
-				);
-				return result;
-			})
-			.catch(err => this._logger.error("Error getting Corresponding from Database", err));
+		const results = await this.enqueueDbOperation(async () => {
+			const db = await this._db;
+			const result = await db.all(
+				"SELECT DISTINCT t.Ids FROM ToIds t INNER JOIN KeysToIds k ON t.[KeysToIds.pk] = k.pk WHERE k.Keys = :sqlKey AND k.[Bridges.pk] = (SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName) ORDER BY t.pk",
+				{
+					":sqlKey": `${direction} ${fromId}`,
+					":sqlBridgeName": bridge.name
+				}
+			);
+			return result;
+		}).catch(err => this._logger.error("Error getting Corresponding from Database", err));
 		if (results !== undefined) {
 			results.forEach(id => {
 				toId.push(id.Ids);
@@ -150,16 +168,17 @@ export class PersistentMessageMap {
 	}
 
 	async getCorrespondingReverse(direction: Direction, bridge: Bridge, toId: string) {
-		const result = await this._db.then(db =>
-			db.get(
+		const result = await this.enqueueDbOperation(async () => {
+			const db = await this._db;
+			return db.get(
 				"SELECT k.Keys FROM KeysToIds k INNER JOIN ToIds t ON t.[KeysToIds.pk] = k.pk WHERE k.[Bridges.pk] = (SELECT pk FROM Bridges WHERE BridgeName = :sqlBridgeName) AND t.Ids = :sqlIds AND k.Keys LIKE :sqlDirection ORDER BY k.pk DESC LIMIT 1",
 				{
 					":sqlBridgeName": bridge.name,
 					":sqlIds": toId,
 					":sqlDirection": `${direction} %`
 				}
-			)
-		);
+			);
+		});
 		return result?.Keys;
 	}
 }
