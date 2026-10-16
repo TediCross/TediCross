@@ -24,7 +24,7 @@
 	},
 	"dependencies": {
 		"discord.js": "14.27.0",
-		"js-yaml": "5.4.3",
+		"js-yaml": "5.5.0",
 		"mime": "4.1.1",
 		"moment": "2.31.0",
 		"ogg-opus-decoder": "1.7.5",
@@ -50,7 +50,7 @@
 		"cli-highlight": "2.1.11",
 		"eslint": "10.12.0",
 		"eslint-config-prettier": "10.1.8",
-		"eslint-plugin-prettier": "5.5.6",
+		"eslint-plugin-prettier": "5.5.7",
 		"nodemon": "3.1.14",
 		"prettier": "3.9.10",
 		"rimraf": "6.1.3",
