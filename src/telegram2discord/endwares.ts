@@ -593,9 +593,14 @@ export const handleEdits = createMessageHandler(async (ctx: TediCrossContext, br
 				sendObject = { ...componentsPayload, attachments: keptAttachments } as DiscordMessage;
 			} else if ((messageText.length > 2000 && bridge.discord.useEmbeds !== "never") || prepared.hasLinks) {
 				const description = prepared.text || " ";
-				const embed = new EmbedBuilder().setDescription(description.slice(0, 4096));
-				if (prepared.header) embed.setTitle(prepared.header.slice(0, 256));
-				sendObject = { content: "", embeds: [embed] };
+				const embeds = dcMessage.embeds
+					.filter(embed => embed.data.type === "rich")
+					.map(embed => EmbedBuilder.from(embed));
+				if (embeds.length === 0) embeds.push(new EmbedBuilder());
+				embeds[0]
+					.setDescription(description.slice(0, 4096))
+					.setTitle(prepared.header ? prepared.header.slice(0, 256) : null);
+				sendObject = { content: "", embeds };
 				if (description.length > 4096) remainingChunks.push(...R.splitEvery(2000, description.slice(4096)));
 			} else {
 				const chunks = R.splitEvery(2000, messageText);
