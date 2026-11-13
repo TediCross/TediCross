@@ -1,4 +1,4 @@
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 
 RUN apk add --no-cache python3 g++ make
 
@@ -11,7 +11,7 @@ COPY tsconfig.json ./
 COPY src ./src
 RUN npm run build && npm prune --omit=dev
 
-FROM node:24-alpine AS runtime
+FROM node:26-alpine AS runtime
 
 LABEL org.opencontainers.image.source="https://github.com/TediCross/TediCross" \
 	org.opencontainers.image.description="A bot that bridges chats between Telegram and Discord." \
