@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"description": "Bridging Telegram and Discord",
 	"engines": {
-		"node": ">=22.13"
+		"node": ">=26.13"
 	},
 	"license": "MIT",
 	"repository": {

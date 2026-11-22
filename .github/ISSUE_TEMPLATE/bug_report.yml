@@ -43,8 +43,8 @@ body:
     id: runtime
     attributes:
       label: Runtime and version
-      description: For example, Node.js 22.13.1 or Docker Engine 28.0.1. Leave blank if unknown.
-      placeholder: Node.js 22.13.1
+      description: For example, Node.js 26.13.0 or Docker Engine 29. Leave blank if unknown.
+      placeholder: Node.js 26.13.0
 
   - type: dropdown
     id: operating_system

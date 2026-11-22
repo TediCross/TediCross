@@ -1,6 +1,6 @@
 # Build and contribute
 
-TediCross is written in TypeScript. Use Node.js 22.13 or newer and npm.
+TediCross is written in TypeScript. Use Node.js 26.13 or newer and npm.
 
 ## Local development
 

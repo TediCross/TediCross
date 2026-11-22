@@ -1,6 +1,6 @@
 # Installation
 
-TediCross requires **Node.js 22.13 or newer**. Create separate Telegram and Discord bot applications for each TediCross instance; a bot token should not be used by two running instances.
+TediCross requires **Node.js 26.13 or newer**. Create separate Telegram and Discord bot applications for each TediCross instance; a bot token should not be used by two running instances.
 
 ## 1. Get the project
 

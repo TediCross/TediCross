@@ -2,7 +2,7 @@
 
 Use Windows Task Scheduler to launch TediCross when your user logs in or when the computer starts.
 
-1. Install Node.js 22.13 or newer and install/build TediCross as described in the [installation guide](installation.md).
+1. Install Node.js 26.13 or newer and install/build TediCross as described in the [installation guide](installation.md).
 2. Open **Task Scheduler** and choose **Create Task**.
 3. On **General**, name the task `TediCross`. Choose the account that can read the project and settings and write to the data directory.
 4. On **Triggers**, add **At startup** or **At log on**, depending on your hosting setup.
