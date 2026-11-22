@@ -2,7 +2,7 @@
 
 TediCross is a self-hosted bot that bridges Telegram chats and Discord channels. It relays text, media, replies, edits, and supported deletion events between the services.
 
-You need your own Telegram bot, Discord application, and a host running **Node.js 26.13 or newer**. There is no public TediCross bot.
+You need your own Telegram bot, Discord application, and a host running **Node.js 24.22.3 (LTS), 26.13 or newer**. There is no public TediCross bot.
 
 > [!CAUTION]
 > **TediCross 1.0.0 includes breaking changes.** The Node.js minimum, dependencies, and some configuration have changed since 0.x. Review the [configuration guide](docs/guides/configuration.md) and back up your settings and data before upgrading.

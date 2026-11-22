@@ -4,7 +4,6 @@ import yargs from "yargs";
 import path from "path";
 import { Logger } from "./Logger";
 import { MessageMap } from "./MessageMap";
-import { Bridge, BridgeProperties } from "./bridgestuff/Bridge";
 import { BridgeMap } from "./bridgestuff/BridgeMap";
 import { Settings } from "./settings/Settings";
 import jsYaml from "js-yaml";
@@ -20,8 +19,8 @@ import { setup as telegramSetup, TediTelegraf } from "./telegram2discord/setup";
 import { Client as DiscordClient, GatewayIntentBits, ActivityType } from "discord.js";
 import { setup as discordSetup } from "./discord2telegram/setup";
 
-if (!semver.gte(process.version, "26.13.0")) {
-	console.log(`TediCross requires at least nodejs 26.13. Your version is ${process.version}`);
+if (!semver.satisfies(process.version, ">=24.22.3 <25 || >=26.13.0")) {
+	console.log(`TediCross requires Node.js 24.22.3 (LTS) or 26.13 or newer. Your version is ${process.version}`);
 	process.exit();
 }
 
@@ -102,7 +101,7 @@ const dcBot = new DiscordClient({
 						type: ActivityType.Custom
 					}
 				]
-		  }
+			}
 		: {}
 });
 
